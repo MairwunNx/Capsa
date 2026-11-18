@@ -6,3 +6,133 @@
 // - Show declarations: true
 
 // Library unique name: <com.mairwunnx.capsa:capsa-test>
+sealed interface com.mairwunnx.capsa.test/WorkEvent { // com.mairwunnx.capsa.test/WorkEvent|null[0]
+    abstract val capability // com.mairwunnx.capsa.test/WorkEvent.capability|{}capability[0]
+        abstract fun <get-capability>(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.capability.<get-capability>|<get-capability>(){}[0]
+    abstract val key // com.mairwunnx.capsa.test/WorkEvent.key|{}key[0]
+        abstract fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.key.<get-key>|<get-key>(){}[0]
+
+    final class Cancelled : com.mairwunnx.capsa.test/WorkEvent { // com.mairwunnx.capsa.test/WorkEvent.Cancelled|null[0]
+        constructor <init>(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa.test/WorkEvent.Cancelled.<init>|<init>(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+
+        final val capability // com.mairwunnx.capsa.test/WorkEvent.Cancelled.capability|{}capability[0]
+            final fun <get-capability>(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Cancelled.capability.<get-capability>|<get-capability>(){}[0]
+        final val key // com.mairwunnx.capsa.test/WorkEvent.Cancelled.key|{}key[0]
+            final fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Cancelled.key.<get-key>|<get-key>(){}[0]
+
+        final fun component1(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Cancelled.component1|component1(){}[0]
+        final fun component2(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Cancelled.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., com.mairwunnx.capsa/WorkKey = ...): com.mairwunnx.capsa.test/WorkEvent.Cancelled // com.mairwunnx.capsa.test/WorkEvent.Cancelled.copy|copy(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa.test/WorkEvent.Cancelled.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa.test/WorkEvent.Cancelled.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Cancelled.toString|toString(){}[0]
+    }
+
+    final class Dropped : com.mairwunnx.capsa.test/WorkEvent { // com.mairwunnx.capsa.test/WorkEvent.Dropped|null[0]
+        constructor <init>(kotlin/String, com.mairwunnx.capsa/WorkKey, com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa.test/WorkEvent.Dropped.<init>|<init>(kotlin.String;com.mairwunnx.capsa.WorkKey;com.mairwunnx.capsa.Signal){}[0]
+
+        final val capability // com.mairwunnx.capsa.test/WorkEvent.Dropped.capability|{}capability[0]
+            final fun <get-capability>(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Dropped.capability.<get-capability>|<get-capability>(){}[0]
+        final val key // com.mairwunnx.capsa.test/WorkEvent.Dropped.key|{}key[0]
+            final fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Dropped.key.<get-key>|<get-key>(){}[0]
+        final val signal // com.mairwunnx.capsa.test/WorkEvent.Dropped.signal|{}signal[0]
+            final fun <get-signal>(): com.mairwunnx.capsa/Signal // com.mairwunnx.capsa.test/WorkEvent.Dropped.signal.<get-signal>|<get-signal>(){}[0]
+
+        final fun component1(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Dropped.component1|component1(){}[0]
+        final fun component2(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Dropped.component2|component2(){}[0]
+        final fun component3(): com.mairwunnx.capsa/Signal // com.mairwunnx.capsa.test/WorkEvent.Dropped.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., com.mairwunnx.capsa/WorkKey = ..., com.mairwunnx.capsa/Signal = ...): com.mairwunnx.capsa.test/WorkEvent.Dropped // com.mairwunnx.capsa.test/WorkEvent.Dropped.copy|copy(kotlin.String;com.mairwunnx.capsa.WorkKey;com.mairwunnx.capsa.Signal){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa.test/WorkEvent.Dropped.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa.test/WorkEvent.Dropped.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Dropped.toString|toString(){}[0]
+    }
+
+    final class Failed : com.mairwunnx.capsa.test/WorkEvent { // com.mairwunnx.capsa.test/WorkEvent.Failed|null[0]
+        constructor <init>(kotlin/String, com.mairwunnx.capsa/WorkKey, kotlin/Throwable) // com.mairwunnx.capsa.test/WorkEvent.Failed.<init>|<init>(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
+
+        final val capability // com.mairwunnx.capsa.test/WorkEvent.Failed.capability|{}capability[0]
+            final fun <get-capability>(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Failed.capability.<get-capability>|<get-capability>(){}[0]
+        final val error // com.mairwunnx.capsa.test/WorkEvent.Failed.error|{}error[0]
+            final fun <get-error>(): kotlin/Throwable // com.mairwunnx.capsa.test/WorkEvent.Failed.error.<get-error>|<get-error>(){}[0]
+        final val key // com.mairwunnx.capsa.test/WorkEvent.Failed.key|{}key[0]
+            final fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Failed.key.<get-key>|<get-key>(){}[0]
+
+        final fun component1(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Failed.component1|component1(){}[0]
+        final fun component2(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Failed.component2|component2(){}[0]
+        final fun component3(): kotlin/Throwable // com.mairwunnx.capsa.test/WorkEvent.Failed.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., com.mairwunnx.capsa/WorkKey = ..., kotlin/Throwable = ...): com.mairwunnx.capsa.test/WorkEvent.Failed // com.mairwunnx.capsa.test/WorkEvent.Failed.copy|copy(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa.test/WorkEvent.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa.test/WorkEvent.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Failed.toString|toString(){}[0]
+    }
+
+    final class Started : com.mairwunnx.capsa.test/WorkEvent { // com.mairwunnx.capsa.test/WorkEvent.Started|null[0]
+        constructor <init>(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa.test/WorkEvent.Started.<init>|<init>(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+
+        final val capability // com.mairwunnx.capsa.test/WorkEvent.Started.capability|{}capability[0]
+            final fun <get-capability>(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Started.capability.<get-capability>|<get-capability>(){}[0]
+        final val key // com.mairwunnx.capsa.test/WorkEvent.Started.key|{}key[0]
+            final fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Started.key.<get-key>|<get-key>(){}[0]
+
+        final fun component1(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Started.component1|component1(){}[0]
+        final fun component2(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa.test/WorkEvent.Started.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., com.mairwunnx.capsa/WorkKey = ...): com.mairwunnx.capsa.test/WorkEvent.Started // com.mairwunnx.capsa.test/WorkEvent.Started.copy|copy(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa.test/WorkEvent.Started.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa.test/WorkEvent.Started.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa.test/WorkEvent.Started.toString|toString(){}[0]
+    }
+}
+
+final class <#A: kotlin/Any> com.mairwunnx.capsa.test/Replay { // com.mairwunnx.capsa.test/Replay|null[0]
+    final val effects // com.mairwunnx.capsa.test/Replay.effects|{}effects[0]
+        final fun <get-effects>(): kotlin.collections/List<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa.test/Replay.effects.<get-effects>|<get-effects>(){}[0]
+    final val ignored // com.mairwunnx.capsa.test/Replay.ignored|{}ignored[0]
+        final fun <get-ignored>(): kotlin.collections/List<com.mairwunnx.capsa/Fact> // com.mairwunnx.capsa.test/Replay.ignored.<get-ignored>|<get-ignored>(){}[0]
+    final val initial // com.mairwunnx.capsa.test/Replay.initial|{}initial[0]
+        final fun <get-initial>(): #A // com.mairwunnx.capsa.test/Replay.initial.<get-initial>|<get-initial>(){}[0]
+    final val signals // com.mairwunnx.capsa.test/Replay.signals|{}signals[0]
+        final fun <get-signals>(): kotlin.collections/List<com.mairwunnx.capsa/Signal> // com.mairwunnx.capsa.test/Replay.signals.<get-signals>|<get-signals>(){}[0]
+    final val state // com.mairwunnx.capsa.test/Replay.state|{}state[0]
+        final fun <get-state>(): #A // com.mairwunnx.capsa.test/Replay.state.<get-state>|<get-state>(){}[0]
+    final val states // com.mairwunnx.capsa.test/Replay.states|{}states[0]
+        final fun <get-states>(): kotlin.collections/List<#A> // com.mairwunnx.capsa.test/Replay.states.<get-states>|<get-states>(){}[0]
+    final val steps // com.mairwunnx.capsa.test/Replay.steps|{}steps[0]
+        final fun <get-steps>(): kotlin.collections/List<com.mairwunnx.capsa.test/Replay.Step<#A>> // com.mairwunnx.capsa.test/Replay.steps.<get-steps>|<get-steps>(){}[0]
+    final val works // com.mairwunnx.capsa.test/Replay.works|{}works[0]
+        final fun <get-works>(): kotlin.collections/List<com.mairwunnx.capsa/Work> // com.mairwunnx.capsa.test/Replay.works.<get-works>|<get-works>(){}[0]
+
+    final class <#A1: kotlin/Any> Step { // com.mairwunnx.capsa.test/Replay.Step|null[0]
+        constructor <init>(com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A1>) // com.mairwunnx.capsa.test/Replay.Step.<init>|<init>(com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<1:0>){}[0]
+
+        final val decision // com.mairwunnx.capsa.test/Replay.Step.decision|{}decision[0]
+            final fun <get-decision>(): com.mairwunnx.capsa/Decision<#A1> // com.mairwunnx.capsa.test/Replay.Step.decision.<get-decision>|<get-decision>(){}[0]
+        final val fact // com.mairwunnx.capsa.test/Replay.Step.fact|{}fact[0]
+            final fun <get-fact>(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa.test/Replay.Step.fact.<get-fact>|<get-fact>(){}[0]
+    }
+}
+
+final class com.mairwunnx.capsa.test/CapsaHarness { // com.mairwunnx.capsa.test/CapsaHarness|null[0]
+    final val effects // com.mairwunnx.capsa.test/CapsaHarness.effects|{}effects[0]
+        final fun <get-effects>(): kotlin.collections/List<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa.test/CapsaHarness.effects.<get-effects>|<get-effects>(){}[0]
+    final val facts // com.mairwunnx.capsa.test/CapsaHarness.facts|{}facts[0]
+        final fun <get-facts>(): kotlin.collections/List<com.mairwunnx.capsa/Fact> // com.mairwunnx.capsa.test/CapsaHarness.facts.<get-facts>|<get-facts>(){}[0]
+    final val violations // com.mairwunnx.capsa.test/CapsaHarness.violations|{}violations[0]
+        final fun <get-violations>(): kotlin.collections/List<com.mairwunnx.capsa/CapsaViolation> // com.mairwunnx.capsa.test/CapsaHarness.violations.<get-violations>|<get-violations>(){}[0]
+    final val workEvents // com.mairwunnx.capsa.test/CapsaHarness.workEvents|{}workEvents[0]
+        final fun <get-workEvents>(): kotlin.collections/List<com.mairwunnx.capsa.test/WorkEvent> // com.mairwunnx.capsa.test/CapsaHarness.workEvents.<get-workEvents>|<get-workEvents>(){}[0]
+
+    final fun <#A1: kotlin/Any> stateOf(com.mairwunnx.capsa/Capability<#A1>): #A1 // com.mairwunnx.capsa.test/CapsaHarness.stateOf|stateOf(com.mairwunnx.capsa.Capability<0:0>){0§<kotlin.Any>}[0]
+    final fun advanceTimeBy(kotlin.time/Duration) // com.mairwunnx.capsa.test/CapsaHarness.advanceTimeBy|advanceTimeBy(kotlin.time.Duration){}[0]
+    final fun advanceUntilIdle() // com.mairwunnx.capsa.test/CapsaHarness.advanceUntilIdle|advanceUntilIdle(){}[0]
+    final fun append(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa.test/CapsaHarness.append|append(com.mairwunnx.capsa.Fact){}[0]
+    final fun assertNoViolations() // com.mairwunnx.capsa.test/CapsaHarness.assertNoViolations|assertNoViolations(){}[0]
+    final fun runCurrent() // com.mairwunnx.capsa.test/CapsaHarness.runCurrent|runCurrent(){}[0]
+    final fun setVisible(kotlin/Boolean) // com.mairwunnx.capsa.test/CapsaHarness.setVisible|setVisible(kotlin.Boolean){}[0]
+    final fun takeEffects(): kotlin.collections/List<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa.test/CapsaHarness.takeEffects|takeEffects(){}[0]
+}
+
+final object com.mairwunnx.capsa.test/TestCapabilityScope : com.mairwunnx.capsa/CapabilityScope // com.mairwunnx.capsa.test/TestCapabilityScope|null[0]
+
+final fun (kotlinx.coroutines.test/TestScope).com.mairwunnx.capsa.test/capsaHarness(kotlin/Array<out com.mairwunnx.capsa/Capability<*>>..., kotlin/Int = ..., kotlin/Boolean = ...): com.mairwunnx.capsa.test/CapsaHarness // com.mairwunnx.capsa.test/capsaHarness|capsaHarness@kotlinx.coroutines.test.TestScope(kotlin.Array<out|com.mairwunnx.capsa.Capability<*>>...;kotlin.Int;kotlin.Boolean){}[0]
+final fun <#A: kotlin/Any> (com.mairwunnx.capsa/Capability<#A>).com.mairwunnx.capsa.test/replay(kotlin/Array<out com.mairwunnx.capsa/Fact>..., #A = ...): com.mairwunnx.capsa.test/Replay<#A> // com.mairwunnx.capsa.test/replay|replay@com.mairwunnx.capsa.Capability<0:0>(kotlin.Array<out|com.mairwunnx.capsa.Fact>...;0:0){0§<kotlin.Any>}[0]
+final inline fun <#A: kotlin/Any?> com.mairwunnx.capsa.test/inCapabilityScope(kotlin/Function1<com.mairwunnx.capsa/CapabilityScope, #A>): #A // com.mairwunnx.capsa.test/inCapabilityScope|inCapabilityScope(kotlin.Function1<com.mairwunnx.capsa.CapabilityScope,0:0>){0§<kotlin.Any?>}[0]
