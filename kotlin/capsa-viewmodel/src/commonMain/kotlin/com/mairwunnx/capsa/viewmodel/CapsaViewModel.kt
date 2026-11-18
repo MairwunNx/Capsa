@@ -40,9 +40,11 @@ import kotlinx.coroutines.plus
  * in [handleEffects]. The runtime starts when the subclass constructor ends, or earlier on the first [send]
  * or the first access to [effects]. On the JVM without a main dispatcher, only [send] or [effects] start it.
  *
+ * The view model is the [CapabilityScope], so it creates its capabilities itself from their ports:
+ *
  * ```
- * class LikeViewModel(likes: LikesCapability) : CapsaViewModel() {
- *     val likes: StateFlow<LikesSlice> = install(likes)
+ * class LikeViewModel(likePorts: LikePorts, private val analytics: Analytics) : CapsaViewModel() {
+ *     val like: StateFlow<LikeSlice> = install(likes(likePorts))
  *
  *     override fun EffectHandlers.Builder.handleEffects() {
  *         on<LikeTracked> { analytics.log(it) }
