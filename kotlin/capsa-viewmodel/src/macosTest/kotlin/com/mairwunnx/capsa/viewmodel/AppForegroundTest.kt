@@ -4,29 +4,28 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import platform.AppKit.NSApplicationDidHideNotification
-import platform.AppKit.NSApplicationDidUnhideNotification
+import platform.AppKit.NSApplicationDidChangeOcclusionStateNotification
 import platform.Foundation.NSNotificationCenter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** Posts the real notifications of the app and checks what [appForeground] reports. */
+/**
+ * A test binary has no running app, so [appForeground] can’t read the occlusion state. It must stay silent then,
+ * and the app counts as being in the foreground. [AppStateFlowTest] checks the plumbing with a fake state.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppForegroundTest {
 
     @Test
-    fun theNotificationsOfTheAppMoveItBetweenForegroundAndBackground() = runTest {
+    fun withoutARunningAppTheLayerStaysSilent() = runTest {
         val seen = mutableListOf<Boolean>()
         val foreground = checkNotNull(appForeground())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { foreground.collect { seen += it } }
         testScheduler.runCurrent()
 
-        val center = NSNotificationCenter.defaultCenter
-        center.postNotificationName(NSApplicationDidHideNotification, null)
-        testScheduler.runCurrent()
-        center.postNotificationName(NSApplicationDidUnhideNotification, null)
+        NSNotificationCenter.defaultCenter.postNotificationName(NSApplicationDidChangeOcclusionStateNotification, null)
         testScheduler.runCurrent()
 
-        assertEquals(listOf(false, true), seen)
+        assertEquals(emptyList(), seen)
     }
 }
