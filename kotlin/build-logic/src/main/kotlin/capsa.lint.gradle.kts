@@ -41,6 +41,12 @@ lightTasks.configureEach {
     if (jvmAndAndroidSourceSets.any { name.startsWith(it) }) include(actualFiles)
 }
 
-tasks.named("check") {
+// The plain `detekt` task would run the light analysis over every file and miss the rules with types.
+// It runs the typed and the light tasks above instead, the same set as `check`.
+tasks.named<Detekt>("detekt") {
+    enabled = false
     dependsOn(typedTasks, lightTasks)
+}
+tasks.named("check") {
+    dependsOn("detekt")
 }
