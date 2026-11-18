@@ -10,4 +10,5 @@ dependencies {
     implementation(libs.binary.compatibility.validator.gradle.plugin)
     implementation(libs.kover.gradle.plugin)
     implementation(libs.ktlint.gradle.plugin)
+    implementation(libs.detekt.gradle.plugin)
 }

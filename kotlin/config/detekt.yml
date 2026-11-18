@@ -1,0 +1,54 @@
+# Builds on detekt's default config. Only the differences live here.
+# Rule of thumb: catch bugs and mess, leave taste alone.
+
+complexity:
+  # The work and stream factories take many parameters on purpose.
+  LongParameterList:
+    active: false
+  TooManyFunctions:
+    active: false
+  ComplexCondition:
+    active: false
+
+coroutines:
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
+  RedundantSuspendModifier:
+    active: true
+
+exceptions:
+  # The runtime catches everything on purpose: a failing capability must not take the screen down.
+  TooGenericExceptionCaught:
+    excludes:
+      - '**/capsa-core/src/**'
+      - '**/capsa-viewmodel/src/**'
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - 'Composable'
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    active: true
+
+style:
+  MaxLineLength:
+    maxLineLength: 186
+  MagicNumber:
+    excludes:
+      - '**/*Test/**'
+      - '**/test/**'
+      - '**/capsa-benchmarks/**'
+  ReturnCount:
+    active: false
+  ForbiddenComment:
+    active: false
+  UnusedPrivateFunction:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+  UnusedVariable:
+    active: true
