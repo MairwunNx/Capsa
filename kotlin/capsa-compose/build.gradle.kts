@@ -2,7 +2,7 @@ plugins {
     id("capsa.library.compose")
 }
 
-description = "Compose Multiplatform helpers for Capsa: effect collection and slots."
+description = "Compose Multiplatform helpers for Capsa: effect collection and slots, with or without a view model."
 
 // Without a target SDK in the library manifest Robolectric runs the oldest SDK it supports. This file points it at compileSdk.
 val robolectricConfig = tasks.register("robolectricConfig") {
@@ -21,13 +21,13 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.capsaCore)
-            api(projects.capsaViewmodel)
+            api(projects.capsaHost)
             api(libs.compose.runtime)
             api(libs.compose.ui)
             api(libs.androidx.lifecycle.runtime.compose)
         }
         commonTest.dependencies {
+            implementation(projects.capsaViewmodel)
             implementation(libs.kotlinx.coroutines.test)
         }
         // The stub android.jar of host tests throws "not mocked" on android.os.Trace and android.util.Log, which a composition calls.
