@@ -18,13 +18,29 @@ detekt {
     parallel = true
 }
 
+// Files with `actual` declarations, by the naming the modules follow: Platform.jvmCommon.kt, Capsa.android.kt, and so on.
+val actualFiles = listOf("**/*.jvmCommon.kt", "**/*.jvm.kt", "**/*.android.kt", "**/*.native.kt")
+
 // The JVM and Android compilations take the common code too and run every rule with types.
-// The other source sets, Apple and native, get the light analysis without types.
-val coveredByCompilations = listOf("detektCommon", "detektJvm", "detektAndroid")
+// detekt 2.0.0-alpha.6 compiles all source sets of a compilation as one module, without the source set structure
+// that the Kotlin Gradle plugin passes. So each expect/actual pair fails with "expect and corresponding actual are declared
+// in the same module" and "has no corresponding expected declaration", and detekt warns about compiler errors.
+// The typed tasks leave the actual files out, which leaves no such pair, and the light tasks below take those files instead.
+val typedTasks = tasks.withType<Detekt>().matching { it.name != "detekt" && !it.name.endsWith("SourceSet") }
+typedTasks.configureEach {
+    exclude(actualFiles)
+}
+
+// The light analysis without types covers what the typed tasks can't see: the actual files of the JVM and Android
+// source sets, and the Apple and native source sets as a whole. The common code is in the typed tasks already.
+val jvmAndAndroidSourceSets = listOf("detektJvm", "detektAndroid")
+val lightTasks = tasks.withType<Detekt>().matching { task ->
+    task.name.endsWith("SourceSet") && !task.name.startsWith("detektCommon")
+}
+lightTasks.configureEach {
+    if (jvmAndAndroidSourceSets.any { name.startsWith(it) }) include(actualFiles)
+}
+
 tasks.named("check") {
-    dependsOn(
-        tasks.withType<Detekt>().matching { task ->
-            task.name != "detekt" && (!task.name.endsWith("SourceSet") || coveredByCompilations.none { task.name.startsWith(it) })
-        },
-    )
+    dependsOn(typedTasks, lightTasks)
 }
