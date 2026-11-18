@@ -19,6 +19,14 @@ kotlin {
         }
     }
 
+    android {
+        // R8 rules that travel inside the AAR to the apps that use Capsa.
+        optimization {
+            consumerKeepRules.publish = true
+            consumerKeepRules.file("consumer-rules.pro")
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.coroutines.core)
