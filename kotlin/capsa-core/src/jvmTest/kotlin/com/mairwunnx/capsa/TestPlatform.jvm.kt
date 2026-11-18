@@ -1,3 +1,3 @@
 package com.mairwunnx.capsa
 
-internal actual fun Throwable.topFrame(): Pair<String, String>? = stackTrace.firstOrNull()?.let { it.className to it.methodName }
+internal actual fun Throwable.frames(): List<Pair<String, String>> = stackTrace.map { it.className to it.methodName }

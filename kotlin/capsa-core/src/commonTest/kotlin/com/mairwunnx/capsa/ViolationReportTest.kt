@@ -77,7 +77,7 @@ class ViolationReportTest {
         val error = assertIs<CapsaViolationException>(rt.errors.single())
         assertNull(error.cause)
         // Only the JVM and Android have a writable stack trace, see prependFrame.
-        error.topFrame()?.let { (className, methodName) ->
+        error.frames().firstOrNull()?.let { (className, methodName) ->
             assertEquals(Orphan.platformClassName(), className)
             assertEquals("unhandledFact", methodName)
         }
@@ -92,7 +92,7 @@ class ViolationReportTest {
         testScheduler.runCurrent()
 
         val error = assertIs<CapsaViolationException>(rt.errors.single())
-        assertTrue(error.topFrame()?.second != "unhandledFact")
+        assertTrue(error.frames().none { (_, methodName) -> methodName == "unhandledFact" })
         rt.scope.cancel()
     }
 

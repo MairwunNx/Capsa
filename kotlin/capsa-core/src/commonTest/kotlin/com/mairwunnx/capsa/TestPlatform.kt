@@ -1,4 +1,4 @@
 package com.mairwunnx.capsa
 
-/** Returns the class and the method of the top stack frame, or `null` where the platform has no readable stack trace. */
-internal expect fun Throwable.topFrame(): Pair<String, String>?
+/** Returns the class and the method of every stack frame, top first, or an empty list where the platform has no readable stack trace. */
+internal expect fun Throwable.frames(): List<Pair<String, String>>
