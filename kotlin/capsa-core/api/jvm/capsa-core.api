@@ -1,0 +1,298 @@
+public abstract interface class com/mairwunnx/capsa/Capability {
+	public abstract fun decide (Ljava/lang/Object;Lcom/mairwunnx/capsa/Fact;)Lcom/mairwunnx/capsa/Decision;
+	public abstract fun getHandles ()Ljava/util/Set;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun initial ()Ljava/lang/Object;
+}
+
+public final class com/mairwunnx/capsa/CapabilityBuilder {
+	public fun <init> ()V
+	public final fun addReaction (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function2;)V
+	public final fun getReactions ()Ljava/util/List;
+}
+
+public final class com/mairwunnx/capsa/CapabilityKt {
+	public static final fun capability (Ljava/lang/String;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lcom/mairwunnx/capsa/Capability;
+}
+
+public abstract interface class com/mairwunnx/capsa/CapabilityScope {
+}
+
+public final class com/mairwunnx/capsa/CapsaBuilder {
+	public fun <init> ()V
+	public final fun build (Lkotlinx/coroutines/CoroutineScope;Lcom/mairwunnx/capsa/CapsaConfig;)Lcom/mairwunnx/capsa/CapsaRuntime;
+	public static synthetic fun build$default (Lcom/mairwunnx/capsa/CapsaBuilder;Lkotlinx/coroutines/CoroutineScope;Lcom/mairwunnx/capsa/CapsaConfig;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaRuntime;
+	public final fun install (Lcom/mairwunnx/capsa/Capability;Ljava/lang/Object;)Lkotlinx/coroutines/flow/StateFlow;
+	public static synthetic fun install$default (Lcom/mairwunnx/capsa/CapsaBuilder;Lcom/mairwunnx/capsa/Capability;Ljava/lang/Object;ILjava/lang/Object;)Lkotlinx/coroutines/flow/StateFlow;
+}
+
+public final class com/mairwunnx/capsa/CapsaConfig {
+	public fun <init> ()V
+	public fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;)V
+	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getMaxSignalDepth ()I
+	public final fun getObserver ()Lcom/mairwunnx/capsa/CapsaObserver;
+	public final fun getOnViolation ()Lkotlin/jvm/functions/Function1;
+	public final fun getWorkContext ()Lkotlin/coroutines/CoroutineContext;
+}
+
+public abstract interface class com/mairwunnx/capsa/CapsaObserver {
+	public fun onDecision (Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Lcom/mairwunnx/capsa/Decision;)V
+	public fun onFact (Lcom/mairwunnx/capsa/Fact;)V
+	public fun onSignalDropped-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Lcom/mairwunnx/capsa/Signal;)V
+	public fun onWorkCancelled-z-6xztE (Ljava/lang/String;Ljava/lang/String;)V
+	public fun onWorkFailed-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun onWorkStarted-z-6xztE (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/mairwunnx/capsa/CapsaObserver$DefaultImpls {
+	public static fun onDecision (Lcom/mairwunnx/capsa/CapsaObserver;Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Lcom/mairwunnx/capsa/Decision;)V
+	public static fun onFact (Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/Fact;)V
+	public static fun onSignalDropped-fuCRvaA (Lcom/mairwunnx/capsa/CapsaObserver;Ljava/lang/String;Ljava/lang/String;Lcom/mairwunnx/capsa/Signal;)V
+	public static fun onWorkCancelled-z-6xztE (Lcom/mairwunnx/capsa/CapsaObserver;Ljava/lang/String;Ljava/lang/String;)V
+	public static fun onWorkFailed-fuCRvaA (Lcom/mairwunnx/capsa/CapsaObserver;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static fun onWorkStarted-z-6xztE (Lcom/mairwunnx/capsa/CapsaObserver;Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/mairwunnx/capsa/CapsaObserver$None : com/mairwunnx/capsa/CapsaObserver {
+	public static final field INSTANCE Lcom/mairwunnx/capsa/CapsaObserver$None;
+	public fun onDecision (Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Lcom/mairwunnx/capsa/Decision;)V
+	public fun onFact (Lcom/mairwunnx/capsa/Fact;)V
+	public fun onSignalDropped-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Lcom/mairwunnx/capsa/Signal;)V
+	public fun onWorkCancelled-z-6xztE (Ljava/lang/String;Ljava/lang/String;)V
+	public fun onWorkFailed-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun onWorkStarted-z-6xztE (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/mairwunnx/capsa/CapsaRuntime {
+	public final fun append (Lcom/mairwunnx/capsa/Fact;)V
+	public final fun getEffects ()Lkotlinx/coroutines/flow/Flow;
+	public final fun onVisibilityChanged (Z)V
+}
+
+public abstract interface class com/mairwunnx/capsa/CapsaViolation {
+}
+
+public final class com/mairwunnx/capsa/CapsaViolation$DecideFailed : com/mairwunnx/capsa/CapsaViolation {
+	public fun <init> (Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/mairwunnx/capsa/Fact;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Ljava/lang/Throwable;)Lcom/mairwunnx/capsa/CapsaViolation$DecideFailed;
+	public static synthetic fun copy$default (Lcom/mairwunnx/capsa/CapsaViolation$DecideFailed;Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaViolation$DecideFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCapability ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/Throwable;
+	public final fun getFact ()Lcom/mairwunnx/capsa/Fact;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/CapsaViolation$SignalCycle : com/mairwunnx/capsa/CapsaViolation {
+	public fun <init> (Lcom/mairwunnx/capsa/Fact;I)V
+	public final fun component1 ()Lcom/mairwunnx/capsa/Fact;
+	public final fun component2 ()I
+	public final fun copy (Lcom/mairwunnx/capsa/Fact;I)Lcom/mairwunnx/capsa/CapsaViolation$SignalCycle;
+	public static synthetic fun copy$default (Lcom/mairwunnx/capsa/CapsaViolation$SignalCycle;Lcom/mairwunnx/capsa/Fact;IILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaViolation$SignalCycle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDepth ()I
+	public final fun getFact ()Lcom/mairwunnx/capsa/Fact;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/CapsaViolation$UnhandledFact : com/mairwunnx/capsa/CapsaViolation {
+	public fun <init> (Lcom/mairwunnx/capsa/Fact;)V
+	public final fun component1 ()Lcom/mairwunnx/capsa/Fact;
+	public final fun copy (Lcom/mairwunnx/capsa/Fact;)Lcom/mairwunnx/capsa/CapsaViolation$UnhandledFact;
+	public static synthetic fun copy$default (Lcom/mairwunnx/capsa/CapsaViolation$UnhandledFact;Lcom/mairwunnx/capsa/Fact;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaViolation$UnhandledFact;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFact ()Lcom/mairwunnx/capsa/Fact;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/CapsaViolation$WorkCrashed : com/mairwunnx/capsa/CapsaViolation {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2-FCJmUPY ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lcom/mairwunnx/capsa/CapsaViolation$WorkCrashed;
+	public static synthetic fun copy-fuCRvaA$default (Lcom/mairwunnx/capsa/CapsaViolation$WorkCrashed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaViolation$WorkCrashed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCapability ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/Throwable;
+	public final fun getKey-FCJmUPY ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/CapsaViolationException : java/lang/IllegalStateException {
+	public static final field FRAME_FILE Ljava/lang/String;
+	public fun <init> (Lcom/mairwunnx/capsa/CapsaViolation;Ljava/util/List;)V
+	public synthetic fun <init> (Lcom/mairwunnx/capsa/CapsaViolation;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getHistory ()Ljava/util/List;
+	public final fun getViolation ()Lcom/mairwunnx/capsa/CapsaViolation;
+}
+
+public final class com/mairwunnx/capsa/Decision {
+	public final fun getCancels ()Ljava/util/List;
+	public final fun getEffects ()Ljava/util/List;
+	public final fun getSignals ()Ljava/util/List;
+	public final fun getState ()Ljava/lang/Object;
+	public final fun getWorks ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/DecisionKt {
+	public static final fun commit (Ljava/lang/Object;Lcom/mairwunnx/capsa/Effect;)Lcom/mairwunnx/capsa/Decision;
+	public static final fun commit (Ljava/lang/Object;Lcom/mairwunnx/capsa/Signal;)Lcom/mairwunnx/capsa/Decision;
+	public static final fun commit (Ljava/lang/Object;Lcom/mairwunnx/capsa/Work;)Lcom/mairwunnx/capsa/Decision;
+	public static final fun commit (Ljava/lang/Object;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lcom/mairwunnx/capsa/Decision;
+	public static synthetic fun commit$default (Ljava/lang/Object;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Decision;
+}
+
+public abstract interface class com/mairwunnx/capsa/Effect {
+}
+
+public final class com/mairwunnx/capsa/EffectHandlers {
+	public final fun handle (Lcom/mairwunnx/capsa/Effect;)V
+}
+
+public final class com/mairwunnx/capsa/EffectHandlers$Builder {
+	public fun <init> ()V
+	public final fun getHandlers ()Ljava/util/List;
+}
+
+public final class com/mairwunnx/capsa/EffectHandlers$Handler {
+	public fun <init> (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)V
+	public final fun getHandle ()Lkotlin/jvm/functions/Function1;
+	public final fun getType ()Lkotlin/reflect/KClass;
+	public final fun handleUnchecked (Lcom/mairwunnx/capsa/Effect;)V
+}
+
+public final class com/mairwunnx/capsa/EffectHandlersKt {
+	public static final fun effectHandlers (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lcom/mairwunnx/capsa/EffectHandlers;
+	public static synthetic fun effectHandlers$default (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/mairwunnx/capsa/EffectHandlers;
+}
+
+public abstract interface class com/mairwunnx/capsa/Fact {
+}
+
+public abstract interface class com/mairwunnx/capsa/Intent : com/mairwunnx/capsa/Fact {
+}
+
+public abstract interface class com/mairwunnx/capsa/Load {
+}
+
+public final class com/mairwunnx/capsa/Load$Failed : com/mairwunnx/capsa/Load {
+	public static final field INSTANCE Lcom/mairwunnx/capsa/Load$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/Load$Loaded : com/mairwunnx/capsa/Load {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lcom/mairwunnx/capsa/Load$Loaded;
+	public static synthetic fun copy$default (Lcom/mairwunnx/capsa/Load$Loaded;Ljava/lang/Object;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Load$Loaded;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/Load$Loading : com/mairwunnx/capsa/Load {
+	public static final field INSTANCE Lcom/mairwunnx/capsa/Load$Loading;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/LoadKt {
+	public static final fun valueOrNull (Lcom/mairwunnx/capsa/Load;)Ljava/lang/Object;
+}
+
+public final class com/mairwunnx/capsa/Platform_jvmCommonKt {
+	public static final fun overlaps (Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;)Z
+}
+
+public final class com/mairwunnx/capsa/Reaction {
+	public fun <init> (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function2;)V
+	public final fun getReact ()Lkotlin/jvm/functions/Function2;
+	public final fun getType ()Lkotlin/reflect/KClass;
+}
+
+public final class com/mairwunnx/capsa/Retry {
+	public synthetic fun <init> (IJDJLkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (IJDJLkotlin/jvm/functions/Function1;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDelay-UwyO8pc ()J
+	public final fun getFactor ()D
+	public final fun getMaxDelay-UwyO8pc ()J
+	public final fun getRetryIf ()Lkotlin/jvm/functions/Function1;
+	public final fun getTimes ()I
+}
+
+public abstract interface class com/mairwunnx/capsa/Signal : com/mairwunnx/capsa/Fact {
+}
+
+public final class com/mairwunnx/capsa/SlicesKt {
+	public static final fun combineState (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun combineState (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function3;)Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun combineState (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function4;)Lkotlinx/coroutines/flow/StateFlow;
+	public static synthetic fun combineState$default (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/flow/StateFlow;
+	public static synthetic fun combineState$default (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lkotlinx/coroutines/flow/StateFlow;
+	public static synthetic fun combineState$default (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function4;ILjava/lang/Object;)Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun mapState (Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/StateFlow;
+	public static synthetic fun mapState$default (Lkotlinx/coroutines/flow/StateFlow;Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/SharingStarted;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/coroutines/flow/StateFlow;
+}
+
+public final class com/mairwunnx/capsa/Started : com/mairwunnx/capsa/Signal {
+	public static final field INSTANCE Lcom/mairwunnx/capsa/Started;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/Work {
+	public synthetic fun <init> (Ljava/lang/String;Lcom/mairwunnx/capsa/WorkPolicy;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;ZJLcom/mairwunnx/capsa/Retry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDebounce-UwyO8pc ()J
+	public final fun getKey-FCJmUPY ()Ljava/lang/String;
+	public final fun getPolicy ()Lcom/mairwunnx/capsa/WorkPolicy;
+	public final fun getRetry ()Lcom/mairwunnx/capsa/Retry;
+	public final fun getWhileVisible ()Z
+	public final fun signals ()Lkotlinx/coroutines/flow/Flow;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/WorkKey {
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lcom/mairwunnx/capsa/WorkKey;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/WorkKt {
+	public static final fun stream-MEMQ7Oc (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;ZLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function0;)Lcom/mairwunnx/capsa/Work;
+	public static synthetic fun stream-MEMQ7Oc$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;ZLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Work;
+	public static final fun work-jHoQyg0 (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;JLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function1;)Lcom/mairwunnx/capsa/Work;
+	public static synthetic fun work-jHoQyg0$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;JLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Work;
+}
+
+public final class com/mairwunnx/capsa/WorkPolicy : java/lang/Enum {
+	public static final field KeepExisting Lcom/mairwunnx/capsa/WorkPolicy;
+	public static final field Latest Lcom/mairwunnx/capsa/WorkPolicy;
+	public static final field Parallel Lcom/mairwunnx/capsa/WorkPolicy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/mairwunnx/capsa/WorkPolicy;
+	public static fun values ()[Lcom/mairwunnx/capsa/WorkPolicy;
+}
+

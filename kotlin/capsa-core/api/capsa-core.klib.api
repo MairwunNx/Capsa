@@ -6,3 +6,299 @@
 // - Show declarations: true
 
 // Library unique name: <com.mairwunnx.capsa:capsa-core>
+final enum class com.mairwunnx.capsa/WorkPolicy : kotlin/Enum<com.mairwunnx.capsa/WorkPolicy> { // com.mairwunnx.capsa/WorkPolicy|null[0]
+    enum entry KeepExisting // com.mairwunnx.capsa/WorkPolicy.KeepExisting|null[0]
+    enum entry Latest // com.mairwunnx.capsa/WorkPolicy.Latest|null[0]
+    enum entry Parallel // com.mairwunnx.capsa/WorkPolicy.Parallel|null[0]
+
+    final val entries // com.mairwunnx.capsa/WorkPolicy.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.mairwunnx.capsa/WorkPolicy> // com.mairwunnx.capsa/WorkPolicy.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.mairwunnx.capsa/WorkPolicy // com.mairwunnx.capsa/WorkPolicy.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.mairwunnx.capsa/WorkPolicy> // com.mairwunnx.capsa/WorkPolicy.values|values#static(){}[0]
+}
+
+abstract interface <#A: kotlin/Any> com.mairwunnx.capsa/Capability { // com.mairwunnx.capsa/Capability|null[0]
+    abstract val handles // com.mairwunnx.capsa/Capability.handles|{}handles[0]
+        abstract fun <get-handles>(): kotlin.collections/Set<kotlin.reflect/KClass<out com.mairwunnx.capsa/Fact>> // com.mairwunnx.capsa/Capability.handles.<get-handles>|<get-handles>(){}[0]
+    abstract val name // com.mairwunnx.capsa/Capability.name|{}name[0]
+        abstract fun <get-name>(): kotlin/String // com.mairwunnx.capsa/Capability.name.<get-name>|<get-name>(){}[0]
+
+    abstract fun decide(#A, com.mairwunnx.capsa/Fact): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/Capability.decide|decide(1:0;com.mairwunnx.capsa.Fact){}[0]
+    abstract fun initial(): #A // com.mairwunnx.capsa/Capability.initial|initial(){}[0]
+}
+
+abstract interface com.mairwunnx.capsa/CapabilityScope // com.mairwunnx.capsa/CapabilityScope|null[0]
+
+abstract interface com.mairwunnx.capsa/CapsaObserver { // com.mairwunnx.capsa/CapsaObserver|null[0]
+    open fun onDecision(kotlin/String, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<*>) // com.mairwunnx.capsa/CapsaObserver.onDecision|onDecision(kotlin.String;com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<*>){}[0]
+    open fun onFact(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa/CapsaObserver.onFact|onFact(com.mairwunnx.capsa.Fact){}[0]
+    open fun onSignalDropped(kotlin/String, com.mairwunnx.capsa/WorkKey, com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa/CapsaObserver.onSignalDropped|onSignalDropped(kotlin.String;com.mairwunnx.capsa.WorkKey;com.mairwunnx.capsa.Signal){}[0]
+    open fun onWorkCancelled(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa/CapsaObserver.onWorkCancelled|onWorkCancelled(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+    open fun onWorkFailed(kotlin/String, com.mairwunnx.capsa/WorkKey, kotlin/Throwable) // com.mairwunnx.capsa/CapsaObserver.onWorkFailed|onWorkFailed(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
+    open fun onWorkStarted(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa/CapsaObserver.onWorkStarted|onWorkStarted(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+
+    final object None : com.mairwunnx.capsa/CapsaObserver // com.mairwunnx.capsa/CapsaObserver.None|null[0]
+}
+
+abstract interface com.mairwunnx.capsa/Effect // com.mairwunnx.capsa/Effect|null[0]
+
+abstract interface com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/Fact|null[0]
+
+abstract interface com.mairwunnx.capsa/Intent : com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/Intent|null[0]
+
+abstract interface com.mairwunnx.capsa/Signal : com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/Signal|null[0]
+
+sealed interface <#A: out kotlin/Any?> com.mairwunnx.capsa/Load { // com.mairwunnx.capsa/Load|null[0]
+    final class <#A1: out kotlin/Any?> Loaded : com.mairwunnx.capsa/Load<#A1> { // com.mairwunnx.capsa/Load.Loaded|null[0]
+        constructor <init>(#A1) // com.mairwunnx.capsa/Load.Loaded.<init>|<init>(1:0){}[0]
+
+        final val value // com.mairwunnx.capsa/Load.Loaded.value|{}value[0]
+            final fun <get-value>(): #A1 // com.mairwunnx.capsa/Load.Loaded.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): #A1 // com.mairwunnx.capsa/Load.Loaded.component1|component1(){}[0]
+        final fun copy(#A1 = ...): com.mairwunnx.capsa/Load.Loaded<#A1> // com.mairwunnx.capsa/Load.Loaded.copy|copy(1:0){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/Load.Loaded.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/Load.Loaded.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/Load.Loaded.toString|toString(){}[0]
+    }
+
+    final object Failed : com.mairwunnx.capsa/Load<kotlin/Nothing> { // com.mairwunnx.capsa/Load.Failed|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/Load.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/Load.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/Load.Failed.toString|toString(){}[0]
+    }
+
+    final object Loading : com.mairwunnx.capsa/Load<kotlin/Nothing> { // com.mairwunnx.capsa/Load.Loading|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/Load.Loading.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/Load.Loading.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/Load.Loading.toString|toString(){}[0]
+    }
+}
+
+sealed interface com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/CapsaViolation|null[0]
+    final class DecideFailed : com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/CapsaViolation.DecideFailed|null[0]
+        constructor <init>(kotlin/String, com.mairwunnx.capsa/Fact, kotlin/Throwable) // com.mairwunnx.capsa/CapsaViolation.DecideFailed.<init>|<init>(kotlin.String;com.mairwunnx.capsa.Fact;kotlin.Throwable){}[0]
+
+        final val capability // com.mairwunnx.capsa/CapsaViolation.DecideFailed.capability|{}capability[0]
+            final fun <get-capability>(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.DecideFailed.capability.<get-capability>|<get-capability>(){}[0]
+        final val error // com.mairwunnx.capsa/CapsaViolation.DecideFailed.error|{}error[0]
+            final fun <get-error>(): kotlin/Throwable // com.mairwunnx.capsa/CapsaViolation.DecideFailed.error.<get-error>|<get-error>(){}[0]
+        final val fact // com.mairwunnx.capsa/CapsaViolation.DecideFailed.fact|{}fact[0]
+            final fun <get-fact>(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/CapsaViolation.DecideFailed.fact.<get-fact>|<get-fact>(){}[0]
+
+        final fun component1(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.DecideFailed.component1|component1(){}[0]
+        final fun component2(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/CapsaViolation.DecideFailed.component2|component2(){}[0]
+        final fun component3(): kotlin/Throwable // com.mairwunnx.capsa/CapsaViolation.DecideFailed.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., com.mairwunnx.capsa/Fact = ..., kotlin/Throwable = ...): com.mairwunnx.capsa/CapsaViolation.DecideFailed // com.mairwunnx.capsa/CapsaViolation.DecideFailed.copy|copy(kotlin.String;com.mairwunnx.capsa.Fact;kotlin.Throwable){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/CapsaViolation.DecideFailed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/CapsaViolation.DecideFailed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.DecideFailed.toString|toString(){}[0]
+    }
+
+    final class SignalCycle : com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/CapsaViolation.SignalCycle|null[0]
+        constructor <init>(com.mairwunnx.capsa/Fact, kotlin/Int) // com.mairwunnx.capsa/CapsaViolation.SignalCycle.<init>|<init>(com.mairwunnx.capsa.Fact;kotlin.Int){}[0]
+
+        final val depth // com.mairwunnx.capsa/CapsaViolation.SignalCycle.depth|{}depth[0]
+            final fun <get-depth>(): kotlin/Int // com.mairwunnx.capsa/CapsaViolation.SignalCycle.depth.<get-depth>|<get-depth>(){}[0]
+        final val fact // com.mairwunnx.capsa/CapsaViolation.SignalCycle.fact|{}fact[0]
+            final fun <get-fact>(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/CapsaViolation.SignalCycle.fact.<get-fact>|<get-fact>(){}[0]
+
+        final fun component1(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/CapsaViolation.SignalCycle.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.mairwunnx.capsa/CapsaViolation.SignalCycle.component2|component2(){}[0]
+        final fun copy(com.mairwunnx.capsa/Fact = ..., kotlin/Int = ...): com.mairwunnx.capsa/CapsaViolation.SignalCycle // com.mairwunnx.capsa/CapsaViolation.SignalCycle.copy|copy(com.mairwunnx.capsa.Fact;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/CapsaViolation.SignalCycle.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/CapsaViolation.SignalCycle.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.SignalCycle.toString|toString(){}[0]
+    }
+
+    final class UnhandledFact : com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/CapsaViolation.UnhandledFact|null[0]
+        constructor <init>(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.<init>|<init>(com.mairwunnx.capsa.Fact){}[0]
+
+        final val fact // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.fact|{}fact[0]
+            final fun <get-fact>(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.fact.<get-fact>|<get-fact>(){}[0]
+
+        final fun component1(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.component1|component1(){}[0]
+        final fun copy(com.mairwunnx.capsa/Fact = ...): com.mairwunnx.capsa/CapsaViolation.UnhandledFact // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.copy|copy(com.mairwunnx.capsa.Fact){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.UnhandledFact.toString|toString(){}[0]
+    }
+
+    final class WorkCrashed : com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/CapsaViolation.WorkCrashed|null[0]
+        constructor <init>(kotlin/String, com.mairwunnx.capsa/WorkKey, kotlin/Throwable) // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.<init>|<init>(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
+
+        final val capability // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.capability|{}capability[0]
+            final fun <get-capability>(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.capability.<get-capability>|<get-capability>(){}[0]
+        final val error // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.error|{}error[0]
+            final fun <get-error>(): kotlin/Throwable // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.error.<get-error>|<get-error>(){}[0]
+        final val key // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.key|{}key[0]
+            final fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.key.<get-key>|<get-key>(){}[0]
+
+        final fun component1(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.component1|component1(){}[0]
+        final fun component2(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.component2|component2(){}[0]
+        final fun component3(): kotlin/Throwable // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., com.mairwunnx.capsa/WorkKey = ..., kotlin/Throwable = ...): com.mairwunnx.capsa/CapsaViolation.WorkCrashed // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.copy|copy(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/CapsaViolation.WorkCrashed.toString|toString(){}[0]
+    }
+}
+
+final class <#A: kotlin/Any> com.mairwunnx.capsa/CapabilityBuilder { // com.mairwunnx.capsa/CapabilityBuilder|null[0]
+    constructor <init>() // com.mairwunnx.capsa/CapabilityBuilder.<init>|<init>(){}[0]
+
+    final val reactions // com.mairwunnx.capsa/CapabilityBuilder.reactions|{}reactions[0]
+        final fun <get-reactions>(): kotlin.collections/MutableList<com.mairwunnx.capsa/Reaction<#A>> // com.mairwunnx.capsa/CapabilityBuilder.reactions.<get-reactions>|<get-reactions>(){}[0]
+
+    final fun <#A1: com.mairwunnx.capsa/Fact> addReaction(kotlin.reflect/KClass<#A1>, kotlin/Function2<#A, #A1, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/CapabilityBuilder.addReaction|addReaction(kotlin.reflect.KClass<0:0>;kotlin.Function2<1:0,0:0,com.mairwunnx.capsa.Decision<1:0>>){0§<com.mairwunnx.capsa.Fact>}[0]
+    final inline fun <#A1: reified com.mairwunnx.capsa/Fact> on(noinline kotlin/Function2<#A, #A1, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/CapabilityBuilder.on|on(kotlin.Function2<1:0,0:0,com.mairwunnx.capsa.Decision<1:0>>){0§<com.mairwunnx.capsa.Fact>}[0]
+}
+
+final class <#A: kotlin/Any> com.mairwunnx.capsa/Reaction { // com.mairwunnx.capsa/Reaction|null[0]
+    constructor <init>(kotlin.reflect/KClass<out com.mairwunnx.capsa/Fact>, kotlin/Function2<#A, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/Reaction.<init>|<init>(kotlin.reflect.KClass<out|com.mairwunnx.capsa.Fact>;kotlin.Function2<1:0,com.mairwunnx.capsa.Fact,com.mairwunnx.capsa.Decision<1:0>>){}[0]
+
+    final val react // com.mairwunnx.capsa/Reaction.react|{}react[0]
+        final fun <get-react>(): kotlin/Function2<#A, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A>> // com.mairwunnx.capsa/Reaction.react.<get-react>|<get-react>(){}[0]
+    final val type // com.mairwunnx.capsa/Reaction.type|{}type[0]
+        final fun <get-type>(): kotlin.reflect/KClass<out com.mairwunnx.capsa/Fact> // com.mairwunnx.capsa/Reaction.type.<get-type>|<get-type>(){}[0]
+}
+
+final class <#A: out kotlin/Any> com.mairwunnx.capsa/Decision { // com.mairwunnx.capsa/Decision|null[0]
+    final val cancels // com.mairwunnx.capsa/Decision.cancels|{}cancels[0]
+        final fun <get-cancels>(): kotlin.collections/List<com.mairwunnx.capsa/WorkKey> // com.mairwunnx.capsa/Decision.cancels.<get-cancels>|<get-cancels>(){}[0]
+    final val effects // com.mairwunnx.capsa/Decision.effects|{}effects[0]
+        final fun <get-effects>(): kotlin.collections/List<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa/Decision.effects.<get-effects>|<get-effects>(){}[0]
+    final val signals // com.mairwunnx.capsa/Decision.signals|{}signals[0]
+        final fun <get-signals>(): kotlin.collections/List<com.mairwunnx.capsa/Signal> // com.mairwunnx.capsa/Decision.signals.<get-signals>|<get-signals>(){}[0]
+    final val state // com.mairwunnx.capsa/Decision.state|{}state[0]
+        final fun <get-state>(): #A // com.mairwunnx.capsa/Decision.state.<get-state>|<get-state>(){}[0]
+    final val works // com.mairwunnx.capsa/Decision.works|{}works[0]
+        final fun <get-works>(): kotlin.collections/List<com.mairwunnx.capsa/Work> // com.mairwunnx.capsa/Decision.works.<get-works>|<get-works>(){}[0]
+
+    final fun toString(): kotlin/String // com.mairwunnx.capsa/Decision.toString|toString(){}[0]
+}
+
+final class com.mairwunnx.capsa/CapsaBuilder { // com.mairwunnx.capsa/CapsaBuilder|null[0]
+    constructor <init>() // com.mairwunnx.capsa/CapsaBuilder.<init>|<init>(){}[0]
+
+    final fun <#A1: kotlin/Any> install(com.mairwunnx.capsa/Capability<#A1>, #A1? = ...): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa/CapsaBuilder.install|install(com.mairwunnx.capsa.Capability<0:0>;0:0?){0§<kotlin.Any>}[0]
+    final fun build(kotlinx.coroutines/CoroutineScope, com.mairwunnx.capsa/CapsaConfig = ...): com.mairwunnx.capsa/CapsaRuntime // com.mairwunnx.capsa/CapsaBuilder.build|build(kotlinx.coroutines.CoroutineScope;com.mairwunnx.capsa.CapsaConfig){}[0]
+}
+
+final class com.mairwunnx.capsa/CapsaConfig { // com.mairwunnx.capsa/CapsaConfig|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Function1<com.mairwunnx.capsa/CapsaViolationException, kotlin/Unit> = ..., kotlin.coroutines/CoroutineContext = ..., com.mairwunnx.capsa/CapsaObserver = ...) // com.mairwunnx.capsa/CapsaConfig.<init>|<init>(kotlin.Int;kotlin.Function1<com.mairwunnx.capsa.CapsaViolationException,kotlin.Unit>;kotlin.coroutines.CoroutineContext;com.mairwunnx.capsa.CapsaObserver){}[0]
+
+    final val maxSignalDepth // com.mairwunnx.capsa/CapsaConfig.maxSignalDepth|{}maxSignalDepth[0]
+        final fun <get-maxSignalDepth>(): kotlin/Int // com.mairwunnx.capsa/CapsaConfig.maxSignalDepth.<get-maxSignalDepth>|<get-maxSignalDepth>(){}[0]
+    final val observer // com.mairwunnx.capsa/CapsaConfig.observer|{}observer[0]
+        final fun <get-observer>(): com.mairwunnx.capsa/CapsaObserver // com.mairwunnx.capsa/CapsaConfig.observer.<get-observer>|<get-observer>(){}[0]
+    final val onViolation // com.mairwunnx.capsa/CapsaConfig.onViolation|{}onViolation[0]
+        final fun <get-onViolation>(): kotlin/Function1<com.mairwunnx.capsa/CapsaViolationException, kotlin/Unit> // com.mairwunnx.capsa/CapsaConfig.onViolation.<get-onViolation>|<get-onViolation>(){}[0]
+    final val workContext // com.mairwunnx.capsa/CapsaConfig.workContext|{}workContext[0]
+        final fun <get-workContext>(): kotlin.coroutines/CoroutineContext // com.mairwunnx.capsa/CapsaConfig.workContext.<get-workContext>|<get-workContext>(){}[0]
+}
+
+final class com.mairwunnx.capsa/CapsaRuntime { // com.mairwunnx.capsa/CapsaRuntime|null[0]
+    final val effects // com.mairwunnx.capsa/CapsaRuntime.effects|{}effects[0]
+        final fun <get-effects>(): kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa/CapsaRuntime.effects.<get-effects>|<get-effects>(){}[0]
+
+    final fun append(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa/CapsaRuntime.append|append(com.mairwunnx.capsa.Fact){}[0]
+    final fun onVisibilityChanged(kotlin/Boolean) // com.mairwunnx.capsa/CapsaRuntime.onVisibilityChanged|onVisibilityChanged(kotlin.Boolean){}[0]
+}
+
+final class com.mairwunnx.capsa/CapsaViolationException : kotlin/IllegalStateException { // com.mairwunnx.capsa/CapsaViolationException|null[0]
+    constructor <init>(com.mairwunnx.capsa/CapsaViolation, kotlin.collections/List<kotlin/String> = ...) // com.mairwunnx.capsa/CapsaViolationException.<init>|<init>(com.mairwunnx.capsa.CapsaViolation;kotlin.collections.List<kotlin.String>){}[0]
+
+    final val history // com.mairwunnx.capsa/CapsaViolationException.history|{}history[0]
+        final fun <get-history>(): kotlin.collections/List<kotlin/String> // com.mairwunnx.capsa/CapsaViolationException.history.<get-history>|<get-history>(){}[0]
+    final val violation // com.mairwunnx.capsa/CapsaViolationException.violation|{}violation[0]
+        final fun <get-violation>(): com.mairwunnx.capsa/CapsaViolation // com.mairwunnx.capsa/CapsaViolationException.violation.<get-violation>|<get-violation>(){}[0]
+}
+
+final class com.mairwunnx.capsa/EffectHandlers { // com.mairwunnx.capsa/EffectHandlers|null[0]
+    final fun handle(com.mairwunnx.capsa/Effect) // com.mairwunnx.capsa/EffectHandlers.handle|handle(com.mairwunnx.capsa.Effect){}[0]
+
+    final class <#A1: com.mairwunnx.capsa/Effect> Handler { // com.mairwunnx.capsa/EffectHandlers.Handler|null[0]
+        constructor <init>(kotlin.reflect/KClass<#A1>, kotlin/Function1<#A1, kotlin/Unit>) // com.mairwunnx.capsa/EffectHandlers.Handler.<init>|<init>(kotlin.reflect.KClass<1:0>;kotlin.Function1<1:0,kotlin.Unit>){}[0]
+
+        final val handle // com.mairwunnx.capsa/EffectHandlers.Handler.handle|{}handle[0]
+            final fun <get-handle>(): kotlin/Function1<#A1, kotlin/Unit> // com.mairwunnx.capsa/EffectHandlers.Handler.handle.<get-handle>|<get-handle>(){}[0]
+        final val type // com.mairwunnx.capsa/EffectHandlers.Handler.type|{}type[0]
+            final fun <get-type>(): kotlin.reflect/KClass<#A1> // com.mairwunnx.capsa/EffectHandlers.Handler.type.<get-type>|<get-type>(){}[0]
+
+        final fun handleUnchecked(com.mairwunnx.capsa/Effect) // com.mairwunnx.capsa/EffectHandlers.Handler.handleUnchecked|handleUnchecked(com.mairwunnx.capsa.Effect){}[0]
+    }
+
+    final class Builder { // com.mairwunnx.capsa/EffectHandlers.Builder|null[0]
+        constructor <init>() // com.mairwunnx.capsa/EffectHandlers.Builder.<init>|<init>(){}[0]
+
+        final val handlers // com.mairwunnx.capsa/EffectHandlers.Builder.handlers|{}handlers[0]
+            final fun <get-handlers>(): kotlin.collections/MutableList<com.mairwunnx.capsa/EffectHandlers.Handler<*>> // com.mairwunnx.capsa/EffectHandlers.Builder.handlers.<get-handlers>|<get-handlers>(){}[0]
+
+        final inline fun <#A2: reified com.mairwunnx.capsa/Effect> on(noinline kotlin/Function1<#A2, kotlin/Unit>) // com.mairwunnx.capsa/EffectHandlers.Builder.on|on(kotlin.Function1<0:0,kotlin.Unit>){0§<com.mairwunnx.capsa.Effect>}[0]
+    }
+}
+
+final class com.mairwunnx.capsa/Retry { // com.mairwunnx.capsa/Retry|null[0]
+    constructor <init>(kotlin/Int, kotlin.time/Duration, kotlin/Double = ..., kotlin.time/Duration = ..., kotlin/Function1<kotlin/Throwable, kotlin/Boolean> = ...) // com.mairwunnx.capsa/Retry.<init>|<init>(kotlin.Int;kotlin.time.Duration;kotlin.Double;kotlin.time.Duration;kotlin.Function1<kotlin.Throwable,kotlin.Boolean>){}[0]
+
+    final val delay // com.mairwunnx.capsa/Retry.delay|{}delay[0]
+        final fun <get-delay>(): kotlin.time/Duration // com.mairwunnx.capsa/Retry.delay.<get-delay>|<get-delay>(){}[0]
+    final val factor // com.mairwunnx.capsa/Retry.factor|{}factor[0]
+        final fun <get-factor>(): kotlin/Double // com.mairwunnx.capsa/Retry.factor.<get-factor>|<get-factor>(){}[0]
+    final val maxDelay // com.mairwunnx.capsa/Retry.maxDelay|{}maxDelay[0]
+        final fun <get-maxDelay>(): kotlin.time/Duration // com.mairwunnx.capsa/Retry.maxDelay.<get-maxDelay>|<get-maxDelay>(){}[0]
+    final val retryIf // com.mairwunnx.capsa/Retry.retryIf|{}retryIf[0]
+        final fun <get-retryIf>(): kotlin/Function1<kotlin/Throwable, kotlin/Boolean> // com.mairwunnx.capsa/Retry.retryIf.<get-retryIf>|<get-retryIf>(){}[0]
+    final val times // com.mairwunnx.capsa/Retry.times|{}times[0]
+        final fun <get-times>(): kotlin/Int // com.mairwunnx.capsa/Retry.times.<get-times>|<get-times>(){}[0]
+}
+
+final class com.mairwunnx.capsa/Work { // com.mairwunnx.capsa/Work|null[0]
+    final val debounce // com.mairwunnx.capsa/Work.debounce|{}debounce[0]
+        final fun <get-debounce>(): kotlin.time/Duration // com.mairwunnx.capsa/Work.debounce.<get-debounce>|<get-debounce>(){}[0]
+    final val key // com.mairwunnx.capsa/Work.key|{}key[0]
+        final fun <get-key>(): com.mairwunnx.capsa/WorkKey // com.mairwunnx.capsa/Work.key.<get-key>|<get-key>(){}[0]
+    final val policy // com.mairwunnx.capsa/Work.policy|{}policy[0]
+        final fun <get-policy>(): com.mairwunnx.capsa/WorkPolicy // com.mairwunnx.capsa/Work.policy.<get-policy>|<get-policy>(){}[0]
+    final val retry // com.mairwunnx.capsa/Work.retry|{}retry[0]
+        final fun <get-retry>(): com.mairwunnx.capsa/Retry? // com.mairwunnx.capsa/Work.retry.<get-retry>|<get-retry>(){}[0]
+    final val whileVisible // com.mairwunnx.capsa/Work.whileVisible|{}whileVisible[0]
+        final fun <get-whileVisible>(): kotlin/Boolean // com.mairwunnx.capsa/Work.whileVisible.<get-whileVisible>|<get-whileVisible>(){}[0]
+
+    final fun signals(): kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Signal> // com.mairwunnx.capsa/Work.signals|signals(){}[0]
+    final fun toString(): kotlin/String // com.mairwunnx.capsa/Work.toString|toString(){}[0]
+}
+
+final value class com.mairwunnx.capsa/WorkKey { // com.mairwunnx.capsa/WorkKey|null[0]
+    constructor <init>(kotlin/String) // com.mairwunnx.capsa/WorkKey.<init>|<init>(kotlin.String){}[0]
+
+    final val name // com.mairwunnx.capsa/WorkKey.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.mairwunnx.capsa/WorkKey.name.<get-name>|<get-name>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/WorkKey.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/WorkKey.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mairwunnx.capsa/WorkKey.toString|toString(){}[0]
+}
+
+final object com.mairwunnx.capsa/Started : com.mairwunnx.capsa/Signal { // com.mairwunnx.capsa/Started|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/Started.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/Started.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mairwunnx.capsa/Started.toString|toString(){}[0]
+}
+
+final fun (kotlin.reflect/KClass<*>).com.mairwunnx.capsa/overlaps(kotlin.reflect/KClass<*>): kotlin/Boolean // com.mairwunnx.capsa/overlaps|overlaps@kotlin.reflect.KClass<*>(kotlin.reflect.KClass<*>){}[0]
+final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(com.mairwunnx.capsa/Effect): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(com.mairwunnx.capsa.Effect){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(com.mairwunnx.capsa/Signal): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(com.mairwunnx.capsa.Signal){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(com.mairwunnx.capsa/Work): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(com.mairwunnx.capsa.Work){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(kotlin.collections/List<com.mairwunnx.capsa/Effect> = ..., kotlin.collections/List<com.mairwunnx.capsa/Work> = ..., kotlin.collections/List<com.mairwunnx.capsa/WorkKey> = ..., kotlin.collections/List<com.mairwunnx.capsa/Signal> = ...): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(kotlin.collections.List<com.mairwunnx.capsa.Effect>;kotlin.collections.List<com.mairwunnx.capsa.Work>;kotlin.collections.List<com.mairwunnx.capsa.WorkKey>;kotlin.collections.List<com.mairwunnx.capsa.Signal>){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any> com.mairwunnx.capsa/capability(kotlin/String, #A, kotlin/Function1<com.mairwunnx.capsa/CapabilityBuilder<#A>, kotlin/Unit>): com.mairwunnx.capsa/Capability<#A> // com.mairwunnx.capsa/capability|capability(kotlin.String;0:0;kotlin.Function1<com.mairwunnx.capsa.CapabilityBuilder<0:0>,kotlin.Unit>){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?, #D: kotlin/Any?, #E: kotlin/Any?> com.mairwunnx.capsa/combineState(kotlinx.coroutines/CoroutineScope, kotlinx.coroutines.flow/StateFlow<#A>, kotlinx.coroutines.flow/StateFlow<#B>, kotlinx.coroutines.flow/StateFlow<#C>, kotlinx.coroutines.flow/StateFlow<#D>, kotlinx.coroutines.flow/SharingStarted = ..., kotlin/Function4<#A, #B, #C, #D, #E>): kotlinx.coroutines.flow/StateFlow<#E> // com.mairwunnx.capsa/combineState|combineState(kotlinx.coroutines.CoroutineScope;kotlinx.coroutines.flow.StateFlow<0:0>;kotlinx.coroutines.flow.StateFlow<0:1>;kotlinx.coroutines.flow.StateFlow<0:2>;kotlinx.coroutines.flow.StateFlow<0:3>;kotlinx.coroutines.flow.SharingStarted;kotlin.Function4<0:0,0:1,0:2,0:3,0:4>){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>;3§<kotlin.Any?>;4§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?, #D: kotlin/Any?> com.mairwunnx.capsa/combineState(kotlinx.coroutines/CoroutineScope, kotlinx.coroutines.flow/StateFlow<#A>, kotlinx.coroutines.flow/StateFlow<#B>, kotlinx.coroutines.flow/StateFlow<#C>, kotlinx.coroutines.flow/SharingStarted = ..., kotlin/Function3<#A, #B, #C, #D>): kotlinx.coroutines.flow/StateFlow<#D> // com.mairwunnx.capsa/combineState|combineState(kotlinx.coroutines.CoroutineScope;kotlinx.coroutines.flow.StateFlow<0:0>;kotlinx.coroutines.flow.StateFlow<0:1>;kotlinx.coroutines.flow.StateFlow<0:2>;kotlinx.coroutines.flow.SharingStarted;kotlin.Function3<0:0,0:1,0:2,0:3>){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>;3§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?> com.mairwunnx.capsa/combineState(kotlinx.coroutines/CoroutineScope, kotlinx.coroutines.flow/StateFlow<#A>, kotlinx.coroutines.flow/StateFlow<#B>, kotlinx.coroutines.flow/SharingStarted = ..., kotlin/Function2<#A, #B, #C>): kotlinx.coroutines.flow/StateFlow<#C> // com.mairwunnx.capsa/combineState|combineState(kotlinx.coroutines.CoroutineScope;kotlinx.coroutines.flow.StateFlow<0:0>;kotlinx.coroutines.flow.StateFlow<0:1>;kotlinx.coroutines.flow.SharingStarted;kotlin.Function2<0:0,0:1,0:2>){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?> (kotlinx.coroutines.flow/StateFlow<#A>).com.mairwunnx.capsa/mapState(kotlinx.coroutines/CoroutineScope, kotlinx.coroutines.flow/SharingStarted = ..., kotlin/Function1<#A, #B>): kotlinx.coroutines.flow/StateFlow<#B> // com.mairwunnx.capsa/mapState|mapState@kotlinx.coroutines.flow.StateFlow<0:0>(kotlinx.coroutines.CoroutineScope;kotlinx.coroutines.flow.SharingStarted;kotlin.Function1<0:0,0:1>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (com.mairwunnx.capsa/Load<#A>).com.mairwunnx.capsa/valueOrNull(): #A? // com.mairwunnx.capsa/valueOrNull|valueOrNull@com.mairwunnx.capsa.Load<0:0>(){0§<kotlin.Any?>}[0]
+final fun com.mairwunnx.capsa/effectHandlers(kotlin/Function1<com.mairwunnx.capsa/Effect, kotlin/Unit> = ..., kotlin/Function1<com.mairwunnx.capsa/EffectHandlers.Builder, kotlin/Unit>): com.mairwunnx.capsa/EffectHandlers // com.mairwunnx.capsa/effectHandlers|effectHandlers(kotlin.Function1<com.mairwunnx.capsa.Effect,kotlin.Unit>;kotlin.Function1<com.mairwunnx.capsa.EffectHandlers.Builder,kotlin.Unit>){}[0]
+final fun com.mairwunnx.capsa/stream(com.mairwunnx.capsa/WorkKey, kotlin/Function1<kotlin/Throwable, com.mairwunnx.capsa/Signal>, com.mairwunnx.capsa/WorkPolicy = ..., kotlin/Boolean = ..., com.mairwunnx.capsa/Retry? = ..., kotlin/Function0<kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Signal>>): com.mairwunnx.capsa/Work // com.mairwunnx.capsa/stream|stream(com.mairwunnx.capsa.WorkKey;kotlin.Function1<kotlin.Throwable,com.mairwunnx.capsa.Signal>;com.mairwunnx.capsa.WorkPolicy;kotlin.Boolean;com.mairwunnx.capsa.Retry?;kotlin.Function0<kotlinx.coroutines.flow.Flow<com.mairwunnx.capsa.Signal>>){}[0]
+final fun com.mairwunnx.capsa/work(com.mairwunnx.capsa/WorkKey, kotlin/Function1<kotlin/Throwable, com.mairwunnx.capsa/Signal>, com.mairwunnx.capsa/WorkPolicy = ..., kotlin.time/Duration = ..., com.mairwunnx.capsa/Retry? = ..., kotlin.coroutines/SuspendFunction0<com.mairwunnx.capsa/Signal>): com.mairwunnx.capsa/Work // com.mairwunnx.capsa/work|work(com.mairwunnx.capsa.WorkKey;kotlin.Function1<kotlin.Throwable,com.mairwunnx.capsa.Signal>;com.mairwunnx.capsa.WorkPolicy;kotlin.time.Duration;com.mairwunnx.capsa.Retry?;kotlin.coroutines.SuspendFunction0<com.mairwunnx.capsa.Signal>){}[0]
