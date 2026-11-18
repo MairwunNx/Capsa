@@ -33,6 +33,8 @@ Later implementations stand next to `kotlin/` and don’t change the root:
 
 Neither folder exists yet.
 
+Open the repository root in IntelliJ IDEA or Android Studio, not `kotlin/`. The shared `.idea/gradle.xml` links the Gradle build in `kotlin/`, so the IDE imports it on its own, and the shared code style in `.idea/codeStyles/` applies. VS Code opens `capsa.code-workspace`.
+
 ## Build and check
 
 ```sh
