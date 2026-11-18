@@ -146,22 +146,8 @@ sealed interface com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/Cap
 }
 
 final class <#A: kotlin/Any> com.mairwunnx.capsa/CapabilityBuilder { // com.mairwunnx.capsa/CapabilityBuilder|null[0]
-    constructor <init>() // com.mairwunnx.capsa/CapabilityBuilder.<init>|<init>(){}[0]
-
-    final val reactions // com.mairwunnx.capsa/CapabilityBuilder.reactions|{}reactions[0]
-        final fun <get-reactions>(): kotlin.collections/MutableList<com.mairwunnx.capsa/Reaction<#A>> // com.mairwunnx.capsa/CapabilityBuilder.reactions.<get-reactions>|<get-reactions>(){}[0]
-
     final fun <#A1: com.mairwunnx.capsa/Fact> addReaction(kotlin.reflect/KClass<#A1>, kotlin/Function2<#A, #A1, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/CapabilityBuilder.addReaction|addReaction(kotlin.reflect.KClass<0:0>;kotlin.Function2<1:0,0:0,com.mairwunnx.capsa.Decision<1:0>>){0§<com.mairwunnx.capsa.Fact>}[0]
     final inline fun <#A1: reified com.mairwunnx.capsa/Fact> on(noinline kotlin/Function2<#A, #A1, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/CapabilityBuilder.on|on(kotlin.Function2<1:0,0:0,com.mairwunnx.capsa.Decision<1:0>>){0§<com.mairwunnx.capsa.Fact>}[0]
-}
-
-final class <#A: kotlin/Any> com.mairwunnx.capsa/Reaction { // com.mairwunnx.capsa/Reaction|null[0]
-    constructor <init>(kotlin.reflect/KClass<out com.mairwunnx.capsa/Fact>, kotlin/Function2<#A, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/Reaction.<init>|<init>(kotlin.reflect.KClass<out|com.mairwunnx.capsa.Fact>;kotlin.Function2<1:0,com.mairwunnx.capsa.Fact,com.mairwunnx.capsa.Decision<1:0>>){}[0]
-
-    final val react // com.mairwunnx.capsa/Reaction.react|{}react[0]
-        final fun <get-react>(): kotlin/Function2<#A, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A>> // com.mairwunnx.capsa/Reaction.react.<get-react>|<get-react>(){}[0]
-    final val type // com.mairwunnx.capsa/Reaction.type|{}type[0]
-        final fun <get-type>(): kotlin.reflect/KClass<out com.mairwunnx.capsa/Fact> // com.mairwunnx.capsa/Reaction.type.<get-type>|<get-type>(){}[0]
 }
 
 final class <#A: out kotlin/Any> com.mairwunnx.capsa/Decision { // com.mairwunnx.capsa/Decision|null[0]
@@ -231,8 +217,6 @@ final class com.mairwunnx.capsa/EffectHandlers { // com.mairwunnx.capsa/EffectHa
     }
 
     final class Builder { // com.mairwunnx.capsa/EffectHandlers.Builder|null[0]
-        constructor <init>() // com.mairwunnx.capsa/EffectHandlers.Builder.<init>|<init>(){}[0]
-
         final val handlers // com.mairwunnx.capsa/EffectHandlers.Builder.handlers|{}handlers[0]
             final fun <get-handlers>(): kotlin.collections/MutableList<com.mairwunnx.capsa/EffectHandlers.Handler<*>> // com.mairwunnx.capsa/EffectHandlers.Builder.handlers.<get-handlers>|<get-handlers>(){}[0]
 

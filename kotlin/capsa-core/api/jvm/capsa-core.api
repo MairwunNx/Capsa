@@ -6,9 +6,7 @@ public abstract interface class com/mairwunnx/capsa/Capability {
 }
 
 public final class com/mairwunnx/capsa/CapabilityBuilder {
-	public fun <init> ()V
 	public final fun addReaction (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function2;)V
-	public final fun getReactions ()Ljava/util/List;
 }
 
 public final class com/mairwunnx/capsa/CapabilityKt {
@@ -159,7 +157,6 @@ public final class com/mairwunnx/capsa/EffectHandlers {
 }
 
 public final class com/mairwunnx/capsa/EffectHandlers$Builder {
-	public fun <init> ()V
 	public final fun getHandlers ()Ljava/util/List;
 }
 
@@ -215,12 +212,6 @@ public final class com/mairwunnx/capsa/LoadKt {
 
 public final class com/mairwunnx/capsa/Platform_jvmCommonKt {
 	public static final fun overlaps (Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;)Z
-}
-
-public final class com/mairwunnx/capsa/Reaction {
-	public fun <init> (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function2;)V
-	public final fun getReact ()Lkotlin/jvm/functions/Function2;
-	public final fun getType ()Lkotlin/reflect/KClass;
 }
 
 public final class com/mairwunnx/capsa/Retry {

@@ -39,7 +39,7 @@ public class EffectHandlers internal constructor(
     }
 
     /** Registers handlers inside the [effectHandlers] block. */
-    public class Builder @PublishedApi internal constructor() {
+    public class Builder internal constructor() {
         @PublishedApi
         internal val handlers: MutableList<Handler<*>> = mutableListOf()
 

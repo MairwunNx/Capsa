@@ -84,9 +84,8 @@ public fun <S : Any> capability(
 }
 
 /** Registers reactions to facts inside the [capability] block. */
-public class CapabilityBuilder<S : Any> @PublishedApi internal constructor() {
+public class CapabilityBuilder<S : Any> internal constructor() {
 
-    @PublishedApi
     internal val reactions: MutableList<Reaction<S>> = mutableListOf()
 
     /**
@@ -112,7 +111,6 @@ public class CapabilityBuilder<S : Any> @PublishedApi internal constructor() {
     }
 }
 
-@PublishedApi
 internal class Reaction<S : Any>(
     val type: KClass<out Fact>,
     val react: (S, Fact) -> Decision<S>,
