@@ -1,0 +1,55 @@
+# Gradle and Kotlin
+.gradle/
+build/
+**/build/
+.kotlin/
+local.properties
+gradle-app.setting
+.gradletasknamecache
+
+# Package files, except the Gradle wrapper
+*.jar
+!gradle-wrapper.jar
+*.class
+*.log
+hs_err_pid*
+
+# Android
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Xcode and CocoaPods
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata
+Pods/
+
+# IntelliJ IDEA and Android Studio: only the shared part goes to git
+.idea/*
+!.idea/.gitignore
+!.idea/codeStyles/
+!.idea/vcs.xml
+kotlin/.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Release notes the release workflow writes
+release-notes.md
+
+# Python helpers in tools/
+__pycache__/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+[Dd]esktop.ini
