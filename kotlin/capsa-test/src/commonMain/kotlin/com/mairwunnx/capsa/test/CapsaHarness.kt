@@ -49,7 +49,7 @@ public sealed interface WorkEvent {
  * The runtime lives in `backgroundScope`, so `runTest` doesn’t wait for it to finish.
  *
  * The scheduler handles facts only after [runCurrent] or [advanceTimeBy]. For timers and streams use [advanceTimeBy].
- * [advanceUntilIdle] skips `backgroundScope`, where the runtime lives, so it handles no facts and runs no works.
+ * The harness has no `advanceUntilIdle`: it skips `backgroundScope`, where the runtime lives, so it would handle no facts.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 public class CapsaHarness internal constructor(
@@ -96,15 +96,6 @@ public class CapsaHarness internal constructor(
         scheduler.advanceTimeBy(duration.inWholeMilliseconds)
         scheduler.runCurrent()
     }
-
-    /**
-     * Runs the queued tasks, moving virtual time forward as needed.
-     *
-     * It stops as soon as only `backgroundScope` tasks are left. The runtime and its works live there,
-     * so the call handles no facts, not even [com.mairwunnx.capsa.Started], and runs no works.
-     * For the runtime, use [runCurrent] and [advanceTimeBy].
-     */
-    public fun advanceUntilIdle(): Unit = scheduler.advanceUntilIdle()
 
     /**
      * Returns the current state of `capability`.

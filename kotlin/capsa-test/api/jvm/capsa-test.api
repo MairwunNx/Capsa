@@ -1,6 +1,5 @@
 public final class com/mairwunnx/capsa/test/CapsaHarness {
 	public final fun advanceTimeBy-LRDsOJo (J)V
-	public final fun advanceUntilIdle ()V
 	public final fun append (Lcom/mairwunnx/capsa/Fact;)V
 	public final fun assertNoViolations ()V
 	public final fun getEffects ()Ljava/util/List;
