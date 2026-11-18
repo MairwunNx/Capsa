@@ -44,7 +44,7 @@ cd kotlin && ./gradlew build
 `build` compiles every target, runs the tests, detekt, and ktlint. A commit that fails it doesn’t go in.
 
 - **Public API.** `build` also compares the public API with the dumps in each module’s `api/` folder. After you change the API on purpose, run `./gradlew apiDump` and commit the new dumps with the change.
-- **Xcode.** Kotlin/Native needs the full Xcode, not only the Command Line Tools, to link tests such as `macosArm64Test`. If `xcodebuild -version` fails, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
+- **Xcode.** Kotlin/Native needs the full Xcode, not only the Command Line Tools, to link tests such as `macosArm64Test`. If `xcodebuild -version` fails, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`. `iosSimulatorArm64Test` also needs the iOS simulator runtime: `xcodebuild -downloadPlatform iOS`. CI skips the simulator tests (it sets `CI`) and relies on `macosArm64Test`.
 
 ## Hard rules
 
