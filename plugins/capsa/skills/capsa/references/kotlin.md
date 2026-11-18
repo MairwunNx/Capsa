@@ -242,8 +242,7 @@ class LikesTest {
 | `capability.replay(vararg facts, from)` | Feeds facts straight into `decide`. `state`, `states`, `effects`, `works`, `signals`, `ignored`. Starts no works |
 | `TestScope.capsaHarness(vararg capabilities, maxSignalDepth, strict = true)` | A real runtime on virtual time in `backgroundScope`. Sends `Started` |
 | `harness.append(fact)` | Queues a fact. Nothing happens until the clock moves |
-| `runCurrent()`, `advanceTimeBy(duration)` | Run what is due now, move the clock and run what became due |
-| `advanceUntilIdle()` | Runs nothing of the runtime, not even `Started`: it lives in `backgroundScope`. Don’t use it |
+| `runCurrent()`, `advanceTimeBy(duration)` | Run what is due now, move the clock and run what became due. The harness has no `advanceUntilIdle()` on purpose |
 | `stateOf(capability)`, `effects`, `takeEffects()` | The slice, the effects so far, the effects since the last take |
 | `facts`, `workEvents` | Handled facts, `WorkEvent.Started`, `Cancelled`, `Failed`, `Dropped` |
 | `setVisible(visible)` | Hides or shows the screen for `whileVisible` streams |

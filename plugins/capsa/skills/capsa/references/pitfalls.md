@@ -6,7 +6,7 @@ Mistakes that compile and then hurt. Each entry says what goes wrong, why, and w
 
 ### `advanceUntilIdle()` doesn’t run the runtime
 
-The test harness runs the runtime in the test’s background scope, so `runTest` doesn’t wait for it forever. `advanceUntilIdle()` stops as soon as only background tasks are left, and the whole runtime is a background task. After `harness.advanceUntilIdle()` the runtime hasn’t handled even `Started`: no fact, no work, no debounce, no timer.
+The test harness runs the runtime in the test’s background scope, so `runTest` doesn’t wait for it forever. `advanceUntilIdle()` of `runTest` stops as soon as only background tasks are left, and the whole runtime is a background task. After it the runtime hasn’t handled even `Started`: no fact, no work, no debounce, no timer. That’s why the harness has no `advanceUntilIdle()` of its own.
 
 Use `harness.runCurrent()` to handle what is due right now, such as queued facts and works without delays. Use `harness.advanceTimeBy(300.milliseconds)` to move the clock for debounce, retries, and timers.
 
