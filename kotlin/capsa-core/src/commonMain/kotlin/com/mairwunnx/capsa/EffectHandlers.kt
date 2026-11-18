@@ -16,7 +16,6 @@ public class EffectHandlers internal constructor(
     private val handlers: List<Handler<*>>,
     private val onUnhandled: (Effect) -> Unit,
 ) {
-    @PublishedApi
     internal class Handler<E : Effect>(val type: KClass<E>, val handle: (E) -> Unit) {
         @Suppress("UNCHECKED_CAST")
         fun handleUnchecked(effect: Effect) {
@@ -40,7 +39,6 @@ public class EffectHandlers internal constructor(
 
     /** Registers handlers inside the [effectHandlers] block. */
     public class Builder internal constructor() {
-        @PublishedApi
         internal val handlers: MutableList<Handler<*>> = mutableListOf()
 
         /**
@@ -53,12 +51,17 @@ public class EffectHandlers internal constructor(
          * @throws IllegalArgumentException if a handler for [E], its supertype, or its subtype is already registered
          */
         public inline fun <reified E : Effect> on(noinline handle: (E) -> Unit) {
-            require(handlers.none { it.type == E::class }) { "A handler for ${E::class.simpleName} is already registered" }
-            val overlap = handlers.firstOrNull { it.type.overlaps(E::class) }
+            addHandler(E::class, handle)
+        }
+
+        @PublishedApi
+        internal fun <E : Effect> addHandler(type: KClass<E>, handle: (E) -> Unit) {
+            require(handlers.none { it.type == type }) { "A handler for ${type.simpleName} is already registered" }
+            val overlap = handlers.firstOrNull { it.type.overlaps(type) }
             require(overlap == null) {
-                "Handlers for ${overlap?.type?.simpleName} and ${E::class.simpleName} overlap: one type inherits the other"
+                "Handlers for ${overlap?.type?.simpleName} and ${type.simpleName} overlap: one type inherits the other"
             }
-            handlers += Handler(E::class, handle)
+            handlers += Handler(type, handle)
         }
     }
 }

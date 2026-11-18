@@ -157,14 +157,7 @@ public final class com/mairwunnx/capsa/EffectHandlers {
 }
 
 public final class com/mairwunnx/capsa/EffectHandlers$Builder {
-	public final fun getHandlers ()Ljava/util/List;
-}
-
-public final class com/mairwunnx/capsa/EffectHandlers$Handler {
-	public fun <init> (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)V
-	public final fun getHandle ()Lkotlin/jvm/functions/Function1;
-	public final fun getType ()Lkotlin/reflect/KClass;
-	public final fun handleUnchecked (Lcom/mairwunnx/capsa/Effect;)V
+	public final fun addHandler (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)V
 }
 
 public final class com/mairwunnx/capsa/EffectHandlersKt {
@@ -208,10 +201,6 @@ public final class com/mairwunnx/capsa/Load$Loading : com/mairwunnx/capsa/Load {
 
 public final class com/mairwunnx/capsa/LoadKt {
 	public static final fun valueOrNull (Lcom/mairwunnx/capsa/Load;)Ljava/lang/Object;
-}
-
-public final class com/mairwunnx/capsa/Platform_jvmCommonKt {
-	public static final fun overlaps (Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;)Z
 }
 
 public final class com/mairwunnx/capsa/Retry {

@@ -9,7 +9,6 @@ import kotlin.reflect.KClass
  * there the builders catch only two registrations of the same class, and a fact or an effect that matches
  * two of them fails when it arrives.
  */
-@PublishedApi
 internal expect fun KClass<*>.overlaps(other: KClass<*>): Boolean
 
 /**

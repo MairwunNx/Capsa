@@ -205,21 +205,8 @@ final class com.mairwunnx.capsa/CapsaViolationException : kotlin/IllegalStateExc
 final class com.mairwunnx.capsa/EffectHandlers { // com.mairwunnx.capsa/EffectHandlers|null[0]
     final fun handle(com.mairwunnx.capsa/Effect) // com.mairwunnx.capsa/EffectHandlers.handle|handle(com.mairwunnx.capsa.Effect){}[0]
 
-    final class <#A1: com.mairwunnx.capsa/Effect> Handler { // com.mairwunnx.capsa/EffectHandlers.Handler|null[0]
-        constructor <init>(kotlin.reflect/KClass<#A1>, kotlin/Function1<#A1, kotlin/Unit>) // com.mairwunnx.capsa/EffectHandlers.Handler.<init>|<init>(kotlin.reflect.KClass<1:0>;kotlin.Function1<1:0,kotlin.Unit>){}[0]
-
-        final val handle // com.mairwunnx.capsa/EffectHandlers.Handler.handle|{}handle[0]
-            final fun <get-handle>(): kotlin/Function1<#A1, kotlin/Unit> // com.mairwunnx.capsa/EffectHandlers.Handler.handle.<get-handle>|<get-handle>(){}[0]
-        final val type // com.mairwunnx.capsa/EffectHandlers.Handler.type|{}type[0]
-            final fun <get-type>(): kotlin.reflect/KClass<#A1> // com.mairwunnx.capsa/EffectHandlers.Handler.type.<get-type>|<get-type>(){}[0]
-
-        final fun handleUnchecked(com.mairwunnx.capsa/Effect) // com.mairwunnx.capsa/EffectHandlers.Handler.handleUnchecked|handleUnchecked(com.mairwunnx.capsa.Effect){}[0]
-    }
-
     final class Builder { // com.mairwunnx.capsa/EffectHandlers.Builder|null[0]
-        final val handlers // com.mairwunnx.capsa/EffectHandlers.Builder.handlers|{}handlers[0]
-            final fun <get-handlers>(): kotlin.collections/MutableList<com.mairwunnx.capsa/EffectHandlers.Handler<*>> // com.mairwunnx.capsa/EffectHandlers.Builder.handlers.<get-handlers>|<get-handlers>(){}[0]
-
+        final fun <#A2: com.mairwunnx.capsa/Effect> addHandler(kotlin.reflect/KClass<#A2>, kotlin/Function1<#A2, kotlin/Unit>) // com.mairwunnx.capsa/EffectHandlers.Builder.addHandler|addHandler(kotlin.reflect.KClass<0:0>;kotlin.Function1<0:0,kotlin.Unit>){0§<com.mairwunnx.capsa.Effect>}[0]
         final inline fun <#A2: reified com.mairwunnx.capsa/Effect> on(noinline kotlin/Function1<#A2, kotlin/Unit>) // com.mairwunnx.capsa/EffectHandlers.Builder.on|on(kotlin.Function1<0:0,kotlin.Unit>){0§<com.mairwunnx.capsa.Effect>}[0]
     }
 }
@@ -274,7 +261,6 @@ final object com.mairwunnx.capsa/Started : com.mairwunnx.capsa/Signal { // com.m
     final fun toString(): kotlin/String // com.mairwunnx.capsa/Started.toString|toString(){}[0]
 }
 
-final fun (kotlin.reflect/KClass<*>).com.mairwunnx.capsa/overlaps(kotlin.reflect/KClass<*>): kotlin/Boolean // com.mairwunnx.capsa/overlaps|overlaps@kotlin.reflect.KClass<*>(kotlin.reflect.KClass<*>){}[0]
 final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(com.mairwunnx.capsa/Effect): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(com.mairwunnx.capsa.Effect){0§<kotlin.Any>}[0]
 final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(com.mairwunnx.capsa/Signal): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(com.mairwunnx.capsa.Signal){0§<kotlin.Any>}[0]
 final fun <#A: kotlin/Any> (#A).com.mairwunnx.capsa/commit(com.mairwunnx.capsa/Work): com.mairwunnx.capsa/Decision<#A> // com.mairwunnx.capsa/commit|commit@0:0(com.mairwunnx.capsa.Work){0§<kotlin.Any>}[0]
