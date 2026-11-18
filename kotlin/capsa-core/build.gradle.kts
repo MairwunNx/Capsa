@@ -24,5 +24,8 @@ kotlin {
             api(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.atomicfu)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
+        }
     }
 }
