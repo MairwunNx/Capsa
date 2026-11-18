@@ -1,17 +1,10 @@
 package com.mairwunnx.capsa.compose
 
-import androidx.compose.runtime.AbstractApplier
-import androidx.compose.runtime.BroadcastFrameClock
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Composition
-import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import com.mairwunnx.capsa.Intent
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -109,47 +102,5 @@ class SlotTest {
         }
 
         assertSame(Modifier, capturedModifier)
-    }
-
-    // --- Headless composition ----------------------------------------------------------------
-
-    private class Host(
-        private val clock: BroadcastFrameClock,
-        private val scope: TestScope,
-    ) {
-        fun frame() {
-            scope.testScheduler.runCurrent()
-            clock.sendFrame(0L)
-            scope.testScheduler.runCurrent()
-        }
-    }
-
-    private object UnitApplier : AbstractApplier<Unit>(Unit) {
-        override fun insertTopDown(index: Int, instance: Unit) = Unit
-        override fun insertBottomUp(index: Int, instance: Unit) = Unit
-        override fun remove(index: Int, count: Int) = Unit
-        override fun move(from: Int, to: Int, count: Int) = Unit
-        override fun onClear() = Unit
-    }
-
-    private fun TestScope.compose(content: @Composable () -> Unit): Host {
-        val clock = BroadcastFrameClock()
-        val recomposer = Recomposer(backgroundScope.coroutineContext + clock)
-        backgroundScope.launch(clock) { recomposer.runRecomposeAndApplyChanges() }
-        // A composition set before the recomposer runs gets one more recomposition when it starts.
-        testScheduler.runCurrent()
-        val composition = Composition(UnitApplier, recomposer)
-        composition.setContent(content)
-        val host = Host(clock, this)
-        host.frame()
-        backgroundScope.launch {
-            try {
-                awaitCancellation()
-            } finally {
-                composition.dispose()
-                recomposer.cancel()
-            }
-        }
-        return host
     }
 }
