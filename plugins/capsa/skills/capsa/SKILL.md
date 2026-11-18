@@ -42,7 +42,7 @@ These rules apply to code on Capsa only. Leave screens on other architectures al
 1. **Slice by scenario.** A capability owns one user scenario: a like, a search, a timer. Never a layout block.
 2. **The host assembles, it doesn’t think.** No product conditions in the host, the wiring, the projection, or a composable. Decisions belong to `decide`.
 3. **The runtime is the only bus.** A capability never imports another capability or reads its slice. It listens to the neighbour’s signals.
-4. **Effects are the only impurity.** `decide` does no I/O, reads no clock, launches no coroutines, and touches no DI. Time, randomness, and data arrive as facts or through ports.
+4. **Side effects live at the edge.** `decide` does no I/O, reads no clock, launches no coroutines, and touches no DI. Time, randomness, and data arrive as facts or through ports.
 5. **Keep the decider small.** About 150 lines or 12 facts. Past that, split the capability.
 
 And in practice:

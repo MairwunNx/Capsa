@@ -9,7 +9,7 @@ These are the rules of Capability Slice Architecture as Capsa applies them. Caps
 | 1 | **Slice by scenario** | A capability owns a user scenario: a like, a search, a timer. Never a layout block |
 | 2 | **The host assembles, it doesn’t think** | The host collects slices, sends intents, and performs effects. It holds no product conditions |
 | 3 | **The runtime is the only bus** | A capability never imports another one or reads its slice. They talk through facts |
-| 4 | **Effects are the only impurity** | The router and the snackbar live at the edge, never in the logic |
+| 4 | **Side effects live at the edge** | The logic describes navigation, snackbars, and analytics as effects, and the host performs them. The router and the snackbar never get into the logic |
 | 5 | **Keep the decider small** | About 150 lines or 12 facts. Past that, split the capability |
 
 ## Structure of a screen
