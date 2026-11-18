@@ -10,64 +10,85 @@
   "benchmarks": {
     "CombineStateBenchmark.changeOneSlice": {
       "mode": "thrpt",
-      "score": 4772.412,
-      "error": 50.644,
+      "score": 4861.42,
+      "error": 61.899,
       "unit": "ops/ms",
       "allocBytesPerOp": 714.3
     },
     "DecideBenchmark.decide(reactions=1)": {
       "mode": "thrpt",
-      "score": 397432.354,
-      "error": 6435.815,
+      "score": 397754.416,
+      "error": 2008.813,
       "unit": "ops/ms",
       "allocBytesPerOp": 32.0
     },
     "DecideBenchmark.decide(reactions=10)": {
       "mode": "thrpt",
-      "score": 395292.168,
-      "error": 15730.013,
+      "score": 401649.52,
+      "error": 6234.907,
       "unit": "ops/ms",
       "allocBytesPerOp": 32.0
     },
     "DecideBenchmark.decide(reactions=30)": {
       "mode": "thrpt",
-      "score": 399825.661,
-      "error": 4303.429,
+      "score": 399323.596,
+      "error": 11723.818,
       "unit": "ops/ms",
       "allocBytesPerOp": 32.0
     },
+    "EffectHandlersBenchmark.handle(handlers=1)": {
+      "mode": "thrpt",
+      "score": 448369.613,
+      "error": 21506.824,
+      "unit": "ops/ms",
+      "allocBytesPerOp": 0.0
+    },
+    "EffectHandlersBenchmark.handle(handlers=10)": {
+      "mode": "thrpt",
+      "score": 447371.907,
+      "error": 19976.932,
+      "unit": "ops/ms",
+      "allocBytesPerOp": 0.0
+    },
+    "EffectHandlersBenchmark.handle(handlers=30)": {
+      "mode": "thrpt",
+      "score": 439501.933,
+      "error": 10464.729,
+      "unit": "ops/ms",
+      "allocBytesPerOp": 0.0
+    },
     "FactPassBenchmark.passOneFact(capabilities=1)": {
       "mode": "thrpt",
-      "score": 14193.815,
-      "error": 199.569,
+      "score": 14019.966,
+      "error": 159.644,
       "unit": "ops/ms",
       "allocBytesPerOp": 194.3
     },
     "FactPassBenchmark.passOneFact(capabilities=10)": {
       "mode": "thrpt",
-      "score": 14099.882,
-      "error": 89.181,
+      "score": 15435.198,
+      "error": 173.118,
       "unit": "ops/ms",
       "allocBytesPerOp": 194.3
     },
     "LatestWorkBenchmark.typeOneCharacter": {
       "mode": "thrpt",
-      "score": 433.623,
-      "error": 22.692,
+      "score": 434.619,
+      "error": 21.183,
       "unit": "ops/ms",
       "allocBytesPerOp": 2828.5
     },
     "StreamBenchmark.tenThousandSignals": {
       "mode": "thrpt",
-      "score": 1.863,
-      "error": 0.103,
+      "score": 1.887,
+      "error": 0.034,
       "unit": "ops/ms",
-      "allocBytesPerOp": 2510150.2
+      "allocBytesPerOp": 2510260.3
     },
     "ViolationReportBenchmark.reportUnhandledFact": {
       "mode": "thrpt",
-      "score": 181.545,
-      "error": 2.312,
+      "score": 183.612,
+      "error": 3.015,
       "unit": "ops/ms",
       "allocBytesPerOp": 13554.4
     }
