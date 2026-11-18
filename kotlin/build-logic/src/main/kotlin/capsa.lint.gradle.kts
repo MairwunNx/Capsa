@@ -16,6 +16,8 @@ detekt {
     buildUponDefaultConfig = true
     config.setFrom(layout.settingsDirectory.file("config/detekt.yml"))
     parallel = true
+    // Paths in the reports start at the repository root, so GitHub links each finding in SARIF to its file.
+    basePath.set(layout.settingsDirectory.asFile.parentFile)
 }
 
 // Files with `actual` declarations, by the naming the modules follow: Platform.jvmCommon.kt, Capsa.android.kt, and so on.
