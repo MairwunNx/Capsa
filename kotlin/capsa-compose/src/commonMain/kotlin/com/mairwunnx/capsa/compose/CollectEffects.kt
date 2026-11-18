@@ -24,7 +24,8 @@ import kotlinx.coroutines.withContext
  *
  * [rememberUpdatedState] swaps in the current `handlers` without restarting the subscription on every recomposition.
  *
- * While the screen stays at `STARTED` or above, the runtime counts it as visible and keeps works with `whileVisible` running.
+ * The collection counts as a watcher of the screen, see `CapsaVisibility.Watched`: while the screen stays at `STARTED`
+ * or above, the runtime counts it as visible and keeps works with `whileVisible` running. Nothing else reports visibility.
  *
  * A failing handler and an effect without a handler go through the error policy of the view model: a debug build
  * crashes, a release build logs the error and keeps collecting the next effects.
@@ -41,7 +42,7 @@ public fun CollectEffects(
 ) {
     val currentHandlers by rememberUpdatedState(handlers)
     LaunchedEffect(effects, lifecycleOwner) {
-        effects.flow.collectWhileStarted(lifecycleOwner, onVisible = effects::setVisible) { effect ->
+        effects.flow.collectWhileStarted(lifecycleOwner) { effect ->
             try {
                 currentHandlers.handle(effect)
             } catch (e: CancellationException) {
@@ -63,20 +64,10 @@ public fun CollectEffects(
  * between receiving an effect and handling it.
  *
  * @param lifecycleOwner the lifecycle owner that drives the subscription
- * @param onVisible gets `true` when the lifecycle enters `STARTED` and `false` when it leaves
  * @param onEffect the synchronous effect handler
  */
-public suspend fun Flow<Effect>.collectWhileStarted(
-    lifecycleOwner: LifecycleOwner,
-    onVisible: (Boolean) -> Unit = {},
-    onEffect: (Effect) -> Unit,
-) {
+public suspend fun Flow<Effect>.collectWhileStarted(lifecycleOwner: LifecycleOwner, onEffect: (Effect) -> Unit) {
     lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-        onVisible(true)
-        try {
-            withContext(Dispatchers.Main.immediate) { collect { onEffect(it) } }
-        } finally {
-            onVisible(false)
-        }
+        withContext(Dispatchers.Main.immediate) { collect { onEffect(it) } }
     }
 }

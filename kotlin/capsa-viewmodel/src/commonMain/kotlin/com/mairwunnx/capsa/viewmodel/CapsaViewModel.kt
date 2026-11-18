@@ -146,7 +146,7 @@ public abstract class CapsaViewModel(
      */
     public val effects: CapsaEffects by lazy {
         val runtime = ensureStarted()
-        CapsaEffects(flow = runtime.watched(outbox.receiveAsFlow()), onFail = ::fail, onVisible = runtime::onVisibilityChanged)
+        CapsaEffects(flow = runtime.watched(outbox.receiveAsFlow()), onFail = ::fail)
     }
 
     /**
@@ -358,7 +358,7 @@ internal fun capsaExceptionHandler(
  * The effects of a screen together with the error policy for their handlers.
  *
  * The screen passes this object to `CollectEffects` instead of the view model itself. A host without Compose,
- * such as SwiftUI, collects [flow] and calls [fail] and [setVisible] on its own.
+ * such as SwiftUI, collects [flow] and calls [fail] on its own.
  *
  * @property flow the effects that the view model didn’t take. While someone collects them, the runtime counts
  * the screen as visible
@@ -366,7 +366,6 @@ internal fun capsaExceptionHandler(
 public class CapsaEffects internal constructor(
     public val flow: Flow<Effect>,
     private val onFail: (Throwable) -> Unit,
-    private val onVisible: (Boolean) -> Unit,
 ) {
 
     /**
@@ -377,17 +376,5 @@ public class CapsaEffects internal constructor(
      */
     public fun fail(error: Throwable) {
         onFail(error)
-    }
-
-    /**
-     * Tells the runtime whether the screen is visible. The runtime pauses works with `whileVisible` while it isn’t
-     * and starts them again when it comes back.
-     *
-     * The host calls it with `true` when the screen starts collecting [flow] and with `false` when it stops.
-     *
-     * @param visible `true` if the user sees the screen
-     */
-    public fun setVisible(visible: Boolean) {
-        onVisible(visible)
     }
 }

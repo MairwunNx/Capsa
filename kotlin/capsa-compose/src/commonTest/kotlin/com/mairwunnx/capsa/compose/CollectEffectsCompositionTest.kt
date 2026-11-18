@@ -39,6 +39,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Checks [CollectEffects] in a real composition with a [CapsaViewModel] behind it. The lifecycle comes from
@@ -200,6 +201,27 @@ class CollectEffectsCompositionTest : CompositionTest() {
         owner.lifecycle.currentState = Lifecycle.State.STARTED
         settle(host)
         assertEquals(listOf("start", "stop", "start"), subscriptions)
+    }
+
+    @Test
+    fun aStopShorterThanTheGraceKeepsTheStreamRunning() = runTest {
+        val vm = screen()
+        val owner = TestOwner(Lifecycle.State.STARTED)
+        val host = compose {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                CollectEffects(vm.effects, effectHandlers {})
+            }
+        }
+        settle(host)
+
+        // A rotation: the old screen stops, and the new one starts a moment later.
+        owner.lifecycle.currentState = Lifecycle.State.CREATED
+        host.frame()
+        testScheduler.advanceTimeBy(300.milliseconds)
+        owner.lifecycle.currentState = Lifecycle.State.STARTED
+        settle(host)
+
+        assertEquals(listOf("start"), subscriptions)
     }
 
     @Test

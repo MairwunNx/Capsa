@@ -62,7 +62,6 @@ final class com.mairwunnx.capsa.viewmodel/CapsaEffects { // com.mairwunnx.capsa.
         final fun <get-flow>(): kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa.viewmodel/CapsaEffects.flow.<get-flow>|<get-flow>(){}[0]
 
     final fun fail(kotlin/Throwable) // com.mairwunnx.capsa.viewmodel/CapsaEffects.fail|fail(kotlin.Throwable){}[0]
-    final fun setVisible(kotlin/Boolean) // com.mairwunnx.capsa.viewmodel/CapsaEffects.setVisible|setVisible(kotlin.Boolean){}[0]
 }
 
 final class com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver : com.mairwunnx.capsa/CapsaObserver { // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver|null[0]
