@@ -8,7 +8,8 @@ import kotlin.reflect.KClass
  *
  * Constructor functions are declared as
  * `context(_: CapabilityScope) fun likes(...)`.
- * The scope comes from `CapsaViewModel` and from `TestCapabilityScope` of the test harness, so the UI and the data layer
+ * The scope comes from the hosts, `CapsaViewModel`, `CapsaComposable`, and the lambda of `rememberCapsa`, and from
+ * `TestCapabilityScope` of the test harness, so the UI and the data layer
  * can’t create a capability directly.
  */
 public interface CapabilityScope

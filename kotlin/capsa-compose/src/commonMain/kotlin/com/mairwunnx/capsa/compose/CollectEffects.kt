@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
 /**
  * Handles the screen’s effects while its lifecycle stays at [Lifecycle.State.STARTED] or above.
  *
- * Below `STARTED` the function stops collecting. The channel behind `CapsaViewModel.effects` keeps the effects
+ * Below `STARTED` the function stops collecting. The channel behind the `effects` of a host keeps the effects
  * until the next active subscriber, so navigation waits for the screen to come back.
  *
  * [rememberUpdatedState] swaps in the current `handlers` without restarting the subscription on every recomposition.
@@ -27,10 +27,10 @@ import kotlinx.coroutines.withContext
  * The collection counts as a watcher of the screen, see `CapsaVisibility.Watched`: while the screen stays at `STARTED`
  * or above, the runtime counts it as visible and keeps works with `whileVisible` running. Nothing else reports visibility.
  *
- * A failing handler and an effect without a handler go through the error policy of the view model: a debug build
+ * A failing handler and an effect without a handler go through the error policy of the host: a debug build
  * crashes, a release build logs the error and keeps collecting the next effects.
  *
- * @param effects the effects from `CapsaViewModel.effects`
+ * @param effects the effects of a host: `CapsaViewModel.effects`, `CapsaComposable.effects`, or `CapsaHandle.effects`
  * @param handlers the effect handlers of the screen
  * @param lifecycleOwner the lifecycle owner that drives the subscription
  */

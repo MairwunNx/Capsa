@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.transform
  * the screen visible. Whoever collects the projection counts as a collector of the slice.
  * If `transform` fails, the projection skips that value and stays on the last good one, and the error goes
  * to the error handler of the scope. The next value of the slice goes through `transform` again.
- * `CapsaViewModel.capsaScope` crashes the app on such an error only in debug builds.
+ * The `capsaScope` of a host crashes the app on such an error only in debug builds.
  *
  * @param scope the scope of the subscription to the slice
  * @param started the start policy of the subscription

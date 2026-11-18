@@ -5,7 +5,7 @@ import com.mairwunnx.capsa.CapabilityScope
 /**
  * Provides a [CapabilityScope] to create capabilities in a test.
  *
- * In an app, `CapsaViewModel` provides this scope.
+ * In an app, a host provides this scope: `CapsaViewModel`, `CapsaComposable`, or the lambda of `rememberCapsa`.
  */
 public object TestCapabilityScope : CapabilityScope
 
