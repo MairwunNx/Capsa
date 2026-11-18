@@ -24,6 +24,7 @@
             <option value="$PROJECT_DIR$/kotlin/capsa-bom" />
             <option value="$PROJECT_DIR$/kotlin/capsa-compose" />
             <option value="$PROJECT_DIR$/kotlin/capsa-core" />
+            <option value="$PROJECT_DIR$/kotlin/capsa-host" />
             <option value="$PROJECT_DIR$/kotlin/capsa-test" />
             <option value="$PROJECT_DIR$/kotlin/capsa-viewmodel" />
             <option value="$PROJECT_DIR$/kotlin/samples" />

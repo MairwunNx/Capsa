@@ -8,9 +8,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.mairwunnx.capsa.CapsaEffects
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.EffectHandlers
-import com.mairwunnx.capsa.viewmodel.CapsaEffects
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

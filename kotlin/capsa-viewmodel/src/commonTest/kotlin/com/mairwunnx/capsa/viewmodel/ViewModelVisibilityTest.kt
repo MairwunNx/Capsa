@@ -1,5 +1,7 @@
 package com.mairwunnx.capsa.viewmodel
 
+import com.mairwunnx.capsa.AppForeground
+import com.mairwunnx.capsa.Capsa
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.Started

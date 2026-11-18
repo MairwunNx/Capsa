@@ -25,6 +25,7 @@ rootProject.name = "capsa"
 
 include(
     ":capsa-core",
+    ":capsa-host",
     ":capsa-viewmodel",
     ":capsa-compose",
     ":capsa-test",

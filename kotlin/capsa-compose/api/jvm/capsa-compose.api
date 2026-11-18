@@ -1,5 +1,5 @@
 public final class com/mairwunnx/capsa/compose/CollectEffectsKt {
-	public static final fun CollectEffects (Lcom/mairwunnx/capsa/viewmodel/CapsaEffects;Lcom/mairwunnx/capsa/EffectHandlers;Landroidx/lifecycle/LifecycleOwner;Landroidx/compose/runtime/Composer;II)V
+	public static final fun CollectEffects (Lcom/mairwunnx/capsa/CapsaEffects;Lcom/mairwunnx/capsa/EffectHandlers;Landroidx/lifecycle/LifecycleOwner;Landroidx/compose/runtime/Composer;II)V
 	public static final fun collectWhileStarted (Lkotlinx/coroutines/flow/Flow;Landroidx/lifecycle/LifecycleOwner;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

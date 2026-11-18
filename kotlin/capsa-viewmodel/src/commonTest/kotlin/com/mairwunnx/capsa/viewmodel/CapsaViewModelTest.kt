@@ -2,14 +2,16 @@ package com.mairwunnx.capsa.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import com.mairwunnx.capsa.Capability
+import com.mairwunnx.capsa.Capsa
+import com.mairwunnx.capsa.CapsaLogger
 import com.mairwunnx.capsa.CapsaViolationException
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.EffectHandlers
 import com.mairwunnx.capsa.Intent
+import com.mairwunnx.capsa.SliceSaver
 import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.capability
 import com.mairwunnx.capsa.commit
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +30,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -441,22 +442,6 @@ class CapsaViewModelTest {
 
         // The stream of effects stopped: one attempt to log it, one to report the failure of the logger.
         assertEquals(2, attempts)
-    }
-
-    @Test
-    fun failFastHandsTheErrorToThePreviousHandlerOtherwiseItIsReported() {
-        val previous = mutableListOf<Throwable>()
-        val reported = mutableListOf<Throwable>()
-        val fallback = CoroutineExceptionHandler { _, e -> previous += e }
-        val error = IllegalStateException("bug")
-
-        capsaExceptionHandler(failFast = true, fallback = fallback, report = { reported += it })
-            .handleException(EmptyCoroutineContext, error)
-        capsaExceptionHandler(failFast = false, fallback = fallback, report = { reported += it })
-            .handleException(EmptyCoroutineContext, error)
-
-        assertEquals(listOf<Throwable>(error), previous)
-        assertEquals(listOf<Throwable>(error), reported)
     }
 
     private companion object {

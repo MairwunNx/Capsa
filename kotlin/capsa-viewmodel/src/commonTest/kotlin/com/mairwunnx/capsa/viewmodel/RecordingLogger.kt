@@ -1,5 +1,7 @@
 package com.mairwunnx.capsa.viewmodel
 
+import com.mairwunnx.capsa.Capsa
+import com.mairwunnx.capsa.CapsaLogger
 /** Keeps every line it receives, so a test can check what Capsa wrote and at which level. */
 internal class RecordingLogger : CapsaLogger {
 

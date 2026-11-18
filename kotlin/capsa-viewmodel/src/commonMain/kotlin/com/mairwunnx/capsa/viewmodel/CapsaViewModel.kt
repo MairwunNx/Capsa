@@ -4,35 +4,26 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.savedstate.SavedState
-import androidx.savedstate.read
-import androidx.savedstate.savedState
-import androidx.savedstate.serialization.decodeFromSavedState
-import androidx.savedstate.serialization.encodeToSavedState
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.CapabilityScope
-import com.mairwunnx.capsa.CapsaBuilder
+import com.mairwunnx.capsa.Capsa
 import com.mairwunnx.capsa.CapsaConfig
-import com.mairwunnx.capsa.CapsaRuntime
+import com.mairwunnx.capsa.CapsaEffects
+import com.mairwunnx.capsa.CapsaHostCore
+import com.mairwunnx.capsa.CapsaLogger
 import com.mairwunnx.capsa.CapsaVisibility
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.EffectHandlers
 import com.mairwunnx.capsa.Intent
+import com.mairwunnx.capsa.LoggingCapsaObserver
 import com.mairwunnx.capsa.Signal
-import com.mairwunnx.capsa.effectHandlers
+import com.mairwunnx.capsa.SliceSaver
+import com.mairwunnx.capsa.SnapshotStore
 import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.locks.SynchronizedObject
-import kotlinx.atomicfu.locks.synchronized
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.plus
 
 /**
  * Hosts the capabilities of a screen in an AndroidX [ViewModel], on Android, iOS, and the JVM.
@@ -90,10 +81,19 @@ import kotlinx.coroutines.plus
 @Suppress("AbstractClassCanBeConcreteClass") // A screen extends it, nobody creates it as is.
 public abstract class CapsaViewModel(
     protected val logger: CapsaLogger = CapsaLogger.Default,
-    private val savedStateHandle: SavedStateHandle? = null,
-    private val config: CapsaConfig = defaultConfig(logger),
+    savedStateHandle: SavedStateHandle? = null,
+    config: CapsaConfig = defaultConfig(logger),
 ) : ViewModel(),
     CapabilityScope {
+
+    private val core = CapsaHostCore(
+        scope = viewModelScope,
+        logger = logger,
+        config = config,
+        handleEffects = { handleEffects() },
+        onEffectFailed = { effect, error -> onEffectFailed(effect, error) },
+        startHint = " In a test, set Main to StandardTestDispatcher.",
+    )
 
     /**
      * The scope of the runtime and of projections, with the error policy of Capsa.
@@ -101,40 +101,22 @@ public abstract class CapsaViewModel(
      * Pass it to `mapState` and `combineState` instead of `viewModelScope`. Otherwise a failing projection
      * crashes a release build.
      */
-    protected val capsaScope: CoroutineScope = viewModelScope + capsaExceptionHandler(
-        failFast = Capsa.failFast,
-        fallback = viewModelScope.coroutineContext[CoroutineExceptionHandler],
-        report = ::report,
-    )
+    protected val capsaScope: CoroutineScope = core.capsaScope
 
-    private val builder = CapsaBuilder()
-    private val runtime = atomic<CapsaRuntime?>(null)
-    private val startLock = SynchronizedObject()
-    private val outbox = Channel<Effect>(Channel.UNLIMITED)
+    private val snapshots: SnapshotStore? = savedStateHandle?.let(::HandleSnapshots)
 
     init {
-        viewModelScope.coroutineContext[Job]?.invokeOnCompletion { outbox.cancel() }
-        // Not `immediate`: the start waits until the subclass constructor ends. Without a main thread there is no later
-        // moment to wait for: a start on another thread would race the constructor, so send() or effects start the runtime.
-        if (hasMainDispatcher()) {
-            viewModelScope.launchReporting(
-                context = Dispatchers.Main,
-                onError = { logError("Capsa: the runtime did not start", it) },
-                onErrorFailed = ::fail,
-            ) {
-                ensureStarted()
-            }
-        }
+        core.startAfterConstructor()
     }
 
     /** Passes a user `intent` to the runtime. */
     public fun send(intent: Intent) {
-        ensureStarted().append(intent)
+        core.send(intent)
     }
 
     /** Passes an outside `signal` to the runtime, such as the result of another screen. */
     protected fun signal(signal: Signal) {
-        ensureStarted().append(signal)
+        core.signal(signal)
     }
 
     /**
@@ -144,10 +126,8 @@ public abstract class CapsaViewModel(
      * the view model, so `CollectEffects` doesn’t restart the subscription on recomposition. The collector of
      * [CapsaEffects.flow] makes the screen visible, like a collector of a slice.
      */
-    public val effects: CapsaEffects by lazy {
-        val runtime = ensureStarted()
-        CapsaEffects(flow = runtime.watched(outbox.receiveAsFlow()), onFail = ::fail)
-    }
+    public val effects: CapsaEffects
+        get() = core.effects
 
     /**
      * Registers the effects that the view model handles without the screen.
@@ -166,10 +146,7 @@ public abstract class CapsaViewModel(
      * @throws IllegalStateException if the runtime has already started
      * @throws IllegalArgumentException if the name of the capability is already taken
      */
-    protected fun <S : Any> install(capability: Capability<S>): StateFlow<S> {
-        checkNotStarted("install")
-        return builder.install(capability)
-    }
+    protected fun <S : Any> install(capability: Capability<S>): StateFlow<S> = core.install(capability)
 
     /**
      * Installs `capability` and keeps the chosen part of its state in [SavedStateHandle].
@@ -186,78 +163,13 @@ public abstract class CapsaViewModel(
      * @throws IllegalArgumentException if the name of the capability is already taken
      */
     protected fun <S : Any, P : Any> installSaved(capability: Capability<S>, saver: SliceSaver<S, P>, key: String): StateFlow<S> {
-        checkNotStarted("installSaved")
-        val handle = checkNotNull(savedStateHandle) { "installSaved() needs a SavedStateHandle in the constructor" }
-        val restored = handle.get<SavedState>(key)?.let { saved -> restoreOrNull(saver, saved, key) }
-        val state = builder.install(capability, restored)
-        handle.setSavedStateProvider(key) { save(saver = saver, state = state.value, key = key) }
-        return state
-    }
-
-    /** A broken snapshot must not break the screen: the capability starts from [Capability.initial]. */
-    private fun <S : Any, P : Any> restoreOrNull(saver: SliceSaver<S, P>, saved: SavedState, key: String): S? =
-        try {
-            saved.read { if (contains(SNAPSHOT_KEY)) getSavedState(SNAPSHOT_KEY) else null }
-                ?.let { snapshot -> saver.restore(decodeFromSavedState(saver.serializer, snapshot)) }
-        } catch (e: Exception) {
-            fail(IllegalStateException("Capsa could not restore snapshot \"$key\"", e))
-            null
-        }
-
-    /**
-     * Encodes the snapshot of `state` when the system saves the screen.
-     *
-     * The snapshot sits in a wrapper, so `null` and a snapshot that encodes to nothing stay apart. A failing `saver`
-     * goes to the error policy and saves nothing for `key`: the other keys of the screen are saved as usual.
-     */
-    private fun <S : Any, P : Any> save(saver: SliceSaver<S, P>, state: S, key: String): SavedState {
-        val snapshot = try {
-            saver.save(state)?.let { encodeToSavedState(saver.serializer, it) }
-        } catch (e: Exception) {
-            fail(IllegalStateException("Capsa could not save snapshot \"$key\"", e))
-            null
-        }
-        return savedState { if (snapshot != null) putSavedState(SNAPSHOT_KEY, snapshot) }
+        val store = checkNotNull(snapshots) { "installSaved() needs a SavedStateHandle in the constructor" }
+        return core.installSaved(capability, saver, key, store)
     }
 
     /** Hands `error` to the error policy of Capsa: a crash with [Capsa.failFast] on, an error in the log otherwise. */
     internal fun fail(error: Throwable) {
-        capsaScope.coroutineContext[CoroutineExceptionHandler]?.handleException(capsaScope.coroutineContext, error)
-    }
-
-    private fun checkNotStarted(method: String) {
-        check(runtime.value == null) {
-            "$method() after the runtime started. Call it while the subclass initializes, and leave send() and effects alone " +
-                "until the constructor ends. In a test, set Main to StandardTestDispatcher."
-        }
-    }
-
-    /** `send` and `signal` work from any thread: the runtime is created exactly once. */
-    private fun ensureStarted(): CapsaRuntime = runtime.value ?: synchronized(startLock) { runtime.value ?: start() }
-
-    private fun start(): CapsaRuntime {
-        val handlers = effectHandlers(onUnhandled = { outbox.trySend(it) }) { handleEffects() }
-        val started = builder.build(capsaScope, config)
-        runtime.value = started
-        viewModelScope.launchReporting(onError = { logError("Capsa: the effect stream stopped", it) }, onErrorFailed = ::fail) {
-            started.effects.collect { dispatch(handlers, it) }
-        }
-        AppForeground.flow()?.let { foreground ->
-            viewModelScope.launchReporting(onError = { logError("Capsa: the app foreground stream stopped", it) }, onErrorFailed = ::fail) {
-                foreground.collect(started::onVisibilityChanged)
-            }
-        }
-        return started
-    }
-
-    private suspend fun dispatch(handlers: EffectHandlers, effect: Effect) {
-        try {
-            handlers.handle(effect)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            onEffectFailed(effect, e)
-        }
+        core.fail(error)
     }
 
     /**
@@ -274,27 +186,7 @@ public abstract class CapsaViewModel(
         fail(IllegalStateException("Capsa effect $effect failed in the ViewModel", error))
     }
 
-    /**
-     * Writes an error that the release policy keeps away from a crash. A logger that throws here has nowhere left
-     * to report to, so the platform log gets both errors instead of the app crashing.
-     */
-    private fun report(error: Throwable) {
-        try {
-            logger.log(CapsaLogger.Level.Error, error) { "Capsa failure" }
-        } catch (e: Exception) {
-            e.addSuppressed(error)
-            writeToPlatformLog(CapsaLogger.Level.Error, "Capsa failure, and the logger failed too", e)
-        }
-    }
-
-    private fun logError(text: String, error: Exception) {
-        logger.log(CapsaLogger.Level.Error, error) { text }
-    }
-
     public companion object {
-
-        /** The key of the snapshot inside the wrapper that [installSaved] keeps in `SavedStateHandle`. */
-        private const val SNAPSHOT_KEY = "snapshot"
 
         // Dispatchers.Default is only the default: tests replace it with setWorkDispatcher.
         @Suppress("InjectDispatcher")
@@ -321,60 +213,11 @@ public abstract class CapsaViewModel(
     }
 }
 
-/**
- * Returns `false` when the platform has no main dispatcher, such as a plain JVM app without `kotlinx-coroutines-swing`
- * or a test without `Dispatchers.setMain`. `viewModelScope` checks the same way: a missing dispatcher throws on access
- * to `immediate`, while `Dispatchers.Main` itself would throw only on the first dispatch.
- */
-internal fun hasMainDispatcher(): Boolean =
-    try {
-        Dispatchers.Main.immediate
-        true
-    } catch (_: NotImplementedError) {
-        false
-    } catch (_: IllegalStateException) {
-        false
-    }
+/** Keeps snapshots in [SavedStateHandle]: the key of a snapshot is the key of [CapsaViewModel.installSaved]. */
+private class HandleSnapshots(private val handle: SavedStateHandle) : SnapshotStore {
+    override fun restored(key: String): SavedState? = handle.get<SavedState>(key)
 
-/**
- * Decides the fate of an uncaught Capsa error.
- *
- * With `failFast`, the error goes to the previous handler of the scope, or without one to the platform, and the app crashes.
- * Otherwise the error goes to `report`, and the scope keeps working.
- */
-internal fun capsaExceptionHandler(
-    failFast: Boolean,
-    fallback: CoroutineExceptionHandler?,
-    report: (Throwable) -> Unit,
-): CoroutineExceptionHandler = CoroutineExceptionHandler { context, error ->
-    when {
-        !failFast -> report(error)
-        fallback != null -> fallback.handleException(context, error)
-        else -> deliverUncaughtToPlatform(error)
-    }
-}
-
-/**
- * The effects of a screen together with the error policy for their handlers.
- *
- * The screen passes this object to `CollectEffects` instead of the view model itself. A host without Compose,
- * such as SwiftUI, collects [flow] and calls [fail] on its own.
- *
- * @property flow the effects that the view model didn’t take. While someone collects them, the runtime counts
- * the screen as visible
- */
-public class CapsaEffects internal constructor(
-    public val flow: Flow<Effect>,
-    private val onFail: (Throwable) -> Unit,
-) {
-
-    /**
-     * Hands `error` of a screen’s effect handler to the error policy of Capsa: a crash with [Capsa.failFast] on,
-     * an error in the log otherwise. The effects keep coming either way.
-     *
-     * @param error what the handler threw, or an error about an effect without a handler
-     */
-    public fun fail(error: Throwable) {
-        onFail(error)
+    override fun register(key: String, provide: () -> SavedState) {
+        handle.setSavedStateProvider(key) { provide() }
     }
 }

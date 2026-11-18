@@ -1,5 +1,6 @@
 package com.mairwunnx.capsa.viewmodel
 
+import com.mairwunnx.capsa.CapsaLogger
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.capability

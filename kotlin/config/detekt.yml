@@ -23,6 +23,7 @@ exceptions:
   TooGenericExceptionCaught:
     excludes:
       - '**/capsa-core/src/**'
+      - '**/capsa-host/src/**'
       - '**/capsa-viewmodel/src/**'
 
 naming:

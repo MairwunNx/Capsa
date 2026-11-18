@@ -1,6 +1,6 @@
 package com.mairwunnx.capsa.compose
 
-import com.mairwunnx.capsa.viewmodel.CapsaLogger
+import com.mairwunnx.capsa.CapsaLogger
 
 /** Keeps the errors it receives, so a test can check what reached the error policy of a release build. */
 internal class RecordingLogger : CapsaLogger {

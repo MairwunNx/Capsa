@@ -10,6 +10,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.mairwunnx.capsa.Capsa
+import com.mairwunnx.capsa.CapsaLogger
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
@@ -19,8 +21,6 @@ import com.mairwunnx.capsa.capability
 import com.mairwunnx.capsa.commit
 import com.mairwunnx.capsa.effectHandlers
 import com.mairwunnx.capsa.stream
-import com.mairwunnx.capsa.viewmodel.Capsa
-import com.mairwunnx.capsa.viewmodel.CapsaLogger
 import com.mairwunnx.capsa.viewmodel.CapsaViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

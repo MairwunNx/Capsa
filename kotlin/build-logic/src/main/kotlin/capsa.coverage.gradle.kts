@@ -5,5 +5,5 @@ plugins {
 }
 
 dependencies {
-    listOf("capsa-core", "capsa-viewmodel", "capsa-compose", "capsa-test").forEach { kover(project(":$it")) }
+    listOf("capsa-core", "capsa-host", "capsa-viewmodel", "capsa-compose", "capsa-test").forEach { kover(project(":$it")) }
 }
