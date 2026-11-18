@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.reflect.KClass
 
 /**
  * Holds the state of one capability and hides its concrete type `S` from the runtime.
@@ -118,6 +119,14 @@ public class CapsaRuntime internal constructor(
 
     private val history = CapsaHistory()
 
+    /**
+     * Remembers which capabilities accept each class of fact, so a fact doesn’t check every reaction of every capability.
+     *
+     * [Capability.handles] doesn’t change after the build, so the answer for a class never changes either.
+     * Accessed only from the fact-processing coroutine. The map grows up to the number of fact classes on the screen.
+     */
+    private val handlersByClass = mutableMapOf<KClass<out Fact>, List<CapabilityHolder<*>>>()
+
     init {
         inbox.trySend(Inbound.External(Started))
         // One consumer: the order is deterministic, and no locks are needed.
@@ -196,7 +205,7 @@ public class CapsaRuntime internal constructor(
             return
         }
 
-        val handlers = holders.filter { it.accepts(fact) }
+        val handlers = handlersByClass.getOrPut(fact::class) { holders.filter { it.accepts(fact) } }
         history.add(CapsaHistory.FactHandled(fact, handlers))
         if (handlers.isEmpty()) {
             if (fact !is Started) report(CapsaViolation.UnhandledFact(fact))

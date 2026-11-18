@@ -27,7 +27,11 @@ public interface Capability<S : Any> {
      */
     public val name: String
 
-    /** Returns the classes of facts the capability accepts. The runtime filters out the other facts. */
+    /**
+     * Returns the classes of facts the capability accepts. The runtime filters out the other facts.
+     *
+     * The set must not change: the runtime asks once for each class of fact and remembers the answer.
+     */
     public val handles: Set<KClass<out Fact>>
 
     /** Creates the state before the first fact. A restored state takes priority over the initial one. */
