@@ -25,6 +25,7 @@ class WorkLifecycleTest {
     private data object Watch : Intent
     private data object Tick : Signal
     private data object Foreign : Intent
+    private data object WatchBoth : Intent
 
     private val run = WorkKey("run")
     private val ticks = WorkKey("ticks")
@@ -57,6 +58,21 @@ class WorkLifecycleTest {
         }
         on<Tick> { state, _ -> (state + 1).commit() }
         on<Foreign> { _, _ -> throw CancellationException("not ours") }
+    }
+
+    private val twinTickers = capability("twins", 0) {
+        on<WatchBoth> { state, _ ->
+            val ticker = stream(ticks, onError = { Tick }, policy = WorkPolicy.Parallel, whileVisible = true) {
+                flow {
+                    while (true) {
+                        delay(100.milliseconds)
+                        emit(Tick)
+                    }
+                }
+            }
+            state.commit(works = listOf(ticker, ticker))
+        }
+        on<Tick> { state, _ -> (state + 1).commit() }
     }
 
     private class Harness<S : Any>(
@@ -153,6 +169,29 @@ class WorkLifecycleTest {
         testScheduler.advanceTimeBy(150.milliseconds)
         assertEquals(1, rt.state.value)
         rt.scope.cancel()
+    }
+
+    @Test
+    fun parallelWhileVisibleStreamsWithOneKeyAllRestartWhenVisible() = runTest {
+        val rt = start(twinTickers)
+        // The streams never end: without the cancel in finally, a failed assertion would hang runTest.
+        try {
+            rt.runtime.append(WatchBoth)
+            testScheduler.runCurrent()
+            testScheduler.advanceTimeBy(150.milliseconds)
+            assertEquals(2, rt.state.value)
+
+            rt.runtime.onVisibilityChanged(false)
+            testScheduler.advanceTimeBy(1_000.milliseconds)
+            assertEquals(2, rt.state.value)
+
+            rt.runtime.onVisibilityChanged(true)
+            testScheduler.runCurrent()
+            testScheduler.advanceTimeBy(150.milliseconds)
+            assertEquals(4, rt.state.value)
+        } finally {
+            rt.scope.cancel()
+        }
     }
 
     @Test

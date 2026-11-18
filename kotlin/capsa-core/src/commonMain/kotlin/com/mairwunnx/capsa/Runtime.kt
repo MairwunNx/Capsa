@@ -319,12 +319,11 @@ public class CapsaRuntime internal constructor(
             paused.clear()
             resumed.forEach { (owner, work) -> startWork(owner, work) }
         } else {
-            jobs.values.flatten()
-                .filter { it.work.whileVisible && !it.revoked }
-                .forEach { launch ->
-                    cancelWork(launch.owner, launch.work.key)
-                    paused += launch.owner to launch.work
-                }
+            val hidden = jobs.values.flatten().filter { it.work.whileVisible && !it.revoked }
+            // cancelWork clears the paused entries of its key, so all cancels go first: with WorkPolicy.Parallel
+            // one key has several runs, and a cancel after a pause would erase the runs paused before it.
+            hidden.map { it.owner to it.work.key }.distinct().forEach { (owner, key) -> cancelWork(owner, key) }
+            hidden.forEach { paused += it.owner to it.work }
         }
     }
 
