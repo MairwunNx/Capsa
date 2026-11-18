@@ -13,6 +13,7 @@ import com.mairwunnx.capsa.CapabilityScope
 import com.mairwunnx.capsa.CapsaBuilder
 import com.mairwunnx.capsa.CapsaConfig
 import com.mairwunnx.capsa.CapsaRuntime
+import com.mairwunnx.capsa.CapsaVisibility
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.EffectHandlers
 import com.mairwunnx.capsa.Intent
@@ -62,6 +63,21 @@ import kotlinx.coroutines.plus
  *
  * The default config runs works on `Dispatchers.Default`, and decisions stay on the thread of `viewModelScope`.
  * [LoggingCapsaObserver] writes the runtime journal. A test replaces the work dispatcher with [setWorkDispatcher].
+ *
+ * ### When the screen is visible
+ *
+ * The runtime pauses works with `whileVisible` while the screen is hidden, and the view model needs no call for it.
+ * The screen is visible while someone collects a slice, a projection, or [effects], and the app is in the foreground.
+ * `collectAsStateWithLifecycle()` and `CollectEffects` stop collecting below `STARTED`, so the back stack and
+ * the background hide the screen. A rotation doesn’t restart the works: the new screen starts collecting within
+ * [CapsaVisibility.Watched.grace], one second by default. The foreground comes from `ProcessLifecycleOwner` on Android
+ * and from the app notifications on iOS and macOS. It also covers `collectAsState()`, which keeps collecting in the background.
+ *
+ * Read slices inside the view model through `.value` or build projections with `mapState` and `combineState`:
+ * they don’t count as collectors. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }`
+ * over a slice is a collector that never leaves, so the screen stays visible for good. `SharingStarted.WhileSubscribed`
+ * passes the collectors of the UI through. A test without UI collects the state, for example in `backgroundScope`,
+ * otherwise works with `whileVisible` don’t start.
  *
  * Uncaught errors of the runtime, of projections, of snapshots, and of the screen’s effect handlers go through [capsaScope].
  * With [Capsa.failFast] on, they crash the app, so a bug shows up at once. Otherwise they go to [logger] as errors,
@@ -226,6 +242,11 @@ public abstract class CapsaViewModel(
         viewModelScope.launchReporting(onError = { logError("Capsa: the effect stream stopped", it) }, onErrorFailed = ::fail) {
             started.effects.collect { dispatch(handlers, it) }
         }
+        AppForeground.flow()?.let { foreground ->
+            viewModelScope.launchReporting(onError = { logError("Capsa: the app foreground stream stopped", it) }, onErrorFailed = ::fail) {
+                foreground.collect(started::onVisibilityChanged)
+            }
+        }
         return started
     }
 
@@ -339,7 +360,8 @@ internal fun capsaExceptionHandler(
  * The screen passes this object to `CollectEffects` instead of the view model itself. A host without Compose,
  * such as SwiftUI, collects [flow] and calls [fail] and [setVisible] on its own.
  *
- * @property flow the effects that the view model didn’t take
+ * @property flow the effects that the view model didn’t take. While someone collects them, the runtime counts
+ * the screen as visible
  */
 public class CapsaEffects internal constructor(
     public val flow: Flow<Effect>,

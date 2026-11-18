@@ -13,6 +13,8 @@ robolectric = "4.18.1"
 # Robolectric needs JDK 21 to run SDK 35 and newer, so the Android host tests run on it.
 robolectric-jvm = "21"
 androidx-lifecycle = "2.11.0"
+# The Android-only ProcessLifecycleOwner, from Google Maven: JetBrains doesn't publish lifecycle-process for KMP.
+androidx-lifecycle-process = "2.11.0"
 androidx-savedstate = "1.4.0"
 androidx-tracing = "2.0.5"
 androidx-startup = "1.2.0"
@@ -33,6 +35,7 @@ kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-
 androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-savedstate = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "androidx-lifecycle-process" }
 androidx-savedstate = { module = "org.jetbrains.androidx.savedstate:savedstate", version.ref = "androidx-savedstate" }
 androidx-tracing = { module = "androidx.tracing:tracing", version.ref = "androidx-tracing" }
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
