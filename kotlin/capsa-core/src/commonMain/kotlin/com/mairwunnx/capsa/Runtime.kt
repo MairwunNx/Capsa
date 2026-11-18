@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * Holds the state of one capability and hides its concrete type `S` from the runtime.
@@ -40,6 +42,7 @@ internal class CapabilityHolder<S : Any>(
 public class CapsaBuilder {
 
     private val holders = mutableListOf<CapabilityHolder<*>>()
+    private val watchers = Watchers()
     private var built = false
 
     /**
@@ -50,7 +53,8 @@ public class CapsaBuilder {
      *
      * @param capability the capability to install
      * @param restored the state after process restoration, or `null`
-     * @return a read-only flow of the state, for building projections
+     * @return a read-only flow of the state, for building projections. Its collectors make the screen visible,
+     * see [CapsaVisibility.Watched]
      * @throws IllegalArgumentException if the builder already holds a capability with this name
      * @throws IllegalStateException if the runtime is already built: such a capability would never receive facts
      */
@@ -61,7 +65,7 @@ public class CapsaBuilder {
         }
         val holder = CapabilityHolder(capability, restored)
         holders += holder
-        return holder.state
+        return WatchedStateFlow(holder.state, watchers)
     }
 
     /**
@@ -77,7 +81,7 @@ public class CapsaBuilder {
     public fun build(scope: CoroutineScope, config: CapsaConfig = CapsaConfig()): CapsaRuntime {
         check(!built) { "build() is already called: a second runtime over the same capabilities would process facts in parallel" }
         built = true
-        return CapsaRuntime(holders.toList(), scope, config)
+        return CapsaRuntime(holders.toList(), watchers, scope, config)
     }
 }
 
@@ -89,6 +93,7 @@ public class CapsaBuilder {
  */
 public class CapsaRuntime internal constructor(
     private val holders: List<CapabilityHolder<*>>,
+    private val watchers: Watchers,
     private val scope: CoroutineScope,
     private val config: CapsaConfig,
 ) {
@@ -102,7 +107,12 @@ public class CapsaRuntime internal constructor(
      */
     private val outbox = Channel<Effect>(Channel.UNLIMITED)
 
-    /** The effects for the host. Only one collector may read them. */
+    /**
+     * The effects for the host. Only one collector may read them.
+     *
+     * Their collector doesn’t count as a watcher of the screen: a host that collects them all the time, such as
+     * a view model, would keep the screen visible for good. A host hands the screen its own flow through [watched].
+     */
     public val effects: Flow<Effect> = outbox.receiveAsFlow()
 
     /**
@@ -115,7 +125,18 @@ public class CapsaRuntime internal constructor(
     /** Works with `whileVisible` that wait for the screen to come back. Accessed only from the fact-processing coroutine. */
     private val paused = mutableListOf<Pair<String, Work>>()
 
-    private var visible = true
+    /** Whether the works with `whileVisible` run. Accessed only from the fact-processing coroutine, like the fields below. */
+    private var visible = config.visibility is CapsaVisibility.Host
+
+    /** The host’s veto from [onVisibilityChanged]. */
+    private var hostVisible = true
+
+    /** The collectors of slices, projections, and [watched] flows. */
+    private var watcherCount = 0
+
+    /** The pending hide after the last collector left, and its number: a late [Inbound.GraceOver] of an old one is ignored. */
+    private var grace: Job? = null
+    private var graceTicket = 0
 
     private val history = CapsaHistory()
 
@@ -128,6 +149,8 @@ public class CapsaRuntime internal constructor(
     private val handlersByClass = mutableMapOf<KClass<out Fact>, List<CapabilityHolder<*>>>()
 
     init {
+        // Collectors that came before the build go first: a work with `whileVisible` from Started then starts at once.
+        watchers.attach { inbox.trySend(Inbound.Watching(it)) }
         inbox.trySend(Inbound.External(Started))
         // One consumer: the order is deterministic, and no locks are needed.
         scope.launch {
@@ -158,13 +181,26 @@ public class CapsaRuntime internal constructor(
     }
 
     /**
-     * Tells whether the screen is visible. A hidden screen pauses the works with `whileVisible`, a visible one restarts them.
+     * Passes the host’s veto on visibility. A hidden screen pauses the works with `whileVisible`, a visible one restarts them.
      *
-     * The host calls the method when the lifecycle changes. The method is thread-safe.
+     * With [CapsaVisibility.Host] only this method decides. With [CapsaVisibility.Watched] `false` hides the screen
+     * at once even while someone collects it, for example when the app goes to the background, and `true` lifts the veto:
+     * the collectors decide again. The veto starts lifted. The method is thread-safe.
      */
     public fun onVisibilityChanged(visible: Boolean) {
         inbox.trySend(Inbound.Visibility(visible))
     }
+
+    /**
+     * Counts the collectors of `flow` as watchers of the screen, see [CapsaVisibility.Watched].
+     *
+     * A host wraps the flows it hands to the screen and doesn’t install itself, such as the effects. The slices
+     * from [CapsaBuilder.install] count their collectors already.
+     *
+     * @param flow the flow for the screen
+     * @return a flow with the same values that makes the screen visible while someone collects it
+     */
+    public fun <T> watched(flow: Flow<T>): Flow<T> = WatchedFlow(flow, watchers)
 
     private fun receive(inbound: Inbound) {
         when (inbound) {
@@ -177,7 +213,18 @@ public class CapsaRuntime internal constructor(
                 process(inbound.signal)
             }
             is Inbound.WorkDone -> forget(inbound.launch)
-            is Inbound.Visibility -> changeVisibility(inbound.visible)
+            is Inbound.Visibility -> {
+                hostVisible = inbound.visible
+                updateVisibility()
+            }
+            is Inbound.Watching -> {
+                watcherCount += inbound.delta
+                updateVisibility()
+            }
+            is Inbound.GraceOver -> if (inbound.ticket == graceTicket && grace != null) {
+                grace = null
+                changeVisibility(false)
+            }
         }
     }
 
@@ -320,6 +367,41 @@ public class CapsaRuntime internal constructor(
         if (running.isEmpty()) jobs.remove(key)
     }
 
+    /** Applies the veto of the host and the count of collectors. The last collector hides the screen only after the grace. */
+    private fun updateVisibility() {
+        val watched = config.visibility is CapsaVisibility.Host || watcherCount > 0
+        when {
+            !hostVisible -> {
+                stopGrace()
+                changeVisibility(false)
+            }
+            watched -> {
+                stopGrace()
+                changeVisibility(true)
+            }
+            visible && grace == null -> startGrace()
+        }
+    }
+
+    private fun startGrace() {
+        val period = (config.visibility as CapsaVisibility.Watched).grace
+        if (period == Duration.ZERO) {
+            changeVisibility(false)
+            return
+        }
+        val ticket = ++graceTicket
+        grace = scope.launch {
+            delay(period)
+            inbox.trySend(Inbound.GraceOver(ticket))
+        }
+    }
+
+    private fun stopGrace() {
+        grace?.cancel()
+        grace = null
+        graceTicket++
+    }
+
     private fun changeVisibility(visible: Boolean) {
         if (this.visible == visible) return
         this.visible = visible
@@ -348,6 +430,8 @@ public class CapsaRuntime internal constructor(
         class FromWork(val signal: Signal, val launch: Launch) : Inbound
         class WorkDone(val launch: Launch) : Inbound
         class Visibility(val visible: Boolean) : Inbound
+        class Watching(val delta: Int) : Inbound
+        class GraceOver(val ticket: Int) : Inbound
     }
 }
 

@@ -6,6 +6,7 @@ import com.mairwunnx.capsa.CapsaConfig
 import com.mairwunnx.capsa.CapsaObserver
 import com.mairwunnx.capsa.CapsaRuntime
 import com.mairwunnx.capsa.CapsaViolation
+import com.mairwunnx.capsa.CapsaVisibility
 import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Fact
@@ -80,7 +81,8 @@ public class CapsaHarness internal constructor(
     /**
      * Simulates the screen going to the background (`false`) and coming back (`true`).
      *
-     * Works with `whileVisible` pause and restart. Like [append], it waits for [runCurrent].
+     * Works with `whileVisible` pause and restart. The screen of the harness starts visible: it uses [CapsaVisibility.Host],
+     * so collectors of the slices don’t matter. Like [append], it waits for [runCurrent].
      */
     public fun setVisible(visible: Boolean): Unit = runtime.onVisibilityChanged(visible)
 
@@ -186,6 +188,8 @@ public fun TestScope.capsaHarness(
                 if (strict) throw it
             },
             observer = recorder,
+            // Nobody collects the slices in a test, so only setVisible decides.
+            visibility = CapsaVisibility.Host,
         ),
     )
     // The effect subscriber starts at once, so an effect reaches the list without an extra runCurrent().

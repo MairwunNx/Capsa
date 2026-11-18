@@ -99,7 +99,9 @@ class WorkLifecycleTest {
         }
         val builder = CapsaBuilder()
         val state = builder.install(capability)
-        return Harness(runtime = builder.build(scope, CapsaConfig()), state = state, errors = errors, scope = scope)
+        // The tests drive visibility by hand, so nobody has to collect the slice.
+        val config = CapsaConfig(visibility = CapsaVisibility.Host)
+        return Harness(runtime = builder.build(scope, config), state = state, errors = errors, scope = scope)
     }
 
     @Test

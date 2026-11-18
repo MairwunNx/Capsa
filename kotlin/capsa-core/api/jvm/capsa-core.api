@@ -26,11 +26,12 @@ public final class com/mairwunnx/capsa/CapsaBuilder {
 
 public final class com/mairwunnx/capsa/CapsaConfig {
 	public fun <init> ()V
-	public fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;)V
-	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/CapsaVisibility;)V
+	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/CapsaVisibility;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getMaxSignalDepth ()I
 	public final fun getObserver ()Lcom/mairwunnx/capsa/CapsaObserver;
 	public final fun getOnViolation ()Lkotlin/jvm/functions/Function1;
+	public final fun getVisibility ()Lcom/mairwunnx/capsa/CapsaVisibility;
 	public final fun getWorkContext ()Lkotlin/coroutines/CoroutineContext;
 }
 
@@ -66,6 +67,7 @@ public final class com/mairwunnx/capsa/CapsaRuntime {
 	public final fun append (Lcom/mairwunnx/capsa/Fact;)V
 	public final fun getEffects ()Lkotlinx/coroutines/flow/Flow;
 	public final fun onVisibilityChanged (Z)V
+	public final fun watched (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
 }
 
 public abstract interface class com/mairwunnx/capsa/CapsaViolation {
@@ -130,6 +132,24 @@ public final class com/mairwunnx/capsa/CapsaViolationException : java/lang/Illeg
 	public synthetic fun <init> (Lcom/mairwunnx/capsa/CapsaViolation;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getHistory ()Ljava/util/List;
 	public final fun getViolation ()Lcom/mairwunnx/capsa/CapsaViolation;
+}
+
+public abstract interface class com/mairwunnx/capsa/CapsaVisibility {
+}
+
+public final class com/mairwunnx/capsa/CapsaVisibility$Host : com/mairwunnx/capsa/CapsaVisibility {
+	public static final field INSTANCE Lcom/mairwunnx/capsa/CapsaVisibility$Host;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mairwunnx/capsa/CapsaVisibility$Watched : com/mairwunnx/capsa/CapsaVisibility {
+	public fun <init> ()V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getGrace-UwyO8pc ()J
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/mairwunnx/capsa/Decision {

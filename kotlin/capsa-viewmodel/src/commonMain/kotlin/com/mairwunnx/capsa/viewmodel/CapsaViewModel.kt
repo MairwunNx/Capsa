@@ -125,11 +125,12 @@ public abstract class CapsaViewModel(
      * The effects for the screen. The first access starts the runtime.
      *
      * The channel keeps effects until someone subscribes and serves a single consumer. The object lives as long as
-     * the view model, so `CollectEffects` doesn’t restart the subscription on recomposition.
+     * the view model, so `CollectEffects` doesn’t restart the subscription on recomposition. The collector of
+     * [CapsaEffects.flow] makes the screen visible, like a collector of a slice.
      */
     public val effects: CapsaEffects by lazy {
-        ensureStarted()
-        CapsaEffects(flow = outbox.receiveAsFlow(), onFail = ::fail, onVisible = { ensureStarted().onVisibilityChanged(it) })
+        val runtime = ensureStarted()
+        CapsaEffects(flow = runtime.watched(outbox.receiveAsFlow()), onFail = ::fail, onVisible = runtime::onVisibilityChanged)
     }
 
     /**

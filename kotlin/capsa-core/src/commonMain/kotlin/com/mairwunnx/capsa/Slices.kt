@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.transform
  * The slice holds domain data, for example `likes: Int`, and `transform` does the formatting.
  * [mapState] computes the initial value from [StateFlow.value] synchronously, so the result is available at once.
  * By default [SharingStarted.Eagerly] starts the subscription together with the call.
+ * The projection reads the slice past the counter of [CapsaVisibility.Watched], so its own subscription doesn’t keep
+ * the screen visible. Whoever collects the projection counts as a collector of the slice.
  * If `transform` fails, the projection skips that value and stays on the last good one, and the error goes
  * to the error handler of the scope. The next value of the slice goes through `transform` again.
  * `CapsaViewModel.capsaScope` crashes the app on such an error only in debug builds.
@@ -28,8 +30,11 @@ public fun <T, R> StateFlow<T>.mapState(
     scope: CoroutineScope,
     started: SharingStarted = SharingStarted.Eagerly,
     transform: (T) -> R,
-): StateFlow<R> =
-    projectReporting(scope = scope, started = started, initialValue = transform(value), transform = transform)
+): StateFlow<R> {
+    val source = unwatched()
+    return source.projectReporting(scope = scope, started = started, initialValue = transform(source.value), transform = transform)
+        .watchedBy(watchOf(this))
+}
 
 /**
  * Combines two slices into one derived state.
@@ -45,12 +50,13 @@ public fun <A, B, R> combineState(
     b: StateFlow<B>,
     started: SharingStarted = SharingStarted.Eagerly,
     transform: (A, B) -> R,
-): StateFlow<R> = combine(a, b, ::Pair)
+): StateFlow<R> = combine(a.unwatched(), b.unwatched(), ::Pair)
     .projectReporting(
         scope = scope,
         started = started,
         initialValue = transform(a.value, b.value),
     ) { (x, y) -> transform(x, y) }
+    .watchedBy(watchOf(a, b))
 
 /** Combines three slices by the same rules as the overload for two. */
 public fun <A, B, C, R> combineState(
@@ -60,12 +66,13 @@ public fun <A, B, C, R> combineState(
     c: StateFlow<C>,
     started: SharingStarted = SharingStarted.Eagerly,
     transform: (A, B, C) -> R,
-): StateFlow<R> = combine(a, b, c, ::Triple)
+): StateFlow<R> = combine(a.unwatched(), b.unwatched(), c.unwatched(), ::Triple)
     .projectReporting(
         scope = scope,
         started = started,
         initialValue = transform(a.value, b.value, c.value),
     ) { (x, y, z) -> transform(x, y, z) }
+    .watchedBy(watchOf(a, b, c))
 
 /**
  * Combines four slices into one derived state.
@@ -80,12 +87,13 @@ public fun <A, B, C, D, R> combineState(
     d: StateFlow<D>,
     started: SharingStarted = SharingStarted.Eagerly,
     transform: (A, B, C, D) -> R,
-): StateFlow<R> = combine(a, b, c, d, ::Four)
+): StateFlow<R> = combine(a.unwatched(), b.unwatched(), c.unwatched(), d.unwatched(), ::Four)
     .projectReporting(
         scope = scope,
         started = started,
         initialValue = transform(a.value, b.value, c.value, d.value),
     ) { transform(it.a, it.b, it.c, it.d) }
+    .watchedBy(watchOf(a, b, c, d))
 
 private data class Four<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 

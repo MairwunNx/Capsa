@@ -130,6 +130,12 @@ public fun work(
  * comes back. This fits timers and frequent updates that the back stack doesn’t need. The flow must be able to start
  * from the current value: the runtime calls `block` again after the screen returns.
  *
+ * By default the screen is visible while someone collects its slices, projections, or effects, and the app isn’t in
+ * the background, see [CapsaVisibility.Watched]. Nobody calls anything for it. A screen that collects its state with
+ * `collectAsStateWithLifecycle()` stops collecting in the background and in the back stack, and the stream pauses.
+ * Until the first collector the screen is hidden, so the stream waits for the UI. A rotation doesn’t restart the stream:
+ * the new screen comes back within [CapsaVisibility.Watched.grace].
+ *
  * @param key the key of the work within the capability
  * @param onError turns an exception from the flow into a signal
  * @param policy what to do when a work with this key is already running

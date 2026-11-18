@@ -2,7 +2,9 @@ package com.mairwunnx.capsa.compose
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Recomposer
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -23,6 +25,7 @@ import com.mairwunnx.capsa.viewmodel.CapsaViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
@@ -57,23 +60,20 @@ class CollectEffectsCompositionTest : CompositionTest() {
 
     /** Turns `Open(id)` into `Navigate(id)` and keeps a `whileVisible` stream that writes down when it starts and stops. */
     private class ScreenViewModel(logger: CapsaLogger, subscriptions: MutableList<String>) : CapsaViewModel(logger) {
-        init {
-            @Suppress("IgnoredReturnValue")
-            install(
-                capability("screen", Unit) {
-                    on<Started> { state, _ ->
-                        state.commit(
-                            stream(TICKS, onError = { Ticked }, whileVisible = true) {
-                                flow<Signal> { awaitCancellation() }
-                                    .onStart { subscriptions += "start" }
-                                    .onCompletion { subscriptions += "stop" }
-                            },
-                        )
-                    }
-                    on<Open> { state, fact -> state.commit(Navigate(fact.id)) }
-                },
-            )
-        }
+        val screen: StateFlow<Unit> = install(
+            capability("screen", Unit) {
+                on<Started> { state, _ ->
+                    state.commit(
+                        stream(TICKS, onError = { Ticked }, whileVisible = true) {
+                            flow<Signal> { awaitCancellation() }
+                                .onStart { subscriptions += "start" }
+                                .onCompletion { subscriptions += "stop" }
+                        },
+                    )
+                }
+                on<Open> { state, fact -> state.commit(Navigate(fact.id)) }
+            },
+        )
     }
 
     private val logger = RecordingLogger()
@@ -99,9 +99,11 @@ class CollectEffectsCompositionTest : CompositionTest() {
         return ScreenViewModel(logger, subscriptions)
     }
 
+    /** Runs everything due, a frame, and what the frame started: a collector that left in the frame starts the grace. */
     private fun TestScope.settle(host: HeadlessComposition) {
         testScheduler.advanceUntilIdle()
         host.frame()
+        testScheduler.advanceUntilIdle()
     }
 
     @Test
@@ -175,7 +177,7 @@ class CollectEffectsCompositionTest : CompositionTest() {
     }
 
     @Test
-    fun theRuntimeSeesTheScreenHiddenWhenItStopsAndVisibleWhenItStartsAgain() = runTest {
+    fun theRuntimeSeesTheScreenOnlyFromStartedAndHidesItAfterTheGrace() = runTest {
         val vm = screen()
         val owner = TestOwner(Lifecycle.State.CREATED)
         val host = compose {
@@ -184,8 +186,8 @@ class CollectEffectsCompositionTest : CompositionTest() {
             }
         }
         settle(host)
-        // The runtime counts the screen as visible until the host says otherwise.
-        assertEquals(listOf("start"), subscriptions)
+        // Below STARTED nobody collects the screen, so it stays hidden.
+        assertEquals(emptyList(), subscriptions)
 
         owner.lifecycle.currentState = Lifecycle.State.STARTED
         settle(host)
@@ -198,6 +200,44 @@ class CollectEffectsCompositionTest : CompositionTest() {
         owner.lifecycle.currentState = Lifecycle.State.STARTED
         settle(host)
         assertEquals(listOf("start", "stop", "start"), subscriptions)
+    }
+
+    @Test
+    fun aScreenThatLeavesTheCompositionIsHidden() = runTest {
+        val vm = screen()
+        val owner = TestOwner(Lifecycle.State.STARTED)
+        val shown = mutableStateOf(true)
+        val host = compose {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                if (shown.value) CollectEffects(vm.effects, effectHandlers {})
+            }
+        }
+        settle(host)
+        assertEquals(listOf("start"), subscriptions)
+
+        // The back stack: navigation stops composing the screen.
+        shown.value = false
+        Snapshot.sendApplyNotifications()
+        settle(host)
+
+        assertEquals(listOf("start", "stop"), subscriptions)
+    }
+
+    @Test
+    fun aScreenWithoutEffectsThatCollectsItsStateIsVisible() = runTest {
+        val vm = screen()
+        val shown = mutableStateOf(true)
+        val host = compose {
+            if (shown.value) vm.screen.collectAsState()
+        }
+        settle(host)
+        assertEquals(listOf("start"), subscriptions)
+
+        shown.value = false
+        Snapshot.sendApplyNotifications()
+        settle(host)
+
+        assertEquals(listOf("start", "stop"), subscriptions)
     }
 
     @Test

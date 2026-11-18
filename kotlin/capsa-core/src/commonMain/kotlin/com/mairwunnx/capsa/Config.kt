@@ -126,10 +126,13 @@ public interface CapsaObserver {
  * @param workContext the coroutine context for works. An empty context inherits the settings of the runtime scope.
  * The core doesn’t choose `Dispatchers.Main`: the dispatcher comes with the scope
  * @param observer an observer for logs and tests
+ * @param visibility where the runtime learns whether the screen is visible. By default the screen is visible while someone
+ * collects its slices, projections, or effects, see [CapsaVisibility.Watched]
  */
 public class CapsaConfig(
     public val maxSignalDepth: Int = 8,
     public val onViolation: (CapsaViolationException) -> Unit = { throw it },
     public val workContext: CoroutineContext = EmptyCoroutineContext,
     public val observer: CapsaObserver = CapsaObserver.None,
+    public val visibility: CapsaVisibility = CapsaVisibility.Watched(),
 )

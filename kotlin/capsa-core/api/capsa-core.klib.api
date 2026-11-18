@@ -145,6 +145,23 @@ sealed interface com.mairwunnx.capsa/CapsaViolation { // com.mairwunnx.capsa/Cap
     }
 }
 
+sealed interface com.mairwunnx.capsa/CapsaVisibility { // com.mairwunnx.capsa/CapsaVisibility|null[0]
+    final class Watched : com.mairwunnx.capsa/CapsaVisibility { // com.mairwunnx.capsa/CapsaVisibility.Watched|null[0]
+        constructor <init>(kotlin.time/Duration = ...) // com.mairwunnx.capsa/CapsaVisibility.Watched.<init>|<init>(kotlin.time.Duration){}[0]
+
+        final val grace // com.mairwunnx.capsa/CapsaVisibility.Watched.grace|{}grace[0]
+            final fun <get-grace>(): kotlin.time/Duration // com.mairwunnx.capsa/CapsaVisibility.Watched.grace.<get-grace>|<get-grace>(){}[0]
+
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/CapsaVisibility.Watched.toString|toString(){}[0]
+    }
+
+    final object Host : com.mairwunnx.capsa/CapsaVisibility { // com.mairwunnx.capsa/CapsaVisibility.Host|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mairwunnx.capsa/CapsaVisibility.Host.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mairwunnx.capsa/CapsaVisibility.Host.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mairwunnx.capsa/CapsaVisibility.Host.toString|toString(){}[0]
+    }
+}
+
 final class <#A: kotlin/Any> com.mairwunnx.capsa/CapabilityBuilder { // com.mairwunnx.capsa/CapabilityBuilder|null[0]
     final fun <#A1: com.mairwunnx.capsa/Fact> addReaction(kotlin.reflect/KClass<#A1>, kotlin/Function2<#A, #A1, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/CapabilityBuilder.addReaction|addReaction(kotlin.reflect.KClass<0:0>;kotlin.Function2<1:0,0:0,com.mairwunnx.capsa.Decision<1:0>>){0§<com.mairwunnx.capsa.Fact>}[0]
     final inline fun <#A1: reified com.mairwunnx.capsa/Fact> on(noinline kotlin/Function2<#A, #A1, com.mairwunnx.capsa/Decision<#A>>) // com.mairwunnx.capsa/CapabilityBuilder.on|on(kotlin.Function2<1:0,0:0,com.mairwunnx.capsa.Decision<1:0>>){0§<com.mairwunnx.capsa.Fact>}[0]
@@ -173,7 +190,7 @@ final class com.mairwunnx.capsa/CapsaBuilder { // com.mairwunnx.capsa/CapsaBuild
 }
 
 final class com.mairwunnx.capsa/CapsaConfig { // com.mairwunnx.capsa/CapsaConfig|null[0]
-    constructor <init>(kotlin/Int = ..., kotlin/Function1<com.mairwunnx.capsa/CapsaViolationException, kotlin/Unit> = ..., kotlin.coroutines/CoroutineContext = ..., com.mairwunnx.capsa/CapsaObserver = ...) // com.mairwunnx.capsa/CapsaConfig.<init>|<init>(kotlin.Int;kotlin.Function1<com.mairwunnx.capsa.CapsaViolationException,kotlin.Unit>;kotlin.coroutines.CoroutineContext;com.mairwunnx.capsa.CapsaObserver){}[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Function1<com.mairwunnx.capsa/CapsaViolationException, kotlin/Unit> = ..., kotlin.coroutines/CoroutineContext = ..., com.mairwunnx.capsa/CapsaObserver = ..., com.mairwunnx.capsa/CapsaVisibility = ...) // com.mairwunnx.capsa/CapsaConfig.<init>|<init>(kotlin.Int;kotlin.Function1<com.mairwunnx.capsa.CapsaViolationException,kotlin.Unit>;kotlin.coroutines.CoroutineContext;com.mairwunnx.capsa.CapsaObserver;com.mairwunnx.capsa.CapsaVisibility){}[0]
 
     final val maxSignalDepth // com.mairwunnx.capsa/CapsaConfig.maxSignalDepth|{}maxSignalDepth[0]
         final fun <get-maxSignalDepth>(): kotlin/Int // com.mairwunnx.capsa/CapsaConfig.maxSignalDepth.<get-maxSignalDepth>|<get-maxSignalDepth>(){}[0]
@@ -181,6 +198,8 @@ final class com.mairwunnx.capsa/CapsaConfig { // com.mairwunnx.capsa/CapsaConfig
         final fun <get-observer>(): com.mairwunnx.capsa/CapsaObserver // com.mairwunnx.capsa/CapsaConfig.observer.<get-observer>|<get-observer>(){}[0]
     final val onViolation // com.mairwunnx.capsa/CapsaConfig.onViolation|{}onViolation[0]
         final fun <get-onViolation>(): kotlin/Function1<com.mairwunnx.capsa/CapsaViolationException, kotlin/Unit> // com.mairwunnx.capsa/CapsaConfig.onViolation.<get-onViolation>|<get-onViolation>(){}[0]
+    final val visibility // com.mairwunnx.capsa/CapsaConfig.visibility|{}visibility[0]
+        final fun <get-visibility>(): com.mairwunnx.capsa/CapsaVisibility // com.mairwunnx.capsa/CapsaConfig.visibility.<get-visibility>|<get-visibility>(){}[0]
     final val workContext // com.mairwunnx.capsa/CapsaConfig.workContext|{}workContext[0]
         final fun <get-workContext>(): kotlin.coroutines/CoroutineContext // com.mairwunnx.capsa/CapsaConfig.workContext.<get-workContext>|<get-workContext>(){}[0]
 }
@@ -189,6 +208,7 @@ final class com.mairwunnx.capsa/CapsaRuntime { // com.mairwunnx.capsa/CapsaRunti
     final val effects // com.mairwunnx.capsa/CapsaRuntime.effects|{}effects[0]
         final fun <get-effects>(): kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa/CapsaRuntime.effects.<get-effects>|<get-effects>(){}[0]
 
+    final fun <#A1: kotlin/Any?> watched(kotlinx.coroutines.flow/Flow<#A1>): kotlinx.coroutines.flow/Flow<#A1> // com.mairwunnx.capsa/CapsaRuntime.watched|watched(kotlinx.coroutines.flow.Flow<0:0>){0§<kotlin.Any?>}[0]
     final fun append(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa/CapsaRuntime.append|append(com.mairwunnx.capsa.Fact){}[0]
     final fun onVisibilityChanged(kotlin/Boolean) // com.mairwunnx.capsa/CapsaRuntime.onVisibilityChanged|onVisibilityChanged(kotlin.Boolean){}[0]
 }
