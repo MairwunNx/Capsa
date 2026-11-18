@@ -1,0 +1,28 @@
+{
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.rulers": [186],
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.exclude": {
+    "**/.gradle": true,
+    "**/.kotlin": true,
+    "**/build": true
+  },
+  "search.exclude": {
+    "**/.gradle": true,
+    "**/.kotlin": true,
+    "**/build": true
+  },
+  "gradle.nestedProjects": true,
+  "java.import.gradle.wrapper.enabled": true,
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+  },
+  "[kotlin]": {
+    "editor.tabSize": 4
+  },
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  }
+}
