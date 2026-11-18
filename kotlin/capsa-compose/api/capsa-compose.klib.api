@@ -11,5 +11,54 @@ abstract fun interface <#A: in kotlin/Any?> com.mairwunnx.capsa.compose/Slot { /
     open fun invoke(#A, kotlin/Function1<com.mairwunnx.capsa/Intent, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // com.mairwunnx.capsa.compose/Slot.invoke|invoke(1:0;kotlin.Function1<com.mairwunnx.capsa.Intent,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 }
 
+abstract class com.mairwunnx.capsa.compose/CapsaComposable : com.mairwunnx.capsa/CapabilityScope { // com.mairwunnx.capsa.compose/CapsaComposable|null[0]
+    constructor <init>(com.mairwunnx.capsa.compose/CapsaScope) // com.mairwunnx.capsa.compose/CapsaComposable.<init>|<init>(com.mairwunnx.capsa.compose.CapsaScope){}[0]
+
+    final val capsaScope // com.mairwunnx.capsa.compose/CapsaComposable.capsaScope|{}capsaScope[0]
+        final fun <get-capsaScope>(): kotlinx.coroutines/CoroutineScope // com.mairwunnx.capsa.compose/CapsaComposable.capsaScope.<get-capsaScope>|<get-capsaScope>(){}[0]
+    final val effects // com.mairwunnx.capsa.compose/CapsaComposable.effects|{}effects[0]
+        final fun <get-effects>(): com.mairwunnx.capsa/CapsaEffects // com.mairwunnx.capsa.compose/CapsaComposable.effects.<get-effects>|<get-effects>(){}[0]
+    final val logger // com.mairwunnx.capsa.compose/CapsaComposable.logger|{}logger[0]
+        final fun <get-logger>(): com.mairwunnx.capsa/CapsaLogger // com.mairwunnx.capsa.compose/CapsaComposable.logger.<get-logger>|<get-logger>(){}[0]
+
+    final fun <#A1: kotlin/Any, #B1: kotlin/Any> installSaved(com.mairwunnx.capsa/Capability<#A1>, com.mairwunnx.capsa/SliceSaver<#A1, #B1>, kotlin/String): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa.compose/CapsaComposable.installSaved|installSaved(com.mairwunnx.capsa.Capability<0:0>;com.mairwunnx.capsa.SliceSaver<0:0,0:1>;kotlin.String){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> install(com.mairwunnx.capsa/Capability<#A1>): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa.compose/CapsaComposable.install|install(com.mairwunnx.capsa.Capability<0:0>){0§<kotlin.Any>}[0]
+    final fun send(com.mairwunnx.capsa/Intent) // com.mairwunnx.capsa.compose/CapsaComposable.send|send(com.mairwunnx.capsa.Intent){}[0]
+    final fun signal(com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa.compose/CapsaComposable.signal|signal(com.mairwunnx.capsa.Signal){}[0]
+    open fun (com.mairwunnx.capsa/EffectHandlers.Builder).handleEffects() // com.mairwunnx.capsa.compose/CapsaComposable.handleEffects|handleEffects@com.mairwunnx.capsa.EffectHandlers.Builder(){}[0]
+    open suspend fun onEffectFailed(com.mairwunnx.capsa/Effect, kotlin/Exception) // com.mairwunnx.capsa.compose/CapsaComposable.onEffectFailed|onEffectFailed(com.mairwunnx.capsa.Effect;kotlin.Exception){}[0]
+}
+
+final class <#A: out kotlin/Any?> com.mairwunnx.capsa.compose/CapsaHandle { // com.mairwunnx.capsa.compose/CapsaHandle|null[0]
+    final val effects // com.mairwunnx.capsa.compose/CapsaHandle.effects|{}effects[0]
+        final fun <get-effects>(): com.mairwunnx.capsa/CapsaEffects // com.mairwunnx.capsa.compose/CapsaHandle.effects.<get-effects>|<get-effects>(){}[0]
+    final val state // com.mairwunnx.capsa.compose/CapsaHandle.state|{}state[0]
+        final fun <get-state>(): #A // com.mairwunnx.capsa.compose/CapsaHandle.state.<get-state>|<get-state>(){}[0]
+
+    final fun send(com.mairwunnx.capsa/Intent) // com.mairwunnx.capsa.compose/CapsaHandle.send|send(com.mairwunnx.capsa.Intent){}[0]
+    final fun signal(com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa.compose/CapsaHandle.signal|signal(com.mairwunnx.capsa.Signal){}[0]
+}
+
+final class com.mairwunnx.capsa.compose/CapsaScope : com.mairwunnx.capsa/CapabilityScope { // com.mairwunnx.capsa.compose/CapsaScope|null[0]
+    constructor <init>(kotlinx.coroutines/CoroutineScope, com.mairwunnx.capsa/CapsaLogger = ..., com.mairwunnx.capsa/CapsaConfig = ...) // com.mairwunnx.capsa.compose/CapsaScope.<init>|<init>(kotlinx.coroutines.CoroutineScope;com.mairwunnx.capsa.CapsaLogger;com.mairwunnx.capsa.CapsaConfig){}[0]
+
+    final val capsaScope // com.mairwunnx.capsa.compose/CapsaScope.capsaScope|{}capsaScope[0]
+        final fun <get-capsaScope>(): kotlinx.coroutines/CoroutineScope // com.mairwunnx.capsa.compose/CapsaScope.capsaScope.<get-capsaScope>|<get-capsaScope>(){}[0]
+
+    final fun <#A1: kotlin/Any, #B1: kotlin/Any> installSaved(com.mairwunnx.capsa/Capability<#A1>, com.mairwunnx.capsa/SliceSaver<#A1, #B1>, kotlin/String): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa.compose/CapsaScope.installSaved|installSaved(com.mairwunnx.capsa.Capability<0:0>;com.mairwunnx.capsa.SliceSaver<0:0,0:1>;kotlin.String){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> install(com.mairwunnx.capsa/Capability<#A1>): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa.compose/CapsaScope.install|install(com.mairwunnx.capsa.Capability<0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any?> expose(#A1): com.mairwunnx.capsa.compose/CapsaHandle<#A1> // com.mairwunnx.capsa.compose/CapsaScope.expose|expose(0:0){0§<kotlin.Any?>}[0]
+    final fun handleEffects(kotlin/Function1<com.mairwunnx.capsa/EffectHandlers.Builder, kotlin/Unit>) // com.mairwunnx.capsa.compose/CapsaScope.handleEffects|handleEffects(kotlin.Function1<com.mairwunnx.capsa.EffectHandlers.Builder,kotlin.Unit>){}[0]
+    final fun onEffectFailed(kotlin.coroutines/SuspendFunction2<com.mairwunnx.capsa/Effect, kotlin/Exception, kotlin/Unit>) // com.mairwunnx.capsa.compose/CapsaScope.onEffectFailed|onEffectFailed(kotlin.coroutines.SuspendFunction2<com.mairwunnx.capsa.Effect,kotlin.Exception,kotlin.Unit>){}[0]
+}
+
+final val com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaComposable$stableprop // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaComposable$stableprop|#static{}com_mairwunnx_capsa_compose_CapsaComposable$stableprop[0]
+final val com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaHandle$stableprop // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaHandle$stableprop|#static{}com_mairwunnx_capsa_compose_CapsaHandle$stableprop[0]
+final val com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaScope$stableprop // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaScope$stableprop|#static{}com_mairwunnx_capsa_compose_CapsaScope$stableprop[0]
+
+final fun <#A: kotlin/Any> com.mairwunnx.capsa.compose/rememberCapsa(kotlin/Array<out kotlin/Any?>..., com.mairwunnx.capsa/CapsaLogger?, com.mairwunnx.capsa/CapsaConfig?, kotlin/Function1<com.mairwunnx.capsa.compose/CapsaScope, #A>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): #A // com.mairwunnx.capsa.compose/rememberCapsa|rememberCapsa(kotlin.Array<out|kotlin.Any?>...;com.mairwunnx.capsa.CapsaLogger?;com.mairwunnx.capsa.CapsaConfig?;kotlin.Function1<com.mairwunnx.capsa.compose.CapsaScope,0:0>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){0§<kotlin.Any>}[0]
 final fun com.mairwunnx.capsa.compose/CollectEffects(com.mairwunnx.capsa/CapsaEffects, com.mairwunnx.capsa/EffectHandlers, androidx.lifecycle/LifecycleOwner?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.mairwunnx.capsa.compose/CollectEffects|CollectEffects(com.mairwunnx.capsa.CapsaEffects;com.mairwunnx.capsa.EffectHandlers;androidx.lifecycle.LifecycleOwner?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaComposable$stableprop_getter(): kotlin/Int // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaComposable$stableprop_getter|com_mairwunnx_capsa_compose_CapsaComposable$stableprop_getter(){}[0]
+final fun com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaHandle$stableprop_getter(): kotlin/Int // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaHandle$stableprop_getter|com_mairwunnx_capsa_compose_CapsaHandle$stableprop_getter(){}[0]
+final fun com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaScope$stableprop_getter(): kotlin/Int // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaScope$stableprop_getter|com_mairwunnx_capsa_compose_CapsaScope$stableprop_getter(){}[0]
 final suspend fun (kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Effect>).com.mairwunnx.capsa.compose/collectWhileStarted(androidx.lifecycle/LifecycleOwner, kotlin/Function1<com.mairwunnx.capsa/Effect, kotlin/Unit>) // com.mairwunnx.capsa.compose/collectWhileStarted|collectWhileStarted@kotlinx.coroutines.flow.Flow<com.mairwunnx.capsa.Effect>(androidx.lifecycle.LifecycleOwner;kotlin.Function1<com.mairwunnx.capsa.Effect,kotlin.Unit>){}[0]

@@ -20,9 +20,14 @@ kotlin {
     compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
 
     sourceSets {
+        all {
+            languageSettings.optIn("com.mairwunnx.capsa.InternalCapsaApi")
+        }
         commonMain.dependencies {
             api(projects.capsaHost)
             api(libs.compose.runtime)
+            api(libs.compose.runtime.saveable)
+            api(libs.compose.runtime.retain)
             api(libs.compose.ui)
             api(libs.androidx.lifecycle.runtime.compose)
         }

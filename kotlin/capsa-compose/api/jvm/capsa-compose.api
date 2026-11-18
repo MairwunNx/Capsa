@@ -1,6 +1,44 @@
+public abstract class com/mairwunnx/capsa/compose/CapsaComposable : com/mairwunnx/capsa/CapabilityScope {
+	public static final field $stable I
+	public fun <init> (Lcom/mairwunnx/capsa/compose/CapsaScope;)V
+	protected final fun getCapsaScope ()Lkotlinx/coroutines/CoroutineScope;
+	public final fun getEffects ()Lcom/mairwunnx/capsa/CapsaEffects;
+	protected final fun getLogger ()Lcom/mairwunnx/capsa/CapsaLogger;
+	protected fun handleEffects (Lcom/mairwunnx/capsa/EffectHandlers$Builder;)V
+	protected final fun install (Lcom/mairwunnx/capsa/Capability;)Lkotlinx/coroutines/flow/StateFlow;
+	protected final fun installSaved (Lcom/mairwunnx/capsa/Capability;Lcom/mairwunnx/capsa/SliceSaver;Ljava/lang/String;)Lkotlinx/coroutines/flow/StateFlow;
+	protected fun onEffectFailed (Lcom/mairwunnx/capsa/Effect;Ljava/lang/Exception;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun send (Lcom/mairwunnx/capsa/Intent;)V
+	protected final fun signal (Lcom/mairwunnx/capsa/Signal;)V
+}
+
+public final class com/mairwunnx/capsa/compose/CapsaHandle {
+	public static final field $stable I
+	public final fun getEffects ()Lcom/mairwunnx/capsa/CapsaEffects;
+	public final fun getState ()Ljava/lang/Object;
+	public final fun send (Lcom/mairwunnx/capsa/Intent;)V
+	public final fun signal (Lcom/mairwunnx/capsa/Signal;)V
+}
+
+public final class com/mairwunnx/capsa/compose/CapsaScope : com/mairwunnx/capsa/CapabilityScope {
+	public static final field $stable I
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/mairwunnx/capsa/CapsaLogger;Lcom/mairwunnx/capsa/CapsaConfig;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/mairwunnx/capsa/CapsaLogger;Lcom/mairwunnx/capsa/CapsaConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun expose (Ljava/lang/Object;)Lcom/mairwunnx/capsa/compose/CapsaHandle;
+	public final fun getCapsaScope ()Lkotlinx/coroutines/CoroutineScope;
+	public final fun handleEffects (Lkotlin/jvm/functions/Function1;)V
+	public final fun install (Lcom/mairwunnx/capsa/Capability;)Lkotlinx/coroutines/flow/StateFlow;
+	public final fun installSaved (Lcom/mairwunnx/capsa/Capability;Lcom/mairwunnx/capsa/SliceSaver;Ljava/lang/String;)Lkotlinx/coroutines/flow/StateFlow;
+	public final fun onEffectFailed (Lkotlin/jvm/functions/Function3;)V
+}
+
 public final class com/mairwunnx/capsa/compose/CollectEffectsKt {
 	public static final fun CollectEffects (Lcom/mairwunnx/capsa/CapsaEffects;Lcom/mairwunnx/capsa/EffectHandlers;Landroidx/lifecycle/LifecycleOwner;Landroidx/compose/runtime/Composer;II)V
 	public static final fun collectWhileStarted (Lkotlinx/coroutines/flow/Flow;Landroidx/lifecycle/LifecycleOwner;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/mairwunnx/capsa/compose/RememberCapsaKt {
+	public static final fun rememberCapsa ([Ljava/lang/Object;Lcom/mairwunnx/capsa/CapsaLogger;Lcom/mairwunnx/capsa/CapsaConfig;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)Ljava/lang/Object;
 }
 
 public abstract interface class com/mairwunnx/capsa/compose/Slot {
