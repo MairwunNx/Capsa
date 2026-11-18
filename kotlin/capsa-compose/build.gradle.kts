@@ -8,7 +8,13 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.capsaCore)
-            implementation(libs.compose.runtime)
+            api(projects.capsaViewmodel)
+            api(libs.compose.runtime)
+            api(libs.compose.ui)
+            api(libs.androidx.lifecycle.runtime.compose)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
