@@ -126,6 +126,22 @@ class CapabilityDslTest {
     }
 
     @Test
+    fun theRememberedReactionGivesTheSameAnswerOnEveryFactOfAClass() {
+        val social = capability("social", 0) {
+            on<Liked> { s, _ -> (s + 1).commit() }
+            on<Shared> { s, _ -> (s + 10).commit() }
+            on<Plus> { s, fact -> (s + fact.by).commit() }
+        }
+
+        repeat(2) {
+            assertEquals(3, social.decide(0, Plus(3)).state)
+            assertEquals(5, social.decide(0, Plus(5)).state)
+            assertFailsWith<IllegalStateException> { social.decide(0, LikedAndShared) }
+            assertFailsWith<IllegalStateException> { social.decide(0, Unknown) }
+        }
+    }
+
+    @Test
     @Suppress("IgnoredReturnValue")
     fun builderRejectsInstallAndASecondBuildAfterBuild() {
         val scope = CoroutineScope(Job())

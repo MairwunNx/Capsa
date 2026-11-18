@@ -1,5 +1,6 @@
 package com.mairwunnx.capsa
 
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
 
 /**
@@ -126,14 +127,25 @@ private class ReactiveCapability<S : Any>(
 
     override fun initial(): S = initial
 
+    // The reaction for each class of fact, filled on the first fact of that class. The map is immutable and replaced whole,
+    // so a capability shared between threads at worst searches for the same class twice.
+    @Volatile
+    private var reactionsByClass: Map<KClass<out Fact>, Reaction<S>?> = emptyMap()
+
     override fun decide(state: S, fact: Fact): Decision<S> {
+        val type = fact::class
+        val known = reactionsByClass
+        val reaction = known[type] ?: if (type in known) null else findReaction(fact).also { reactionsByClass = known + (type to it) }
+        return (reaction ?: error("Capability '$name' does not handle $fact")).react(state, fact)
+    }
+
+    private fun findReaction(fact: Fact): Reaction<S>? {
         val matching = reactions.filter { it.type.isInstance(fact) }
         // The build catches inheritance only. A fact that implements two unrelated interfaces is caught here.
         check(matching.size <= 1) {
             "Capability '$name': fact $fact matches several reactions at once: ${matching.joinToString { it.type.simpleName.orEmpty() }}"
         }
-        val reaction = matching.firstOrNull() ?: error("Capability '$name' does not handle $fact")
-        return reaction.react(state, fact)
+        return matching.firstOrNull()
     }
 
     override fun toString(): String = "Capability($name)"
