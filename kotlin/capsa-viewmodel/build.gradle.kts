@@ -23,6 +23,9 @@ kotlin {
         commonMain.dependencies {
             api(projects.capsaCore)
             api(libs.androidx.lifecycle.viewmodel)
+            api(libs.androidx.lifecycle.viewmodel.savedstate)
+            api(libs.kotlinx.serialization.core)
+            implementation(libs.androidx.savedstate)
             implementation(libs.kotlinx.atomicfu)
         }
         androidMain.dependencies {

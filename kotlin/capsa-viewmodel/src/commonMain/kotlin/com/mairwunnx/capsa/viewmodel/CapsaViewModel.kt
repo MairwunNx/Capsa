@@ -1,7 +1,11 @@
 package com.mairwunnx.capsa.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.savedstate.SavedState
+import androidx.savedstate.serialization.decodeFromSavedState
+import androidx.savedstate.serialization.encodeToSavedState
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.CapabilityScope
 import com.mairwunnx.capsa.CapsaBuilder
@@ -30,7 +34,7 @@ import kotlinx.coroutines.plus
 /**
  * Hosts the capabilities of a screen in an AndroidX [ViewModel], on Android, iOS, and the JVM.
  *
- * A subclass installs capabilities with [install], builds the UI state, and, if it needs to, registers handlers
+ * A subclass installs capabilities with [install] or [installSaved], builds the UI state, and, if it needs to, registers handlers
  * in [handleEffects]. The runtime starts when the subclass constructor ends, or earlier on the first [send]
  * or the first access to [effects].
  *
@@ -55,16 +59,18 @@ import kotlinx.coroutines.plus
  * The default config runs works on `Dispatchers.Default`, and decisions stay on the thread of `viewModelScope`.
  * [LoggingCapsaObserver] writes the runtime journal. A test replaces the work dispatcher with [setWorkDispatcher].
  *
- * Uncaught errors of the runtime, of projections, and of the screen’s effect handlers go through [capsaScope].
+ * Uncaught errors of the runtime, of projections, of snapshots, and of the screen’s effect handlers go through [capsaScope].
  * With [Capsa.failFast] on, they crash the app, so a bug shows up at once. Otherwise they go to [logger] as errors,
  * and the screen keeps working on its last valid state.
  *
  * @param logger the logger for failing effect handlers and the runtime journal
+ * @param savedStateHandle the store of snapshots for [installSaved], or `null` if the screen saves nothing
  * @param config the runtime settings
  */
 @Suppress("AbstractClassCanBeConcreteClass") // A screen extends it, nobody creates it as is.
 public abstract class CapsaViewModel(
     protected val logger: CapsaLogger = CapsaLogger.Default,
+    private val savedStateHandle: SavedStateHandle? = null,
     private val config: CapsaConfig = defaultConfig(logger),
 ) : ViewModel(),
     CapabilityScope {
@@ -138,6 +144,49 @@ public abstract class CapsaViewModel(
     protected fun <S : Any> install(capability: Capability<S>): StateFlow<S> {
         checkNotStarted("install")
         return builder.install(capability)
+    }
+
+    /**
+     * Installs `capability` and keeps the chosen part of its state in [SavedStateHandle].
+     *
+     * `saver` restores the snapshot before the capability is installed. After the start it receives every new state:
+     * a snapshot replaces the value under `key`, and `null` removes it.
+     *
+     * @param capability a capability of the screen
+     * @param saver turns the state into a snapshot and back
+     * @param key the key of the snapshot in [SavedStateHandle]
+     * @return a read-only flow of the state
+     * @throws IllegalStateException if there is no `savedStateHandle` or the runtime has already started
+     * @throws IllegalArgumentException if the name of the capability is already taken
+     */
+    protected fun <S : Any, P : Any> installSaved(capability: Capability<S>, saver: SliceSaver<S, P>, key: String): StateFlow<S> {
+        checkNotStarted("installSaved")
+        val handle = checkNotNull(savedStateHandle) { "installSaved() needs a SavedStateHandle in the constructor" }
+        val restored = handle.get<SavedState>(key)?.let { saved -> restoreOrNull(saver, saved, key) }
+        val state = builder.install(capability, restored)
+        viewModelScope.launchReporting(onError = { logError("Capsa: snapshot $key was not saved", it) }) {
+            state.collect { current -> save(saver = saver, state = current, handle = handle, key = key) }
+        }
+        return state
+    }
+
+    /** A broken snapshot must not break the screen: the capability starts from [Capability.initial]. */
+    private fun <S : Any, P : Any> restoreOrNull(saver: SliceSaver<S, P>, saved: SavedState, key: String): S? =
+        try {
+            saver.restore(decodeFromSavedState(saver.serializer, saved))
+        } catch (e: Exception) {
+            fail(IllegalStateException("Capsa could not restore snapshot \"$key\"", e))
+            null
+        }
+
+    /** One failed save doesn’t stop saving the next states. */
+    private fun <S : Any, P : Any> save(saver: SliceSaver<S, P>, state: S, handle: SavedStateHandle, key: String) {
+        try {
+            val saved = saver.save(state)
+            if (saved != null) handle[key] = encodeToSavedState(saver.serializer, saved) else handle.remove<SavedState>(key)
+        } catch (e: Exception) {
+            fail(IllegalStateException("Capsa could not save snapshot \"$key\"", e))
+        }
     }
 
     /** Hands `error` to the error policy of Capsa: a crash with [Capsa.failFast] on, an error in the log otherwise. */
