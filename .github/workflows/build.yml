@@ -8,10 +8,10 @@ on:
 permissions:
   contents: read
 
-# A new push to the same branch or pull request cancels the run it makes stale.
+# A new push to a pull request cancels its stale run. Every push to master gets a run of its own to the end.
 concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-${{ github.ref }}-${{ github.event_name == 'push' && github.sha || '' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -112,9 +112,10 @@ jobs:
         with:
           path: ~/.konan
           key: ${{ runner.os }}-konan-${{ steps.kotlin.outputs.version }}
-      - name: Run the native tests on macOS, link the iOS test binaries
-        # macosArm64Test runs the Kotlin/Native tests for real. The iOS binaries only link: CI has no simulator.
-        run: ./gradlew macosArm64Test linkDebugTestIosSimulatorArm64 linkDebugTestIosArm64
+      - name: Run the native tests on macOS, build the iOS tests
+        # macosArm64Test runs the Kotlin/Native tests for real. CI has no simulator, so the simulator tests only link.
+        # The device target only compiles: linking its test binaries takes minutes and checks nothing the simulator link doesn't.
+        run: ./gradlew macosArm64Test linkDebugTestIosSimulatorArm64 compileTestKotlinIosArm64
       - name: Benchmarks, one short iteration
         run: ./gradlew :capsa-benchmarks:macosArm64SmokeBenchmark
       - uses: actions/upload-artifact@v7
