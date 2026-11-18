@@ -22,6 +22,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.capsaCore)
+            api(libs.androidx.lifecycle.viewmodel)
             implementation(libs.kotlinx.atomicfu)
         }
         androidMain.dependencies {
