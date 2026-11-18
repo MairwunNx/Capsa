@@ -1,0 +1,18 @@
+{
+  "folders": [
+    { "name": "Capsa", "path": "." },
+    { "name": "Kotlin", "path": "kotlin" }
+  ],
+  "settings": {
+    "kotlin.languageServer.enabled": true
+  },
+  "extensions": {
+    "recommendations": [
+      "JetBrains.kotlin",
+      "vscjava.vscode-gradle",
+      "redhat.vscode-yaml",
+      "github.vscode-github-actions",
+      "editorconfig.editorconfig"
+    ]
+  }
+}
