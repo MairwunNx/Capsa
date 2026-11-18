@@ -40,7 +40,7 @@ public class CapsaViolationException(
     }
 
     private companion object {
-        const val FRAME_FILE = "Capsa"
+        private const val FRAME_FILE = "Capsa"
 
         fun describe(violation: CapsaViolation, history: List<String>): String = buildString {
             append(

@@ -128,7 +128,6 @@ public final class com/mairwunnx/capsa/CapsaViolation$WorkCrashed : com/mairwunn
 }
 
 public final class com/mairwunnx/capsa/CapsaViolationException : java/lang/IllegalStateException {
-	public static final field FRAME_FILE Ljava/lang/String;
 	public fun <init> (Lcom/mairwunnx/capsa/CapsaViolation;Ljava/util/List;)V
 	public synthetic fun <init> (Lcom/mairwunnx/capsa/CapsaViolation;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getHistory ()Ljava/util/List;
