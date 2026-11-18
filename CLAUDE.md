@@ -58,7 +58,7 @@ cd kotlin && ./gradlew build
 
 ## Benchmarks
 
-`kotlin/capsa-benchmarks` measures the hot paths of the runtime with kotlinx-benchmark: a fact through one and ten capabilities, `decide` with 1, 10, and 30 reactions, `WorkPolicy.Latest` under fast typing, a `stream` of 10 000 signals, a violation report, and `combineState` over three slices. The numbers tell the order of magnitude and catch a release that got slower. They don’t compare Capsa with anything else.
+`kotlin/capsa-benchmarks` measures the hot paths of the runtime with kotlinx-benchmark: a fact through one and ten capabilities, `decide` with 1, 10, and 30 reactions, an effect through 1, 10, and 30 handlers, `WorkPolicy.Latest` under fast typing, a `stream` of 10 000 signals, a violation report, and `combineState` over three slices. The numbers tell the order of magnitude and catch a release that got slower. They don’t compare Capsa with anything else.
 
 | Command (in `kotlin/`) | What it does |
 |---|---|
