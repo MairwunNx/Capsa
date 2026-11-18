@@ -8,7 +8,8 @@ internal actual fun KClass<*>.overlaps(other: KClass<*>): Boolean =
 
 internal actual fun deliverUncaughtToPlatform(error: Throwable) {
     val thread = Thread.currentThread()
-    thread.uncaughtExceptionHandler.uncaughtException(thread, error)
+    // A running thread always has a handler: its own one or its thread group.
+    checkNotNull(thread.uncaughtExceptionHandler).uncaughtException(thread, error)
 }
 
 // After these errors the JVM or the loaded code can’t be trusted: out of memory, an internal failure of the VM,
