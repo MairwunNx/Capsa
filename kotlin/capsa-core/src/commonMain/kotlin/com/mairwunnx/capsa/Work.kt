@@ -139,7 +139,10 @@ public fun work(
  * @param key the key of the work within the capability
  * @param onError turns an exception from the flow into a signal
  * @param policy what to do when a work with this key is already running
- * @param whileVisible stop the flow while the screen is hidden
+ * @param whileVisible run the flow only while the screen is visible: while the UI collects the state or the effects
+ * and the app is in the foreground. Collect the state with `collectAsStateWithLifecycle()`, not `collectAsState()`:
+ * the latter keeps collecting while the screen sits under another activity of the app or in a minimized desktop window,
+ * so the flow keeps running there
  * @param retry subscribes again on failure. `null` means no retries
  * @param block the factory of the signal flow
  */
