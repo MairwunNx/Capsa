@@ -84,7 +84,7 @@ public abstract class CapsaViewModel(
     protected val capsaScope: CoroutineScope = viewModelScope + capsaExceptionHandler(
         failFast = Capsa.failFast,
         fallback = viewModelScope.coroutineContext[CoroutineExceptionHandler],
-        report = { error -> logger.log(CapsaLogger.Level.Error, error) { "Capsa failure" } },
+        report = ::report,
     )
 
     private val builder = CapsaBuilder()
@@ -98,6 +98,7 @@ public abstract class CapsaViewModel(
         viewModelScope.launchReporting(
             context = Dispatchers.Main,
             onError = { logError("Capsa: the runtime did not start", it) },
+            onErrorFailed = ::fail,
         ) {
             ensureStarted()
         }
@@ -164,7 +165,7 @@ public abstract class CapsaViewModel(
         val handle = checkNotNull(savedStateHandle) { "installSaved() needs a SavedStateHandle in the constructor" }
         val restored = handle.get<SavedState>(key)?.let { saved -> restoreOrNull(saver, saved, key) }
         val state = builder.install(capability, restored)
-        viewModelScope.launchReporting(onError = { logError("Capsa: snapshot $key was not saved", it) }) {
+        viewModelScope.launchReporting(onError = { logError("Capsa: snapshot $key was not saved", it) }, onErrorFailed = ::fail) {
             state.collect { current -> save(saver = saver, state = current, handle = handle, key = key) }
         }
         return state
@@ -208,7 +209,7 @@ public abstract class CapsaViewModel(
         val handlers = effectHandlers(onUnhandled = { outbox.trySend(it) }) { handleEffects() }
         val started = builder.build(capsaScope, config)
         runtime.value = started
-        viewModelScope.launchReporting(onError = { logError("Capsa: the effect stream stopped", it) }) {
+        viewModelScope.launchReporting(onError = { logError("Capsa: the effect stream stopped", it) }, onErrorFailed = ::fail) {
             started.effects.collect { dispatch(handlers, it) }
         }
         return started
@@ -236,6 +237,19 @@ public abstract class CapsaViewModel(
      */
     protected open suspend fun onEffectFailed(effect: Effect, error: Exception) {
         fail(IllegalStateException("Capsa effect $effect failed in the ViewModel", error))
+    }
+
+    /**
+     * Writes an error that the release policy keeps away from a crash. A logger that throws here has nowhere left
+     * to report to, so the platform log gets both errors instead of the app crashing.
+     */
+    private fun report(error: Throwable) {
+        try {
+            logger.log(CapsaLogger.Level.Error, error) { "Capsa failure" }
+        } catch (e: Exception) {
+            e.addSuppressed(error)
+            writeToPlatformLog(CapsaLogger.Level.Error, "Capsa failure, and the logger failed too", e)
+        }
     }
 
     private fun logError(text: String, error: Exception) {

@@ -329,6 +329,69 @@ class CapsaViewModelTest {
         assertEquals(listOf("analytics is down"), logger.errors.map { it?.cause?.message })
     }
 
+    /** Its own effect error handler throws, so the error reaches the stream of effects. */
+    private class BrokenRecoveryViewModel(logger: CapsaLogger, capability: Capability<Counter>) : CapsaViewModel(logger) {
+        init {
+            @Suppress("IgnoredReturnValue")
+            install(capability)
+        }
+
+        override fun EffectHandlers.Builder.handleEffects() {
+            on<Handled> { error("analytics is down") }
+        }
+
+        override suspend fun onEffectFailed(effect: Effect, error: Exception): Unit = throw IllegalStateException("recovery failed", error)
+    }
+
+    @Test
+    fun inReleaseALoggerThatFailsOnAnErrorHandsItsErrorToTheCapsaPolicy() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        Capsa.failFast = false
+        val picky = object : CapsaLogger {
+            val errors = mutableListOf<Throwable?>()
+
+            override fun log(level: CapsaLogger.Level, error: Throwable?, message: () -> String) {
+                if (level != CapsaLogger.Level.Error) return
+                check(message() != "Capsa: the effect stream stopped") { "logger is down" }
+                errors += error
+            }
+        }
+        val emitting = capability("emitting", Counter()) {
+            on<Increment> { state, _ -> state.commit(Handled(1)) }
+        }
+        val vm = BrokenRecoveryViewModel(picky, emitting)
+
+        vm.send(Increment)
+        testScheduler.advanceUntilIdle()
+
+        val reported = picky.errors.single()
+        assertEquals("logger is down", reported?.message)
+        assertEquals(listOf("recovery failed"), reported?.suppressedExceptions?.map { it.message })
+    }
+
+    @Test
+    fun inReleaseALoggerThatAlwaysFailsDoesNotCrashTheApp() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        Capsa.failFast = false
+        var attempts = 0
+        val broken = CapsaLogger { level, _, _ ->
+            if (level == CapsaLogger.Level.Error) {
+                attempts++
+                error("logger is down")
+            }
+        }
+        val emitting = capability("emitting", Counter()) {
+            on<Increment> { state, _ -> state.commit(Handled(1)) }
+        }
+        val vm = BrokenRecoveryViewModel(broken, emitting)
+
+        vm.send(Increment)
+        testScheduler.advanceUntilIdle()
+
+        // The stream of effects stopped: one attempt to log it, one to report the failure of the logger.
+        assertEquals(2, attempts)
+    }
+
     @Test
     fun failFastHandsTheErrorToThePreviousHandlerOtherwiseItIsReported() {
         val previous = mutableListOf<Throwable>()
