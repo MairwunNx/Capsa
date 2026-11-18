@@ -5,7 +5,9 @@ public final class com/mairwunnx/capsa/viewmodel/Capsa {
 }
 
 public final class com/mairwunnx/capsa/viewmodel/CapsaEffects {
+	public final fun fail (Ljava/lang/Throwable;)V
 	public final fun getFlow ()Lkotlinx/coroutines/flow/Flow;
+	public final fun setVisible (Z)V
 }
 
 public abstract interface class com/mairwunnx/capsa/viewmodel/CapsaLogger {
