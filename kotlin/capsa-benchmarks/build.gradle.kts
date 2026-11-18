@@ -1,1 +1,11 @@
-// The JVM benchmarks of capsa-core. Not published.
+plugins {
+    id("capsa.benchmarks")
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(projects.capsaCore)
+        }
+    }
+}
