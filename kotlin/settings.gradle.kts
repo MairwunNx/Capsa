@@ -22,3 +22,14 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "capsa"
+
+include(
+    ":capsa-core",
+    ":capsa-viewmodel",
+    ":capsa-compose",
+    ":capsa-test",
+    ":capsa-bom",
+    ":capsa-benchmarks",
+    ":samples:shared",
+    ":samples:androidApp",
+)
