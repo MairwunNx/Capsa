@@ -48,8 +48,8 @@ public sealed interface WorkEvent {
  * and reads [violations].
  * The runtime lives in `backgroundScope`, so `runTest` doesn’t wait for it to finish.
  *
- * The scheduler handles facts only after [runCurrent], [advanceTimeBy], or [advanceUntilIdle].
- * For timers and streams use [advanceTimeBy]: [advanceUntilIdle] doesn’t wait for `backgroundScope`, where the runtime lives.
+ * The scheduler handles facts only after [runCurrent] or [advanceTimeBy]. For timers and streams use [advanceTimeBy].
+ * [advanceUntilIdle] skips `backgroundScope`, where the runtime lives, so it handles no facts and runs no works.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 public class CapsaHarness internal constructor(
@@ -73,7 +73,7 @@ public class CapsaHarness internal constructor(
     /**
      * Puts `fact` into the queue of the runtime.
      *
-     * The scheduler doesn’t handle the queue until [runCurrent], [advanceTimeBy], or [advanceUntilIdle].
+     * The scheduler doesn’t handle the queue until [runCurrent] or [advanceTimeBy].
      */
     public fun append(fact: Fact): Unit = runtime.append(fact)
 
@@ -101,7 +101,8 @@ public class CapsaHarness internal constructor(
      * Runs the queued tasks, moving virtual time forward as needed.
      *
      * It stops as soon as only `backgroundScope` tasks are left. The runtime and its works live there,
-     * so a pending `delay` in a work or a stream doesn’t fire. To test timers, use [advanceTimeBy].
+     * so the call handles no facts, not even [com.mairwunnx.capsa.Started], and runs no works.
+     * For the runtime, use [runCurrent] and [advanceTimeBy].
      */
     public fun advanceUntilIdle(): Unit = scheduler.advanceUntilIdle()
 
