@@ -20,7 +20,7 @@ public class Replay<S : Any> internal constructor(
     /** The decisions for the accepted facts, in the order of handling. */
     public val steps: List<Step<S>>,
 
-    /** The facts that the capability doesn't accept, so the runtime would never pass them to [Capability.decide]. */
+    /** The facts that the capability doesn’t accept, so the runtime would never pass them to [Capability.decide]. */
     public val ignored: List<Fact>,
 ) {
     /** Pairs an accepted `fact` with the `decision` it produced. */
@@ -35,10 +35,10 @@ public class Replay<S : Any> internal constructor(
     /** The effects of all decisions, in the order of handling. */
     public val effects: List<Effect> get() = steps.flatMap { it.decision.effects }
 
-    /** The works of all decisions. The replay doesn't start them. */
+    /** The works of all decisions. The replay doesn’t start them. */
     public val works: List<Work> get() = steps.flatMap { it.decision.works }
 
-    /** The signals of all decisions. The replay doesn't handle them again. */
+    /** The signals of all decisions. The replay doesn’t handle them again. */
     public val signals: List<Signal> get() = steps.flatMap { it.decision.signals }
 }
 

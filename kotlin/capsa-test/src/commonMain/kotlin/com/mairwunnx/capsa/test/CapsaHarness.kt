@@ -44,12 +44,12 @@ public sealed interface WorkEvent {
  * Runs a real [CapsaRuntime] on virtual time.
  *
  * In strict mode (the default) a broken contract fails the test at once: a fact nobody handles or a failing `decide`
- * can't slip through. A test that checks the violation itself creates the harness with `strict = false`
+ * can’t slip through. A test that checks the violation itself creates the harness with `strict = false`
  * and reads [violations].
- * The runtime lives in `backgroundScope`, so `runTest` doesn't wait for it to finish.
+ * The runtime lives in `backgroundScope`, so `runTest` doesn’t wait for it to finish.
  *
  * The scheduler handles facts only after [runCurrent], [advanceTimeBy], or [advanceUntilIdle].
- * For timers and streams use [advanceTimeBy]: [advanceUntilIdle] doesn't wait for `backgroundScope`, where the runtime lives.
+ * For timers and streams use [advanceTimeBy]: [advanceUntilIdle] doesn’t wait for `backgroundScope`, where the runtime lives.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 public class CapsaHarness internal constructor(
@@ -73,7 +73,7 @@ public class CapsaHarness internal constructor(
     /**
      * Puts `fact` into the queue of the runtime.
      *
-     * The scheduler doesn't handle the queue until [runCurrent], [advanceTimeBy], or [advanceUntilIdle].
+     * The scheduler doesn’t handle the queue until [runCurrent], [advanceTimeBy], or [advanceUntilIdle].
      */
     public fun append(fact: Fact): Unit = runtime.append(fact)
 
@@ -101,7 +101,7 @@ public class CapsaHarness internal constructor(
      * Runs the queued tasks, moving virtual time forward as needed.
      *
      * It stops as soon as only `backgroundScope` tasks are left. The runtime and its works live there,
-     * so a pending `delay` in a work or a stream doesn't fire. To test timers, use [advanceTimeBy].
+     * so a pending `delay` in a work or a stream doesn’t fire. To test timers, use [advanceTimeBy].
      */
     public fun advanceUntilIdle(): Unit = scheduler.advanceUntilIdle()
 
@@ -110,7 +110,7 @@ public class CapsaHarness internal constructor(
      *
      * @param capability a capability passed to [capsaHarness]
      * @return the current state of the capability
-     * @throws NoSuchElementException if the harness doesn't hold `capability`
+     * @throws NoSuchElementException if the harness doesn’t hold `capability`
      */
     @Suppress("UNCHECKED_CAST")
     public fun <S : Any> stateOf(capability: Capability<S>): S = (states.getValue(capability) as StateFlow<S>).value
