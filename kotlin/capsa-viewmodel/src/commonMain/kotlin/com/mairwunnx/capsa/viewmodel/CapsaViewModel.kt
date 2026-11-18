@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.savedstate.SavedState
+import androidx.savedstate.read
+import androidx.savedstate.savedState
 import androidx.savedstate.serialization.decodeFromSavedState
 import androidx.savedstate.serialization.encodeToSavedState
 import com.mairwunnx.capsa.Capability
@@ -153,8 +155,9 @@ public abstract class CapsaViewModel(
     /**
      * Installs `capability` and keeps the chosen part of its state in [SavedStateHandle].
      *
-     * `saver` restores the snapshot before the capability is installed. After the start it receives every new state:
-     * a snapshot replaces the value under `key`, and `null` removes it.
+     * `saver` restores the snapshot before the capability is installed. Later, `saver` runs only when the system saves
+     * the screen: it gets the current state and encodes the snapshot then, not on every change. `null` saves nothing,
+     * so the capability starts from its initial state after the process comes back.
      *
      * @param capability a capability of the screen
      * @param saver turns the state into a snapshot and back
@@ -168,29 +171,34 @@ public abstract class CapsaViewModel(
         val handle = checkNotNull(savedStateHandle) { "installSaved() needs a SavedStateHandle in the constructor" }
         val restored = handle.get<SavedState>(key)?.let { saved -> restoreOrNull(saver, saved, key) }
         val state = builder.install(capability, restored)
-        viewModelScope.launchReporting(onError = { logError("Capsa: snapshot $key was not saved", it) }, onErrorFailed = ::fail) {
-            state.collect { current -> save(saver = saver, state = current, handle = handle, key = key) }
-        }
+        handle.setSavedStateProvider(key) { save(saver = saver, state = state.value, key = key) }
         return state
     }
 
     /** A broken snapshot must not break the screen: the capability starts from [Capability.initial]. */
     private fun <S : Any, P : Any> restoreOrNull(saver: SliceSaver<S, P>, saved: SavedState, key: String): S? =
         try {
-            saver.restore(decodeFromSavedState(saver.serializer, saved))
+            saved.read { if (contains(SNAPSHOT_KEY)) getSavedState(SNAPSHOT_KEY) else null }
+                ?.let { snapshot -> saver.restore(decodeFromSavedState(saver.serializer, snapshot)) }
         } catch (e: Exception) {
             fail(IllegalStateException("Capsa could not restore snapshot \"$key\"", e))
             null
         }
 
-    /** One failed save doesn’t stop saving the next states. */
-    private fun <S : Any, P : Any> save(saver: SliceSaver<S, P>, state: S, handle: SavedStateHandle, key: String) {
-        try {
-            val saved = saver.save(state)
-            if (saved != null) handle[key] = encodeToSavedState(saver.serializer, saved) else handle.remove<SavedState>(key)
+    /**
+     * Encodes the snapshot of `state` when the system saves the screen.
+     *
+     * The snapshot sits in a wrapper, so `null` and a snapshot that encodes to nothing stay apart. A failing `saver`
+     * goes to the error policy and saves nothing for `key`: the other keys of the screen are saved as usual.
+     */
+    private fun <S : Any, P : Any> save(saver: SliceSaver<S, P>, state: S, key: String): SavedState {
+        val snapshot = try {
+            saver.save(state)?.let { encodeToSavedState(saver.serializer, it) }
         } catch (e: Exception) {
             fail(IllegalStateException("Capsa could not save snapshot \"$key\"", e))
+            null
         }
+        return savedState { if (snapshot != null) putSavedState(SNAPSHOT_KEY, snapshot) }
     }
 
     /** Hands `error` to the error policy of Capsa: a crash with [Capsa.failFast] on, an error in the log otherwise. */
@@ -260,6 +268,9 @@ public abstract class CapsaViewModel(
     }
 
     public companion object {
+
+        /** The key of the snapshot inside the wrapper that [installSaved] keeps in `SavedStateHandle`. */
+        private const val SNAPSHOT_KEY = "snapshot"
 
         // Dispatchers.Default is only the default: tests replace it with setWorkDispatcher.
         @Suppress("InjectDispatcher")

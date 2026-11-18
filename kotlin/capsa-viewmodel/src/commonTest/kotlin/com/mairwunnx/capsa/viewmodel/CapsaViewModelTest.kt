@@ -1,9 +1,6 @@
 package com.mairwunnx.capsa.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.savedstate.SavedState
-import androidx.savedstate.serialization.decodeFromSavedState
-import androidx.savedstate.serialization.encodeToSavedState
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.CapsaViolationException
 import com.mairwunnx.capsa.Effect
@@ -18,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -38,7 +36,6 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CapsaViewModelTest {
@@ -146,7 +143,17 @@ class CapsaViewModelTest {
         Capsa.failFast = failFastBefore
     }
 
-    private fun SavedStateHandle.counterSaved(): CounterSaved? = get<SavedState>(KEY)?.let { decodeFromSavedState(CounterSavedSerializer, it) }
+    /** Does what the system does when the process dies: saves the handle and builds a new one from the result. */
+    private fun SavedStateHandle.afterProcessDeath(): SavedStateHandle = SavedStateHandle.createHandle(savedStateProvider().saveState(), null)
+
+    /** Returns a handle that comes back after process death with the counter at `value`. */
+    private fun TestScope.handleSavedAt(value: Int): SavedStateHandle {
+        val handle = SavedStateHandle()
+        val vm = TestViewModel(logger = RecordingLogger(), handle = handle, capability = counter, saver = CounterSaver)
+        repeat(value) { vm.send(Increment) }
+        testScheduler.advanceUntilIdle()
+        return handle.afterProcessDeath()
+    }
 
     @Test
     fun runtimeStartsOnItsOwnTheIntentChangesTheSliceAndTheEffectIsDelivered() = runTest {
@@ -173,23 +180,66 @@ class CapsaViewModelTest {
     }
 
     @Test
-    fun sliceIsWrittenToSavedStateHandleAndClearedWhenThereIsNothingToSave() = runTest {
+    fun snapshotIsSavedWithTheScreenAndLeftOutWhenThereIsNothingToSave() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val handle = SavedStateHandle()
         val vm = TestViewModel(logger = logger, handle = handle, capability = counter, saver = CounterSaver)
-
         testScheduler.advanceUntilIdle()
-        assertNull(handle.counterSaved())
+
+        val untouched = TestViewModel(logger = logger, handle = handle.afterProcessDeath(), capability = counter, saver = CounterSaver)
+        assertEquals(Counter(), untouched.counter.value)
 
         vm.send(Increment)
         testScheduler.advanceUntilIdle()
-        assertEquals(CounterSaved(1), handle.counterSaved())
+
+        val restored = TestViewModel(logger = logger, handle = handle.afterProcessDeath(), capability = counter, saver = CounterSaver)
+        assertEquals(Counter(value = 1), restored.counter.value)
     }
 
     @Test
-    fun sliceIsRestoredFromSavedStateHandle() = runTest {
+    fun snapshotIsEncodedOnlyWhenTheSystemSavesTheScreen() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val handle = SavedStateHandle(mapOf(KEY to encodeToSavedState(CounterSavedSerializer, CounterSaved(5))))
+        var encoded = 0
+        val counting = object : SliceSaver<Counter, CounterSaved> by CounterSaver {
+            override val serializer: KSerializer<CounterSaved> = object : KSerializer<CounterSaved> by CounterSavedSerializer {
+                override fun serialize(encoder: Encoder, value: CounterSaved) {
+                    encoded++
+                    CounterSavedSerializer.serialize(encoder, value)
+                }
+            }
+        }
+        val handle = SavedStateHandle()
+        val vm = TestViewModel(logger = logger, handle = handle, capability = counter, saver = counting)
+
+        repeat(3) { vm.send(Increment) }
+        testScheduler.advanceUntilIdle()
+        assertEquals(0, encoded)
+
+        handle.savedStateProvider().saveState()
+        assertEquals(1, encoded)
+    }
+
+    @Test
+    fun inReleaseAFailingSaveIsLoggedAndTheOtherKeysAreStillSaved() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        Capsa.failFast = false
+        val failing = object : SliceSaver<Counter, CounterSaved> by CounterSaver {
+            override fun save(state: Counter): CounterSaved = error("disk full")
+        }
+        val handle = SavedStateHandle(mapOf("note" to "kept"))
+        TestViewModel(logger = logger, handle = handle, capability = counter, saver = failing)
+        testScheduler.advanceUntilIdle()
+
+        val reborn = handle.afterProcessDeath()
+
+        assertEquals("kept", reborn.get<String>("note"))
+        assertEquals(listOf("disk full"), logger.errors.map { it?.cause?.message })
+    }
+
+    @Test
+    fun sliceIsRestoredAfterProcessDeath() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val handle = handleSavedAt(5)
 
         val vm = TestViewModel(logger = logger, handle = handle, capability = counter, saver = CounterSaver)
 
@@ -282,6 +332,7 @@ class CapsaViewModelTest {
     fun inReleaseABrokenSnapshotFallsBackToTheInitialSlice() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         Capsa.failFast = false
+        val handle = handleSavedAt(5)
         val broken = object : SliceSaver<Counter, CounterSaved> {
             override val serializer: KSerializer<CounterSaved> = CounterSavedSerializer
             override fun save(state: Counter): CounterSaved? = null
@@ -290,7 +341,7 @@ class CapsaViewModelTest {
 
         val vm = TestViewModel(
             logger = logger,
-            handle = SavedStateHandle(mapOf(KEY to encodeToSavedState(CounterSavedSerializer, CounterSaved(5)))),
+            handle = handle,
             capability = counter,
             saver = broken,
         )
