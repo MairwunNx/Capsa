@@ -1,5 +1,6 @@
 package com.mairwunnx.capsa
 
+import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
 
 /**
@@ -29,12 +30,23 @@ public class EffectHandlers internal constructor(
      * If no handler fits, calls `onUnhandled`.
      */
     public fun handle(effect: Effect) {
+        val type = effect::class
+        val known = handlersByClass
+        val handler = known[type] ?: if (type in known) null else findHandler(effect).also { handlersByClass = known + (type to it) }
+        if (handler == null) onUnhandled(effect) else handler.handleUnchecked(effect)
+    }
+
+    // The handler for each class of effect, filled on the first effect of that class. The map is immutable and replaced whole,
+    // so handlers shared between threads at worst search for the same class twice.
+    @Volatile
+    private var handlersByClass: Map<KClass<out Effect>, Handler<*>?> = emptyMap()
+
+    private fun findHandler(effect: Effect): Handler<*>? {
         val matching = handlers.filter { it.type.isInstance(effect) }
         check(matching.size <= 1) {
             "Effect $effect matches several handlers at once: ${matching.joinToString { it.type.simpleName.orEmpty() }}"
         }
-        val handler = matching.firstOrNull()
-        if (handler == null) onUnhandled(effect) else handler.handleUnchecked(effect)
+        return matching.firstOrNull()
     }
 
     /** Registers handlers inside the [effectHandlers] block. */

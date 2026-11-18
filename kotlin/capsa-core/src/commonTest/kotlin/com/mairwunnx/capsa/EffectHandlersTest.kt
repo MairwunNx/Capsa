@@ -86,4 +86,25 @@ class EffectHandlersTest {
 
         assertFailsWith<IllegalStateException> { handlers.handle(OpenAndTrack) }
     }
+
+    @Test
+    fun theRememberedHandlerGivesTheSameAnswerOnEveryEffectOfAClass() {
+        val opened = mutableListOf<Int>()
+        val unhandled = mutableListOf<Effect>()
+        val handlers = effectHandlers(onUnhandled = { unhandled += it }) {
+            on<Navigation> {}
+            on<Tracking> {}
+            on<Open> { opened += it.id }
+        }
+
+        repeat(2) {
+            handlers.handle(Open(1))
+            handlers.handle(Open(2))
+            handlers.handle(Unknown)
+            assertFailsWith<IllegalStateException> { handlers.handle(OpenAndTrack) }
+        }
+
+        assertEquals(listOf(1, 2, 1, 2), opened)
+        assertEquals(listOf<Effect>(Unknown, Unknown), unhandled)
+    }
 }
