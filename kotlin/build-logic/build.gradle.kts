@@ -8,4 +8,5 @@ dependencies {
     implementation(libs.android.gradle.plugin)
     implementation(libs.maven.publish.gradle.plugin)
     implementation(libs.binary.compatibility.validator.gradle.plugin)
+    implementation(libs.kover.gradle.plugin)
 }
