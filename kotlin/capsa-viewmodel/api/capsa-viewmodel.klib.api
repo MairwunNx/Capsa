@@ -6,3 +6,75 @@
 // - Show declarations: true
 
 // Library unique name: <com.mairwunnx.capsa:capsa-viewmodel>
+abstract fun interface com.mairwunnx.capsa.viewmodel/CapsaLogger { // com.mairwunnx.capsa.viewmodel/CapsaLogger|null[0]
+    abstract fun log(com.mairwunnx.capsa.viewmodel/CapsaLogger.Level, kotlin/Throwable?, kotlin/Function0<kotlin/String>) // com.mairwunnx.capsa.viewmodel/CapsaLogger.log|log(com.mairwunnx.capsa.viewmodel.CapsaLogger.Level;kotlin.Throwable?;kotlin.Function0<kotlin.String>){}[0]
+
+    final enum class Level : kotlin/Enum<com.mairwunnx.capsa.viewmodel/CapsaLogger.Level> { // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level|null[0]
+        enum entry Debug // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level.Debug|null[0]
+        enum entry Error // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level.Error|null[0]
+
+        final val entries // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<com.mairwunnx.capsa.viewmodel/CapsaLogger.Level> // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): com.mairwunnx.capsa.viewmodel/CapsaLogger.Level // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<com.mairwunnx.capsa.viewmodel/CapsaLogger.Level> // com.mairwunnx.capsa.viewmodel/CapsaLogger.Level.values|values#static(){}[0]
+    }
+
+    final object Companion { // com.mairwunnx.capsa.viewmodel/CapsaLogger.Companion|null[0]
+        final val Default // com.mairwunnx.capsa.viewmodel/CapsaLogger.Companion.Default|{}Default[0]
+            final fun <get-Default>(): com.mairwunnx.capsa.viewmodel/CapsaLogger // com.mairwunnx.capsa.viewmodel/CapsaLogger.Companion.Default.<get-Default>|<get-Default>(){}[0]
+    }
+}
+
+abstract interface <#A: kotlin/Any, #B: kotlin/Any> com.mairwunnx.capsa.viewmodel/SliceSaver { // com.mairwunnx.capsa.viewmodel/SliceSaver|null[0]
+    abstract val serializer // com.mairwunnx.capsa.viewmodel/SliceSaver.serializer|{}serializer[0]
+        abstract fun <get-serializer>(): kotlinx.serialization/KSerializer<#B> // com.mairwunnx.capsa.viewmodel/SliceSaver.serializer.<get-serializer>|<get-serializer>(){}[0]
+
+    abstract fun restore(#B): #A // com.mairwunnx.capsa.viewmodel/SliceSaver.restore|restore(1:1){}[0]
+    abstract fun save(#A): #B? // com.mairwunnx.capsa.viewmodel/SliceSaver.save|save(1:0){}[0]
+}
+
+abstract class com.mairwunnx.capsa.viewmodel/CapsaViewModel : androidx.lifecycle/ViewModel, com.mairwunnx.capsa/CapabilityScope { // com.mairwunnx.capsa.viewmodel/CapsaViewModel|null[0]
+    constructor <init>(com.mairwunnx.capsa.viewmodel/CapsaLogger = ..., androidx.lifecycle/SavedStateHandle? = ..., com.mairwunnx.capsa/CapsaConfig = ...) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.<init>|<init>(com.mairwunnx.capsa.viewmodel.CapsaLogger;androidx.lifecycle.SavedStateHandle?;com.mairwunnx.capsa.CapsaConfig){}[0]
+
+    final val capsaScope // com.mairwunnx.capsa.viewmodel/CapsaViewModel.capsaScope|{}capsaScope[0]
+        final fun <get-capsaScope>(): kotlinx.coroutines/CoroutineScope // com.mairwunnx.capsa.viewmodel/CapsaViewModel.capsaScope.<get-capsaScope>|<get-capsaScope>(){}[0]
+    final val effects // com.mairwunnx.capsa.viewmodel/CapsaViewModel.effects|{}effects[0]
+        final fun <get-effects>(): com.mairwunnx.capsa.viewmodel/CapsaEffects // com.mairwunnx.capsa.viewmodel/CapsaViewModel.effects.<get-effects>|<get-effects>(){}[0]
+    final val logger // com.mairwunnx.capsa.viewmodel/CapsaViewModel.logger|{}logger[0]
+        final fun <get-logger>(): com.mairwunnx.capsa.viewmodel/CapsaLogger // com.mairwunnx.capsa.viewmodel/CapsaViewModel.logger.<get-logger>|<get-logger>(){}[0]
+
+    final fun <#A1: kotlin/Any, #B1: kotlin/Any> installSaved(com.mairwunnx.capsa/Capability<#A1>, com.mairwunnx.capsa.viewmodel/SliceSaver<#A1, #B1>, kotlin/String): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa.viewmodel/CapsaViewModel.installSaved|installSaved(com.mairwunnx.capsa.Capability<0:0>;com.mairwunnx.capsa.viewmodel.SliceSaver<0:0,0:1>;kotlin.String){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> install(com.mairwunnx.capsa/Capability<#A1>): kotlinx.coroutines.flow/StateFlow<#A1> // com.mairwunnx.capsa.viewmodel/CapsaViewModel.install|install(com.mairwunnx.capsa.Capability<0:0>){0§<kotlin.Any>}[0]
+    final fun send(com.mairwunnx.capsa/Intent) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.send|send(com.mairwunnx.capsa.Intent){}[0]
+    final fun signal(com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.signal|signal(com.mairwunnx.capsa.Signal){}[0]
+    open fun (com.mairwunnx.capsa/EffectHandlers.Builder).handleEffects() // com.mairwunnx.capsa.viewmodel/CapsaViewModel.handleEffects|handleEffects@com.mairwunnx.capsa.EffectHandlers.Builder(){}[0]
+    open suspend fun onEffectFailed(com.mairwunnx.capsa/Effect, kotlin/Exception) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.onEffectFailed|onEffectFailed(com.mairwunnx.capsa.Effect;kotlin.Exception){}[0]
+
+    final object Companion { // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion|null[0]
+        final fun resetWorkDispatcher() // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion.resetWorkDispatcher|resetWorkDispatcher(){}[0]
+        final fun setWorkDispatcher(kotlinx.coroutines/CoroutineDispatcher) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion.setWorkDispatcher|setWorkDispatcher(kotlinx.coroutines.CoroutineDispatcher){}[0]
+    }
+}
+
+final class com.mairwunnx.capsa.viewmodel/CapsaEffects { // com.mairwunnx.capsa.viewmodel/CapsaEffects|null[0]
+    final val flow // com.mairwunnx.capsa.viewmodel/CapsaEffects.flow|{}flow[0]
+        final fun <get-flow>(): kotlinx.coroutines.flow/Flow<com.mairwunnx.capsa/Effect> // com.mairwunnx.capsa.viewmodel/CapsaEffects.flow.<get-flow>|<get-flow>(){}[0]
+}
+
+final class com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver : com.mairwunnx.capsa/CapsaObserver { // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver|null[0]
+    constructor <init>(com.mairwunnx.capsa.viewmodel/CapsaLogger, kotlin/Boolean = ...) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.<init>|<init>(com.mairwunnx.capsa.viewmodel.CapsaLogger;kotlin.Boolean){}[0]
+
+    final fun onDecision(kotlin/String, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<*>) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.onDecision|onDecision(kotlin.String;com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<*>){}[0]
+    final fun onFact(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.onFact|onFact(com.mairwunnx.capsa.Fact){}[0]
+    final fun onSignalDropped(kotlin/String, com.mairwunnx.capsa/WorkKey, com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.onSignalDropped|onSignalDropped(kotlin.String;com.mairwunnx.capsa.WorkKey;com.mairwunnx.capsa.Signal){}[0]
+    final fun onWorkCancelled(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.onWorkCancelled|onWorkCancelled(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+    final fun onWorkFailed(kotlin/String, com.mairwunnx.capsa/WorkKey, kotlin/Throwable) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.onWorkFailed|onWorkFailed(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
+    final fun onWorkStarted(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa.viewmodel/LoggingCapsaObserver.onWorkStarted|onWorkStarted(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
+}
+
+final object com.mairwunnx.capsa.viewmodel/Capsa { // com.mairwunnx.capsa.viewmodel/Capsa|null[0]
+    final var failFast // com.mairwunnx.capsa.viewmodel/Capsa.failFast|{}failFast[0]
+        final fun <get-failFast>(): kotlin/Boolean // com.mairwunnx.capsa.viewmodel/Capsa.failFast.<get-failFast>|<get-failFast>(){}[0]
+        final fun <set-failFast>(kotlin/Boolean) // com.mairwunnx.capsa.viewmodel/Capsa.failFast.<set-failFast>|<set-failFast>(kotlin.Boolean){}[0]
+}
