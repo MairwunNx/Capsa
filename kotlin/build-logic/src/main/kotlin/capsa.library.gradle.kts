@@ -31,10 +31,11 @@ kotlin {
     }
 }
 
-// The Kotlin/Native tests run on macosArm64 without a simulator (D3 in the plan is the reason for that target).
-// The iOS simulator tests need an installed simulator runtime and check nothing more, so they stay off.
+// The iOS simulator tests run on developer machines only. CI checks Kotlin/Native with macosArm64Test, without a simulator.
+// Locally they need the iOS simulator runtime: `xcodebuild -downloadPlatform iOS`.
+val onCi = providers.environmentVariable("CI").isPresent
 tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
-    enabled = false
+    enabled = !onCi
 }
 
 // The ABI dumps in api/ guard the public API: `check` fails when it changes without `apiDump`.
