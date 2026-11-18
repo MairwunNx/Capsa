@@ -7,4 +7,5 @@ dependencies {
     implementation(libs.kotlin.compose.gradle.plugin)
     implementation(libs.android.gradle.plugin)
     implementation(libs.maven.publish.gradle.plugin)
+    implementation(libs.binary.compatibility.validator.gradle.plugin)
 }
