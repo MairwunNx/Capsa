@@ -9,8 +9,9 @@ The group is `com.mairwunnx.capsa`. All modules share one version. Find the late
 | Artifact | Package | What it holds | Depends on |
 |---|---|---|---|
 | `capsa-core` | `com.mairwunnx.capsa` | The runtime: capabilities, facts, works, effects, projections | kotlinx-coroutines |
-| `capsa-viewmodel` | `com.mairwunnx.capsa.viewmodel` | `CapsaViewModel`, the host on AndroidX `ViewModel`, saving slices, `Capsa.failFast`, the logger | `capsa-core`, AndroidX lifecycle and savedstate, kotlinx-serialization |
-| `capsa-compose` | `com.mairwunnx.capsa.compose` | `CollectEffects` and `Slot` for Compose Multiplatform | `capsa-viewmodel`, Compose runtime and UI |
+| `capsa-host` | `com.mairwunnx.capsa` | What every host shares: `Capsa.failFast`, `CapsaLogger`, `LoggingCapsaObserver`, `SliceSaver`, `CapsaEffects`, the foreground of the app | `capsa-core`, AndroidX savedstate, kotlinx-serialization |
+| `capsa-viewmodel` | `com.mairwunnx.capsa.viewmodel` | `CapsaViewModel`, the host on AndroidX `ViewModel` | `capsa-host`, AndroidX lifecycle |
+| `capsa-compose` | `com.mairwunnx.capsa.compose` | `rememberCapsa` and `CapsaComposable`, the host right in the composition, plus `CollectEffects` and `Slot` | `capsa-host`, Compose runtime and UI |
 | `capsa-test` | `com.mairwunnx.capsa.test` | `capsaHarness`, `replay`, `inCapabilityScope` | `capsa-core`, kotlinx-coroutines-test |
 | `capsa-bom` | | Aligns the versions of the modules above | |
 
@@ -41,7 +42,8 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.capsa.compose) // brings capsa-viewmodel and capsa-core
+            implementation(libs.capsa.compose) // brings capsa-host and capsa-core
+            implementation(libs.capsa.viewmodel) // only for screens on CapsaViewModel
         }
         commonTest.dependencies {
             implementation(libs.capsa.test)
@@ -50,7 +52,7 @@ kotlin {
 }
 ```
 
-A module with capabilities only (`business`) needs just `capsa-core`. A host without Compose needs `capsa-viewmodel`. On Android, `capsa-core` ships R8 rules that keep the names of facts and effects, so crash reports stay readable.
+A module with capabilities only (`business`) needs just `capsa-core`. A screen on `rememberCapsa` needs only `capsa-compose`, a screen on `CapsaViewModel` adds `capsa-viewmodel`, and a host without Compose, such as SwiftUI, needs just `capsa-viewmodel`. The two hosts don’t depend on each other. On Android, `capsa-core` ships R8 rules that keep the names of facts and effects, so crash reports stay readable.
 
 ## Facts, slices, capabilities
 
@@ -86,7 +88,7 @@ fun likes(ports: LikePorts): Capability<LikeSlice> = capability("likes", LikeSli
 | `Fact`, `Intent`, `Signal` | Marker interfaces. `Started` is the signal the runtime sends once, first |
 | `Effect` | Marker interface for commands to the host |
 | `capability(name, initial) { on<F> { state, fact -> … } }` | Builds a `Capability<S>`. For a sealed slice: `capability<DownloadSlice>(…)` |
-| `CapabilityScope` | The context parameter that limits who creates a capability: `CapsaViewModel` and `TestCapabilityScope` provide it |
+| `CapabilityScope` | The context parameter that limits who creates a capability: `CapsaViewModel`, `CapsaComposable`, the lambda of `rememberCapsa`, and `TestCapabilityScope` provide it |
 | `state.commit()` | The new slice only |
 | `state.commit(work)`, `commit(effect)`, `commit(signal)` | The slice and one item |
 | `state.commit(effects = …, works = …, cancel = …, signals = …)` | The slice and several items. `cancel` takes `WorkKey`s and runs before `works` |
@@ -161,6 +163,66 @@ class PostViewModel(
 
 The runtime starts after the constructor, or earlier on the first `send` or access to `effects`. Works run on `Dispatchers.Default`, decisions on the thread of `viewModelScope`.
 
+## Host in Compose: `rememberCapsa`
+
+`rememberCapsa` hosts a screen right in the composition, without a `ViewModel`, on Android, iOS, macOS, and the JVM desktop. Its lambda runs once with `CapsaScope` as the receiver and returns either a class or `expose(...)`.
+
+A class extends `CapsaComposable`. Its body is the same as a `CapsaViewModel`, the constructor takes the `CapsaScope` and whatever the screen needs, here the Android `Application`:
+
+```kotlin
+class LikeCapsule(scope: CapsaScope, app: Application) : CapsaComposable(scope) {
+    private val likesApi = LikesApi(app)
+    private val analytics = Analytics(app)
+
+    private val like = installSaved(likes(LikePorts(likesApi::setLiked)), LikeSaver, key = "like")
+    val ui: StateFlow<LikeUi> = like.mapState(capsaScope) { it.toUi() }
+
+    override fun EffectHandlers.Builder.handleEffects() {
+        on<LikeTracked> { analytics.log(it.event) }
+    }
+}
+
+@Composable
+fun LikeScreen(onLikeError: () -> Unit) {
+    val app = LocalContext.current.applicationContext as Application
+    val like = rememberCapsa { LikeCapsule(this, app) }
+    val ui by like.ui.collectAsStateWithLifecycle()
+    CollectEffects(like.effects, effectHandlers { on<ShowLikeError> { onLikeError() } })
+    LikeContent(ui, onIntent = like::send)
+}
+```
+
+Without a class, the lambda installs itself and ends with `expose`:
+
+```kotlin
+val like = rememberCapsa {
+    val like = installSaved(likes(likePorts), LikeSaver, key = "like")
+    handleEffects { on<LikeTracked> { analytics.log(it.event) } }
+    expose(like.mapState(capsaScope) { it.toUi() })
+}
+val ui by like.state.collectAsStateWithLifecycle()
+CollectEffects(like.effects, effectHandlers { on<ShowLikeError> { onLikeError() } })
+LikeContent(ui, onIntent = like::send)
+```
+
+| API | What it does |
+|---|---|
+| `rememberCapsa(keys, logger, config) { … }` | Creates the runtime once for this place in the composition. New `keys` create a new one and stop the old one |
+| `CapsaComposable(scope)` | The members of `CapsaViewModel`: `install`, `installSaved`, `send`, `signal`, `effects`, `handleEffects()`, `onEffectFailed`, `capsaScope`, `logger` |
+| `CapsaScope` | The receiver of the lambda: `install`, `installSaved`, `handleEffects { }`, `onEffectFailed { }`, `capsaScope`, `expose(state)` |
+| `CapsaHandle<T>` | What `expose` returns: `state`, `send`, `signal`, `effects` |
+| `CapsaScope(scope, logger, config)` | A scope without Compose, for a test: it lives as long as `scope` and saves nothing |
+
+- The lambda returns a `CapsaComposable` or ends with `expose`. A lambda that installs and also returns a class, or returns anything else, throws at once.
+- What the lambda reads is fixed when it runs, like `viewModel { }`. Pass the values that should create a new runtime, such as the id of a product, as `keys`.
+- The runtime outlives the activity on Android. Pass the `Application`, never the activity or its `Context`.
+- A rotation keeps the runtime: `retain` holds it through a configuration change on Android, and the works keep running. iOS, macOS, and the desktop don’t recreate the composition.
+- `installSaved` goes to `LocalSaveableStateRegistry`, the store of `rememberSaveable`. Without a registry the capability works and nothing is saved.
+- When the screen leaves the composition for good, the runtime and its works stop. A screen on the back stack keeps its runtime only if the navigation wraps the content of each entry in a `RetainedValuesStore`, as a `NavEntryDecorator` over `RetainedValuesStoreRegistry` does in Navigation 3. Otherwise the works stop, and the saved slices come back on return. A `CapsaViewModel` lives as long as its `ViewModelStore`.
+- In a test, decisions run on `Dispatchers.Main.immediate`, so set `Dispatchers.setMain(dispatcher)`. Works take `config = CapsaConfig(workContext = dispatcher)`.
+
+## Every host
+
 ### When the screen is visible
 
 Nobody reports visibility by hand. The runtime counts the screen as visible while someone collects a slice, a projection, or `effects.flow`, and the app is in the foreground. It pauses `whileVisible` streams otherwise.
@@ -169,7 +231,7 @@ Nobody reports visibility by hand. The runtime counts the screen as visible whil
 - A rotation doesn’t restart the streams: after the last collector leaves, the runtime waits `CapsaVisibility.Watched(grace)`, one second by default.
 - Until the first collector the screen is hidden, so a stream from `Started` waits for the UI.
 - The foreground comes from `ProcessLifecycleOwner` on Android, from the app state on iOS, and on macOS from the windows of the app: ⌘H or all windows minimized to the Dock or closed, while the process keeps running, hide the screen. A window that another app covers doesn’t. The JVM has no foreground layer: Compose Desktop drops a minimized or hidden window to `CREATED`, and the lifecycle-aware collectors stop.
-- Inside the view model read slices through `.value` or build projections. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting and keeps the screen visible for good. `SharingStarted.WhileSubscribed` passes the UI collectors through.
+- Inside a host read slices through `.value` or build projections. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting and keeps the screen visible for good. `SharingStarted.WhileSubscribed` passes the UI collectors through.
 - `CapsaConfig(visibility = CapsaVisibility.Host)` turns the counting off: only `CapsaRuntime.onVisibilityChanged` decides, and the screen starts visible.
 
 ### Saving slices
@@ -185,7 +247,7 @@ object FormSaver : SliceSaver<FormSlice, FormSaved> {
 }
 ```
 
-`save` runs only when the system saves the screen. `null` saves nothing. A broken snapshot goes to the error policy, and the capability starts from its initial slice.
+`save` runs only when the system saves the screen: `CapsaViewModel` keeps the snapshot in `SavedStateHandle`, `rememberCapsa` in the saveable state registry. `null` saves nothing. A broken snapshot goes to the error policy, and the capability starts from its initial slice.
 
 ### Errors and logs
 

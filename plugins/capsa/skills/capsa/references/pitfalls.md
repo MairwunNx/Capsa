@@ -84,15 +84,15 @@ A `CancellationException` thrown while the runtime’s scope is alive, for examp
 
 ### Projections on the wrong scope
 
-`mapState` and `combineState` report a failing transform to the error handler of their scope. On `viewModelScope` that crashes a release build. Pass `capsaScope` from `CapsaViewModel`: it crashes only a debug build.
+`mapState` and `combineState` report a failing transform to the error handler of their scope. On `viewModelScope` or your own scope that crashes a release build. Pass `capsaScope` of the host (`CapsaViewModel`, `CapsaComposable`, or `CapsaScope`): it crashes only a debug build.
 
 ### A projection that fails on the initial slice
 
-`mapState` and `combineState` compute the first value at once, in the view model’s constructor, outside the error handler. A transform that fails on the initial slice crashes the constructor in every build. Make projections total: handle empty lists, `Load.Loading`, and `null`.
+`mapState` and `combineState` compute the first value at once, in the constructor of the host, outside the error handler. A transform that fails on the initial slice crashes the constructor in every build. Make projections total: handle empty lists, `Load.Loading`, and `null`.
 
 ### `install` after the runtime started
 
-`install` and `installSaved` work only while the view model’s constructor runs. A `send`, a `signal`, or an access to `effects` inside `init` starts the runtime early, and a later `install` throws. Install everything first.
+`install` and `installSaved` work only while the host is being built: the constructor of a view model or a `CapsaComposable`, or the lambda of `rememberCapsa`. A `send`, a `signal`, or an access to `effects` inside `init` starts the runtime early, and a later `install` throws. Install everything first.
 
 ### Effects have one consumer
 
@@ -105,3 +105,11 @@ A handler isn’t `suspend`, and the next effect waits until it returns. For asy
 ### `Started` comes once
 
 A rotation, a return from the back stack, or a new composition doesn’t send `Started` again. Refresh on return through an intent from the UI or a `whileVisible` stream, not through `on<Started>`.
+
+### A `rememberCapsa` screen that loses its runtime on the back stack
+
+Without a `RetainedValuesStore` per navigation entry, a screen on the back stack leaves the composition, and `rememberCapsa` stops its runtime: works stop, and only the slices of `installSaved` come back on return. Either wrap each entry in a store of its own, as a `NavEntryDecorator` over `RetainedValuesStoreRegistry` does in Navigation 3, or keep that screen on `CapsaViewModel`.
+
+### The activity inside `rememberCapsa`
+
+The runtime of `rememberCapsa` outlives the activity on Android. A `LocalContext.current` passed to a `CapsaComposable` or captured by the lambda leaks the old activity after a rotation. Pass `applicationContext` or the `Application`.

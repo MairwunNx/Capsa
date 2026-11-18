@@ -1,6 +1,6 @@
 ---
 name: capsa
-description: Capsa, the Kotlin Multiplatform engine for screens built from capabilities, and Capability Slice Architecture (CSA), the rules behind it. Use when code imports com.mairwunnx.capsa, uses CapsaViewModel, capability, slice, Intent, Signal, Effect, work, stream, WorkKey, mapState, combineState, CollectEffects, or capsaHarness, or when the user asks to build, change, test, migrate, or review a screen on Capsa or CSA (“экран на Capsa”). Skip it for code that doesn’t use Capsa.
+description: Capsa, the Kotlin Multiplatform engine for screens built from capabilities, and Capability Slice Architecture (CSA), the rules behind it. Use when code imports com.mairwunnx.capsa, uses CapsaViewModel, rememberCapsa, CapsaComposable, capability, slice, Intent, Signal, Effect, work, stream, WorkKey, mapState, combineState, CollectEffects, or capsaHarness, or when the user asks to build, change, test, migrate, or review a screen on Capsa or CSA (“экран на Capsa”). Skip it for code that doesn’t use Capsa.
 ---
 
 # Capsa
@@ -52,6 +52,18 @@ And in practice:
 - Every work has an `onError` that returns a `Signal`, and a reaction turns it into state, such as `Load.Failed`.
 - Debounce and retries are parameters of a work: `debounce = 300.milliseconds`, `retry = Retry(…)`. No manual `delay` or retry loops.
 - No state in closures or objects. All state lives in slices.
+
+## Choosing a host
+
+A screen runs on one of three hosts. They differ only in where the runtime lives: capabilities, projections, and tests stay the same. `references/kotlin.md` has the API.
+
+| Host | Fits when |
+|---|---|
+| `CapsaViewModel` | The project already creates view models, through DI or `viewModel { }`. The screen must keep its runtime on the back stack and the navigation keeps no `RetainedValuesStore` per entry. The UI isn’t Compose, such as SwiftUI or Android Views |
+| `rememberCapsa` with a `CapsaComposable` class | Compose without view models, for example on the desktop. A big screen: many capabilities, its own effect handlers. A screen that moves off `CapsaViewModel`: the body of the class stays |
+| `rememberCapsa` with a lambda | A small Compose screen: one to three capabilities and little wiring |
+
+When you migrate a screen or create a new one and the user hasn’t named the host, ask before you write code. Name the three options and recommend one, with the reason taken from the project: what the neighbouring screens use, whether DI creates view models, whether the navigation keeps a store per entry, which platforms the screen runs on. Never move an existing screen to another host on your own. One project may use several hosts.
 
 ## What to read next
 
