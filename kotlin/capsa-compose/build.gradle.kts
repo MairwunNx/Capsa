@@ -20,7 +20,8 @@ kotlin {
 }
 
 // Android host tests run on a stub android.jar. A composition calls android.os.Trace and, on an error, android.util.Log,
-// and both throw "not mocked". So SlotTest runs on the JVM and Kotlin/Native only.
+// and both throw "not mocked". So the tests on a real composition run on the JVM and Kotlin/Native only.
 tasks.withType<Test>().matching { it.name == "testAndroidHostTest" }.configureEach {
     filter.excludeTestsMatching("com.mairwunnx.capsa.compose.SlotTest")
+    filter.excludeTestsMatching("com.mairwunnx.capsa.compose.CollectEffectsCompositionTest")
 }
