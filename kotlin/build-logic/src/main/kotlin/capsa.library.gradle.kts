@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
     id("capsa.publish")
+    id("capsa.lint")
     id("org.jetbrains.kotlinx.kover")
     id("org.jetbrains.kotlinx.binary-compatibility-validator")
 }
