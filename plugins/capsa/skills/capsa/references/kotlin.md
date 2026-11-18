@@ -168,7 +168,7 @@ Nobody reports visibility by hand. The runtime counts the screen as visible whil
 - `collectAsStateWithLifecycle()` and `CollectEffects` stop collecting below `STARTED`, so the back stack and the background hide the screen.
 - A rotation doesn’t restart the streams: after the last collector leaves, the runtime waits `CapsaVisibility.Watched(grace)`, one second by default.
 - Until the first collector the screen is hidden, so a stream from `Started` waits for the UI.
-- The foreground comes from `ProcessLifecycleOwner` on Android, from the app state on iOS, and on macOS from whether any window of the app is on screen: ⌘H, windows minimized to the Dock, and closed windows of a running process hide the screen. The JVM has no foreground layer: Compose Desktop drops a minimized or hidden window to `CREATED`, and the lifecycle-aware collectors stop.
+- The foreground comes from `ProcessLifecycleOwner` on Android, from the app state on iOS, and on macOS from the windows of the app: ⌘H or all windows minimized to the Dock or closed, while the process keeps running, hide the screen. A window that another app covers doesn’t. The JVM has no foreground layer: Compose Desktop drops a minimized or hidden window to `CREATED`, and the lifecycle-aware collectors stop.
 - Inside the view model read slices through `.value` or build projections. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting and keeps the screen visible for good. `SharingStarted.WhileSubscribed` passes the UI collectors through.
 - `CapsaConfig(visibility = CapsaVisibility.Host)` turns the counting off: only `CapsaRuntime.onVisibilityChanged` decides, and the screen starts visible.
 
