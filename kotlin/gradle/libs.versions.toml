@@ -9,6 +9,9 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.13.0"
 kotlinx-atomicfu = "0.33.0"
 kotlinx-benchmark = "0.5.0"
+robolectric = "4.18.1"
+# Robolectric needs JDK 21 to run SDK 35 and newer, so the Android host tests run on it.
+robolectric-jvm = "21"
 androidx-lifecycle = "2.11.0"
 androidx-savedstate = "1.4.0"
 androidx-tracing = "2.0.5"
@@ -35,6 +38,7 @@ androidx-tracing = { module = "androidx.tracing:tracing", version.ref = "android
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 # Gradle plugins on the classpath of build-logic

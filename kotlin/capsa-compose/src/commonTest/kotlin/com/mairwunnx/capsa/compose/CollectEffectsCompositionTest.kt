@@ -45,7 +45,7 @@ import kotlin.test.assertIs
  * instead of crashing the test.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class CollectEffectsCompositionTest {
+class CollectEffectsCompositionTest : CompositionTest() {
 
     private data class Open(val id: Int) : Intent
     private data class Navigate(val id: Int) : Effect

@@ -4,7 +4,21 @@ plugins {
 
 description = "Compose Multiplatform helpers for Capsa: effect collection and slots."
 
+// Without a target SDK in the library manifest Robolectric runs the oldest SDK it supports. This file points it at compileSdk.
+val robolectricConfig = tasks.register("robolectricConfig") {
+    val sdk = libs.versions.android.compileSdk
+    val output = layout.buildDirectory.dir("generated/robolectric")
+    inputs.property("sdk", sdk)
+    outputs.dir(output)
+    doLast {
+        output.get().file("robolectric.properties").asFile.writeText("sdk=${sdk.get()}\n")
+    }
+}
+
 kotlin {
+    // CompositionTest is an expect class, which Kotlin still marks as Beta.
+    compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
+
     sourceSets {
         commonMain.dependencies {
             api(projects.capsaCore)
@@ -16,12 +30,17 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
         }
+        // The stub android.jar of host tests throws "not mocked" on android.os.Trace and android.util.Log, which a composition calls.
+        // Robolectric gives the tests a real Android framework, see CompositionTest.
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(libs.robolectric)
+            }
+            resources.srcDir(robolectricConfig)
+        }
     }
 }
 
-// Android host tests run on a stub android.jar. A composition calls android.os.Trace and, on an error, android.util.Log,
-// and both throw "not mocked". So the tests on a real composition run on the JVM and Kotlin/Native only.
 tasks.withType<Test>().matching { it.name == "testAndroidHostTest" }.configureEach {
-    filter.excludeTestsMatching("com.mairwunnx.capsa.compose.SlotTest")
-    filter.excludeTestsMatching("com.mairwunnx.capsa.compose.CollectEffectsCompositionTest")
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(libs.versions.robolectric.jvm.get().toInt()) }
 }

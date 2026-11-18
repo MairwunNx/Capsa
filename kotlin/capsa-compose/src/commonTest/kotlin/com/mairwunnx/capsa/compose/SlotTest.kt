@@ -16,7 +16,7 @@ import kotlin.test.assertSame
  * The tests run a real composition with an empty `Applier` and check SAM conversion, the overloads, and recomposition
  * of a `fun interface` with a `@Composable` method.
  */
-class SlotTest {
+class SlotTest : CompositionTest() {
 
     private data class Clicked(val id: Int) : Intent
 
