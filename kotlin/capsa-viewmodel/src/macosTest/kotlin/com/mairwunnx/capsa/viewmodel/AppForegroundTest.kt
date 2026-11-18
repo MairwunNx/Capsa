@@ -10,7 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * A test binary has no running app, so [appForeground] can’t read the occlusion state. It must stay silent then,
+ * A test binary has no running app, so [appForeground] can’t read its windows. It must stay silent then,
  * and the app counts as being in the foreground. [AppStateFlowTest] checks the plumbing with a fake state.
  */
 @OptIn(ExperimentalCoroutinesApi::class)

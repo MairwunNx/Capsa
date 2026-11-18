@@ -13,8 +13,8 @@ import platform.UIKit.UIApplicationWillEnterForegroundNotification
  */
 internal actual fun appForeground(): Flow<Boolean>? = appStateFlow(
     changes = mapOf(
-        UIApplicationDidEnterBackgroundNotification to { false },
-        UIApplicationWillEnterForegroundNotification to { true },
+        UIApplicationDidEnterBackgroundNotification to { _ -> false },
+        UIApplicationWillEnterForegroundNotification to { _ -> true },
     ),
     initial = ::readForeground,
 )

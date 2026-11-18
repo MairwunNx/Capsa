@@ -18,7 +18,7 @@ class AppStateFlowTest {
     fun theInitialStateComesFirstAndEveryNotificationReadsTheStateAgain() = runTest {
         var state: Boolean? = false
         val seen = mutableListOf<Boolean>()
-        val flow = appStateFlow(changes = mapOf(changed to { state }), initial = { state })
+        val flow = appStateFlow(changes = mapOf(changed to { _ -> state }), initial = { state })
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect { seen += it } }
         testScheduler.runCurrent()
 
@@ -35,7 +35,7 @@ class AppStateFlowTest {
     @Test
     fun anUnknownStateEmitsNothing() = runTest {
         val seen = mutableListOf<Boolean>()
-        val flow = appStateFlow(changes = mapOf(changed to { null }), initial = { null })
+        val flow = appStateFlow(changes = mapOf(changed to { _ -> null }), initial = { null })
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect { seen += it } }
         testScheduler.runCurrent()
 

@@ -71,7 +71,7 @@ import kotlinx.coroutines.plus
  * `collectAsStateWithLifecycle()` and `CollectEffects` stop collecting below `STARTED`, so the back stack and
  * the background hide the screen. A rotation doesn’t restart the works: the new screen starts collecting within
  * [CapsaVisibility.Watched.grace], one second by default. The foreground comes from `ProcessLifecycleOwner` on Android,
- * from the app state on iOS, and from the occlusion of the app windows on macOS. It also covers `collectAsState()`, which keeps collecting in the background.
+ * from the app state on iOS, and from the windows of the app on macOS. It also covers `collectAsState()`, which keeps collecting in the background.
  *
  * Read slices inside the view model through `.value` or build projections with `mapState` and `combineState`:
  * they don’t count as collectors. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }`
