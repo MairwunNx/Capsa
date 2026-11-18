@@ -23,7 +23,7 @@ The root holds what every implementation shares. Each implementation gets its ow
 | `.claude-plugin/` | The marketplace that lists the plugin |
 | `.claude/skills/` | Skills for working on this repository, such as `update-deps`. Users never see them |
 | `docs/` | Pictures for the README and the wiki: `images/` (SVG in light and dark), `media/` (WebP in git, mp4 in LFS), `kdoc/`, `social/` |
-| `tools/` | Helper scripts: diagrams, skill install |
+| `tools/` | Helper scripts: diagrams, skill install, benchmark comparison |
 | `.github/workflows/` | `build.yml` on every push, `release.yml`, `autopilot.yml` |
 
 Later implementations stand next to `kotlin/` and don’t change the root:
@@ -51,10 +51,27 @@ cd kotlin && ./gradlew build
 - **English in code.** Identifiers, KDoc, error messages, and test names are in English.
 - **Explicit API.** Every module builds in explicit API mode: each public declaration states its visibility and its type, and carries KDoc.
 - **Code style.** Kotlin uses 4 spaces, YAML, JSON, and Markdown use 2. Lines stay within 186 columns. `.editorconfig` holds the rest.
-- **Commits** follow `type(scope): short summary`: English, lower case, up to 72 characters. Types are `feat`, `fix`, `docs`, `test`, `build`, `ci`, `chore`, `refactor`. The body is one or two short lines or nothing, without trailers. One logical change per commit, and each commit builds.
+- **Commits** follow `type(scope): short summary`: English, lower case, up to 72 characters. Types are `feat`, `fix`, `docs`, `test`, `build`, `ci`, `chore`, `refactor`, `perf`. The body is one or two short lines or nothing, without trailers. One logical change per commit, and each commit builds.
 - **Clean history.** Code, docs, and commits name no employer, no internal project, no ticket numbers, no local paths. Examples use domains anyone knows: a counter, a search, a like, a timer, a form.
 - **Versions** come from their sources, never from memory: always the latest stable Kotlin, Gradle, AGP, Compose Multiplatform, AndroidX, kotlinx, and actions.
 - **Secrets** come from the owner’s secret store. Never print a secret’s value or write it into a file. Before publishing anywhere or setting secrets, ask the owner.
+
+## Benchmarks
+
+`kotlin/capsa-benchmarks` measures the hot paths of the runtime with kotlinx-benchmark: a fact through one and ten capabilities, `decide` with 1, 10, and 30 reactions, `WorkPolicy.Latest` under fast typing, a `stream` of 10 000 signals, a violation report, and `combineState` over three slices. The numbers tell the order of magnitude and catch a release that got slower. They don’t compare Capsa with anything else.
+
+| Command (in `kotlin/`) | What it does |
+|---|---|
+| `./gradlew :capsa-benchmarks:benchmark` | The full run on the JVM and on `macosArm64`. The tables land in the console, the JSON in `capsa-benchmarks/build/reports/benchmarks/main/` |
+| `./gradlew :capsa-benchmarks:smokeBenchmark` | One short iteration of every benchmark. CI runs it on every push, so the benchmarks keep compiling and running. Its numbers mean nothing |
+| `./gradlew :capsa-benchmarks:jvmGcBenchmark` | The full JVM run with the JMH GC profiler, in `capsa-benchmarks/build/reports/benchmarks/gc/jvm.json`. The comparison reads this one |
+| `python3 tools/bench_compare.py` | Compares the last `jvmGcBenchmark` run with `capsa-benchmarks/baseline/jvm.json` and fails when any benchmark got more than 25 % slower |
+
+**How to read them.** The mode is throughput: operations per millisecond, more is better. `Alloc` is bytes allocated per operation, from `gc.alloc.rate.norm`. The `±` error is the spread between iterations: a difference smaller than the error is noise. A change in allocations is exact and doesn’t depend on the machine, a change in speed does. The comparison warns when the baseline comes from another processor or JDK.
+
+**When to update the baseline.** The release and the autopilot run the full JVM run and the comparison. After each release, its numbers become the new baseline if they stay within the threshold, so every comparison goes against the previous release. Update the baseline on purpose only, in its own commit `perf(bench): new baseline after …` with the reason: `python3 tools/bench_compare.py --write-baseline`. Never update it to hide a slowdown.
+
+**When you change the runtime for speed:** measure before, change, measure after on the benchmark of that path, and keep the change only when the numbers show a gain.
 
 ## Releases
 
