@@ -121,7 +121,7 @@ val ui: StateFlow<PostUi> = combineState(capsaScope, like, comments) { like, com
 val likeUi: StateFlow<LikeUi> = like.mapState(capsaScope) { it.toUi() }
 ```
 
-`mapState` and `combineState` (two to four sources) compute the first value at once and start eagerly by default. A failing transform skips that value and goes to the scope’s error handler. Always pass `capsaScope`.
+`mapState` and `combineState` (two to four sources) compute the first value at once and start eagerly by default. A failing transform skips that value and goes to the scope’s error handler. Always pass `capsaScope`. A projection reads its slices past the visibility counter, so its own subscription doesn’t keep the screen visible. Whoever collects the projection counts.
 
 ## Host: `CapsaViewModel`
 
@@ -161,6 +161,17 @@ class PostViewModel(
 
 The runtime starts after the constructor, or earlier on the first `send` or access to `effects`. Works run on `Dispatchers.Default`, decisions on the thread of `viewModelScope`.
 
+### When the screen is visible
+
+Nobody reports visibility by hand. The runtime counts the screen as visible while someone collects a slice, a projection, or `effects.flow`, and the app is in the foreground. It pauses `whileVisible` streams otherwise.
+
+- `collectAsStateWithLifecycle()` and `CollectEffects` stop collecting below `STARTED`, so the back stack and the background hide the screen.
+- A rotation doesn’t restart the streams: after the last collector leaves, the runtime waits `CapsaVisibility.Watched(grace)`, one second by default.
+- Until the first collector the screen is hidden, so a stream from `Started` waits for the UI.
+- The foreground comes from `ProcessLifecycleOwner` on Android and from the app notifications on iOS and macOS. The JVM has no foreground layer.
+- Inside the view model read slices through `.value` or build projections. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting and keeps the screen visible for good. `SharingStarted.WhileSubscribed` passes the UI collectors through.
+- `CapsaConfig(visibility = CapsaVisibility.Host)` turns the counting off: only `CapsaRuntime.onVisibilityChanged` decides, and the screen starts visible.
+
 ### Saving slices
 
 ```kotlin
@@ -182,7 +193,7 @@ object FormSaver : SliceSaver<FormSlice, FormSaved> {
 - `CapsaLogger` is a `fun interface` with a lazy message. `CapsaLogger.Default` writes to Logcat, `NSLog`, or `System.err` with the tag `Capsa`: errors always, the runtime journal only while `failFast` is on. Pass your own logger to send errors to a crash reporter.
 - `LoggingCapsaObserver` writes the journal: each fact and, indented, what it caused.
 - `CapsaViolationException` carries the `CapsaViolation` and the last 32 events of the runtime.
-- `CapsaConfig(maxSignalDepth = 8, onViolation, workContext, observer)` and `CapsaObserver` configure the runtime when you build a host of your own.
+- `CapsaConfig(maxSignalDepth = 8, onViolation, workContext, observer, visibility)` and `CapsaObserver` configure the runtime when you build a host of your own.
 
 ## Screen: `capsa-compose`
 
@@ -201,12 +212,12 @@ fun PostScreen(viewModel: PostViewModel, onClose: () -> Unit, onLikeError: () ->
 }
 ```
 
-- `CollectEffects(effects, handlers, lifecycleOwner)` collects effects while the lifecycle is at least `STARTED`, on `Dispatchers.Main.immediate`. It also tells the runtime whether the screen is visible, which pauses `whileVisible` streams. A failing handler or an effect without a handler goes to the error policy.
+- `CollectEffects(effects, handlers, lifecycleOwner)` collects effects while the lifecycle is at least `STARTED`, on `Dispatchers.Main.immediate`. Like any collector of the screen, it keeps the screen visible while it collects. A failing handler or an effect without a handler goes to the error policy.
 - `effectHandlers(onUnhandled) { on<E> { … } }` builds `EffectHandlers`. By default an unknown effect throws.
-- `Flow<Effect>.collectWhileStarted(lifecycleOwner, onVisible, onEffect)` is the same loop without Compose.
+- `Flow<Effect>.collectWhileStarted(lifecycleOwner, onEffect)` is the same loop without Compose.
 - `Slot<U>` is a typed UI boundary: `Slot<LikeUi> { ui, onIntent, modifier -> … }`. Use it only for a real boundary.
 
-A host without Compose, such as SwiftUI through Kotlin/Native, collects `effects.flow`, calls `effects.fail(error)` when its handler fails, and `effects.setVisible(true)` and `setVisible(false)` when the screen appears and disappears.
+A host without Compose, such as SwiftUI through Kotlin/Native, collects `effects.flow` and calls `effects.fail(error)` when its handler fails. Collect the effects and the state only while the view is on screen, for example in `.task {}`: the collection is what makes the screen visible.
 
 ## Tests: `capsa-test`
 
@@ -245,10 +256,12 @@ class LikesTest {
 | `runCurrent()`, `advanceTimeBy(duration)` | Run what is due now, move the clock and run what became due. The harness has no `advanceUntilIdle()` on purpose |
 | `stateOf(capability)`, `effects`, `takeEffects()` | The slice, the effects so far, the effects since the last take |
 | `facts`, `workEvents` | Handled facts, `WorkEvent.Started`, `Cancelled`, `Failed`, `Dropped` |
-| `setVisible(visible)` | Hides or shows the screen for `whileVisible` streams |
+| `setVisible(visible)` | Hides or shows the screen for `whileVisible` streams. The harness screen starts visible, collectors don’t count in it |
 | `violations`, `assertNoViolations()` | With `strict = false`, the violations collected instead of a failure |
 
 A fake clock for a port is the test scheduler: `nowMillis = { testScheduler.currentTime }`.
+
+A test of a `CapsaViewModel` without UI must collect its state, for example `backgroundScope.launch { vm.ui.collect {} }`. Otherwise nobody watches the screen, and `whileVisible` streams never start.
 
 ## Build and test commands
 

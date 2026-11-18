@@ -60,7 +60,13 @@ When the screen comes back, the runtime calls the stream’s block again. A stre
 
 ### Who reports visibility
 
-Today `CollectEffects` reports whether the screen is visible. A screen that never calls `CollectEffects` never pauses its `whileVisible` streams, and the runtime counts a screen as visible until it hears otherwise. A host without Compose, such as SwiftUI, calls `CapsaEffects.setVisible` itself.
+Nobody calls anything: the runtime counts who collects the screen. A slice, a projection, or `effects.flow` with a collector makes the screen visible, and the app in the background hides it. Three things break this:
+
+- **`collectAsState()` without a lifecycle.** The composition stays alive below `STARTED` and keeps collecting, for example while another activity of the app covers the screen, so the streams keep going. The foreground layer catches only the background of the whole app. Use `collectAsStateWithLifecycle()`.
+- **A collector in the view model.** `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting, so the screen stays visible for good. Read `.value` or build projections with `mapState` and `combineState`: they don’t count.
+- **A view model test without UI.** Nobody collects, so `whileVisible` streams never start. Collect the state in `backgroundScope`, or test the capability with `capsaHarness`, where the screen starts visible.
+
+A short read such as `slice.first()` counts too: the screen turns visible and stays so for the grace, one second by default.
 
 ### Debounce belongs to `work`
 
