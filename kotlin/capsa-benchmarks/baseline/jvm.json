@@ -10,64 +10,64 @@
   "benchmarks": {
     "CombineStateBenchmark.changeOneSlice": {
       "mode": "thrpt",
-      "score": 4911.747,
-      "error": 124.602,
+      "score": 4772.412,
+      "error": 50.644,
       "unit": "ops/ms",
       "allocBytesPerOp": 714.3
     },
     "DecideBenchmark.decide(reactions=1)": {
       "mode": "thrpt",
-      "score": 149010.264,
-      "error": 738.794,
+      "score": 397432.354,
+      "error": 6435.815,
       "unit": "ops/ms",
-      "allocBytesPerOp": 88.0
+      "allocBytesPerOp": 32.0
     },
     "DecideBenchmark.decide(reactions=10)": {
       "mode": "thrpt",
-      "score": 17675.425,
-      "error": 62.365,
+      "score": 395292.168,
+      "error": 15730.013,
       "unit": "ops/ms",
-      "allocBytesPerOp": 88.0
+      "allocBytesPerOp": 32.0
     },
     "DecideBenchmark.decide(reactions=30)": {
       "mode": "thrpt",
-      "score": 5501.834,
-      "error": 150.661,
+      "score": 399825.661,
+      "error": 4303.429,
       "unit": "ops/ms",
-      "allocBytesPerOp": 88.0
+      "allocBytesPerOp": 32.0
     },
     "FactPassBenchmark.passOneFact(capabilities=1)": {
       "mode": "thrpt",
-      "score": 10612.693,
-      "error": 516.695,
+      "score": 14193.815,
+      "error": 199.569,
       "unit": "ops/ms",
-      "allocBytesPerOp": 250.3
+      "allocBytesPerOp": 194.3
     },
     "FactPassBenchmark.passOneFact(capabilities=10)": {
       "mode": "thrpt",
-      "score": 10649.98,
-      "error": 282.822,
+      "score": 14099.882,
+      "error": 89.181,
       "unit": "ops/ms",
-      "allocBytesPerOp": 250.3
+      "allocBytesPerOp": 194.3
     },
     "LatestWorkBenchmark.typeOneCharacter": {
       "mode": "thrpt",
-      "score": 451.931,
-      "error": 9.636,
+      "score": 433.623,
+      "error": 22.692,
       "unit": "ops/ms",
-      "allocBytesPerOp": 2884.5
+      "allocBytesPerOp": 2828.5
     },
     "StreamBenchmark.tenThousandSignals": {
       "mode": "thrpt",
-      "score": 1.442,
-      "error": 0.006,
+      "score": 1.863,
+      "error": 0.103,
       "unit": "ops/ms",
-      "allocBytesPerOp": 2909849.0
+      "allocBytesPerOp": 2510150.2
     },
     "ViolationReportBenchmark.reportUnhandledFact": {
       "mode": "thrpt",
-      "score": 196.625,
-      "error": 6.06,
+      "score": 181.545,
+      "error": 2.312,
       "unit": "ops/ms",
       "allocBytesPerOp": 13554.4
     }
