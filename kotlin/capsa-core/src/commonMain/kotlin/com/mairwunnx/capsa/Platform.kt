@@ -18,7 +18,12 @@ internal expect fun KClass<*>.overlaps(other: KClass<*>): Boolean
  */
 internal expect fun deliverUncaughtToPlatform(error: Throwable)
 
-/** Returns `true` for an error after which the process can’t go on, such as `OutOfMemoryError` on the JVM. */
+/**
+ * Returns `true` for an error after which the process can’t go on.
+ *
+ * On the JVM and Android these are `VirtualMachineError` except `StackOverflowError` (out of memory, an internal VM failure)
+ * and `LinkageError` (a broken or missing class). Kotlin/Native has no such errors: it terminates on its own.
+ */
 internal expect fun Throwable.isFatal(): Boolean
 
 /**
