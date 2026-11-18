@@ -36,7 +36,7 @@ import kotlinx.coroutines.plus
  *
  * A subclass installs capabilities with [install] or [installSaved], builds the UI state, and, if it needs to, registers handlers
  * in [handleEffects]. The runtime starts when the subclass constructor ends, or earlier on the first [send]
- * or the first access to [effects].
+ * or the first access to [effects]. On the JVM without a main dispatcher, only [send] or [effects] start it.
  *
  * ```
  * class LikeViewModel(likes: LikesCapability) : CapsaViewModel() {
@@ -94,13 +94,16 @@ public abstract class CapsaViewModel(
 
     init {
         viewModelScope.coroutineContext[Job]?.invokeOnCompletion { outbox.cancel() }
-        // Not `immediate`: the start waits until the subclass constructor ends.
-        viewModelScope.launchReporting(
-            context = Dispatchers.Main,
-            onError = { logError("Capsa: the runtime did not start", it) },
-            onErrorFailed = ::fail,
-        ) {
-            ensureStarted()
+        // Not `immediate`: the start waits until the subclass constructor ends. Without a main thread there is no later
+        // moment to wait for: a start on another thread would race the constructor, so send() or effects start the runtime.
+        if (hasMainDispatcher()) {
+            viewModelScope.launchReporting(
+                context = Dispatchers.Main,
+                onError = { logError("Capsa: the runtime did not start", it) },
+                onErrorFailed = ::fail,
+            ) {
+                ensureStarted()
+            }
         }
     }
 
@@ -282,6 +285,21 @@ public abstract class CapsaViewModel(
         )
     }
 }
+
+/**
+ * Returns `false` when the platform has no main dispatcher, such as a plain JVM app without `kotlinx-coroutines-swing`
+ * or a test without `Dispatchers.setMain`. `viewModelScope` checks the same way: a missing dispatcher throws on access
+ * to `immediate`, while `Dispatchers.Main` itself would throw only on the first dispatch.
+ */
+internal fun hasMainDispatcher(): Boolean =
+    try {
+        Dispatchers.Main.immediate
+        true
+    } catch (_: NotImplementedError) {
+        false
+    } catch (_: IllegalStateException) {
+        false
+    }
 
 /**
  * Decides the fate of an uncaught Capsa error.
