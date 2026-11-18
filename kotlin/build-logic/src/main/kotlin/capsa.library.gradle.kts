@@ -31,6 +31,12 @@ kotlin {
     }
 }
 
+// The Kotlin/Native tests run on macosArm64 without a simulator (D3 in the plan is the reason for that target).
+// The iOS simulator tests need an installed simulator runtime and check nothing more, so they stay off.
+tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
+    enabled = false
+}
+
 // The ABI dumps in api/ guard the public API: `check` fails when it changes without `apiDump`.
 // The Kotlin Gradle plugin has its own abiValidation, but its DSL is still experimental.
 apiValidation {
