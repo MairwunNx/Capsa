@@ -1,0 +1,14 @@
+# Every text file is LF in the repository and on checkout, Windows included.
+* text=auto eol=lf
+*.bat text eol=crlf
+
+*.png binary
+*.gif binary
+*.webp binary
+*.jar binary
+
+# Full-size videos live in LFS, so they never weigh on every clone. The README shows their animated WebP copies.
+docs/media/*.mp4 filter=lfs diff=lfs merge=lfs -text
+
+# AGENTS.md is a symlink to CLAUDE.md. On Windows clone with `git clone -c core.symlinks=true`
+# (Developer Mode or an elevated shell), or Git writes a plain file holding the text “CLAUDE.md”.
