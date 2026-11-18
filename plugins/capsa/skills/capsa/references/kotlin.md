@@ -1,6 +1,6 @@
 # Kotlin
 
-The Kotlin Multiplatform implementation of Capsa. Read this file when the project builds with Gradle and applies the Kotlin Multiplatform plugin (`org.jetbrains.kotlin.multiplatform`) or the Android plugin (`com.android.application`, `com.android.library`).
+The Kotlin Multiplatform implementation of Capsa. Read this file when the project builds with Gradle and applies the Kotlin Multiplatform plugin (`org.jetbrains.kotlin.multiplatform`) or an Android plugin (`com.android.application`, `com.android.library`, `com.android.kotlin.multiplatform.library`).
 
 ## Modules and coordinates
 
