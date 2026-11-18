@@ -11,3 +11,22 @@ import kotlin.reflect.KClass
  */
 @PublishedApi
 internal expect fun KClass<*>.overlaps(other: KClass<*>): Boolean
+
+/**
+ * Hands `error` to the platform as an uncaught error: the handler of the current thread on the JVM and Android,
+ * the unhandled exception hook on Kotlin/Native.
+ */
+internal expect fun deliverUncaughtToPlatform(error: Throwable)
+
+/** Returns `true` for an error after which the process can’t go on, such as `OutOfMemoryError` on the JVM. */
+internal expect fun Throwable.isFatal(): Boolean
+
+/**
+ * Puts a synthetic frame on top of the stack trace, so crash reports group by it.
+ *
+ * Only the JVM and Android have a writable stack trace. Kotlin/Native leaves the exception as it is.
+ */
+internal expect fun Throwable.prependFrame(className: String, methodName: String, fileName: String)
+
+/** Returns the runtime name of the class: the binary name on the JVM and Android, the qualified name on Kotlin/Native. */
+internal expect fun Any.platformClassName(): String
