@@ -8,6 +8,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -82,11 +83,20 @@ class WorkLifecycleTest {
         val scope: CoroutineScope,
     )
 
-    private fun <S : Any> TestScope.start(capability: Capability<S>): Harness<S> {
+    /**
+     * Starts the runtime in its own scope, so `advanceUntilIdle` drives its works.
+     *
+     * `inBackground` puts the scope under `backgroundScope` for endless streams: `runTest` cancels them by itself,
+     * even after a failed assertion. `advanceUntilIdle` doesn't wait for such works, so those tests use `advanceTimeBy`.
+     */
+    private fun <S : Any> TestScope.start(capability: Capability<S>, inBackground: Boolean = false): Harness<S> {
         val errors = mutableListOf<Throwable>()
-        val scope = CoroutineScope(
-            StandardTestDispatcher(testScheduler) + SupervisorJob() + CoroutineExceptionHandler { _, e -> errors += e },
-        )
+        val handler = CoroutineExceptionHandler { _, e -> errors += e }
+        val scope = if (inBackground) {
+            CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job) + handler)
+        } else {
+            CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob() + handler)
+        }
         val builder = CapsaBuilder()
         val state = builder.install(capability)
         return Harness(runtime = builder.build(scope, CapsaConfig()), state = state, errors = errors, scope = scope)
@@ -137,7 +147,7 @@ class WorkLifecycleTest {
 
     @Test
     fun whileVisibleStreamPausesWhileHiddenAndRestartsWhenVisible() = runTest {
-        val rt = start(ticker)
+        val rt = start(ticker, inBackground = true)
 
         rt.runtime.append(Watch)
         testScheduler.runCurrent()
@@ -152,12 +162,11 @@ class WorkLifecycleTest {
         testScheduler.runCurrent()
         testScheduler.advanceTimeBy(250.milliseconds)
         assertEquals(5, rt.state.value)
-        rt.scope.cancel()
     }
 
     @Test
     fun whileVisibleStreamStartedWhileHiddenWaitsForTheScreen() = runTest {
-        val rt = start(ticker)
+        val rt = start(ticker, inBackground = true)
 
         rt.runtime.onVisibilityChanged(false)
         rt.runtime.append(Watch)
@@ -168,30 +177,25 @@ class WorkLifecycleTest {
         testScheduler.runCurrent()
         testScheduler.advanceTimeBy(150.milliseconds)
         assertEquals(1, rt.state.value)
-        rt.scope.cancel()
     }
 
     @Test
     fun parallelWhileVisibleStreamsWithOneKeyAllRestartWhenVisible() = runTest {
-        val rt = start(twinTickers)
-        // The streams never end: without the cancel in finally, a failed assertion would hang runTest.
-        try {
-            rt.runtime.append(WatchBoth)
-            testScheduler.runCurrent()
-            testScheduler.advanceTimeBy(150.milliseconds)
-            assertEquals(2, rt.state.value)
+        val rt = start(twinTickers, inBackground = true)
 
-            rt.runtime.onVisibilityChanged(false)
-            testScheduler.advanceTimeBy(1_000.milliseconds)
-            assertEquals(2, rt.state.value)
+        rt.runtime.append(WatchBoth)
+        testScheduler.runCurrent()
+        testScheduler.advanceTimeBy(150.milliseconds)
+        assertEquals(2, rt.state.value)
 
-            rt.runtime.onVisibilityChanged(true)
-            testScheduler.runCurrent()
-            testScheduler.advanceTimeBy(150.milliseconds)
-            assertEquals(4, rt.state.value)
-        } finally {
-            rt.scope.cancel()
-        }
+        rt.runtime.onVisibilityChanged(false)
+        testScheduler.advanceTimeBy(1_000.milliseconds)
+        assertEquals(2, rt.state.value)
+
+        rt.runtime.onVisibilityChanged(true)
+        testScheduler.runCurrent()
+        testScheduler.advanceTimeBy(150.milliseconds)
+        assertEquals(4, rt.state.value)
     }
 
     @Test
