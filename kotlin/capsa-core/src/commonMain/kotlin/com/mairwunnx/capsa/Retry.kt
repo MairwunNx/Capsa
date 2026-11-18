@@ -36,4 +36,7 @@ public class Retry(
 
     /** The delay before the retry number `retry`, counting from zero. */
     internal fun delayBefore(retry: Int): Duration = (delay * factor.pow(retry)).coerceAtMost(maxDelay)
+
+    /** Shows the settings without `retryIf`: a lambda has no readable text. */
+    override fun toString(): String = "Retry(times=$times, delay=$delay, factor=$factor, maxDelay=$maxDelay)"
 }

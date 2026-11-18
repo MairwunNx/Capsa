@@ -253,6 +253,8 @@ final class com.mairwunnx.capsa/Retry { // com.mairwunnx.capsa/Retry|null[0]
         final fun <get-retryIf>(): kotlin/Function1<kotlin/Throwable, kotlin/Boolean> // com.mairwunnx.capsa/Retry.retryIf.<get-retryIf>|<get-retryIf>(){}[0]
     final val times // com.mairwunnx.capsa/Retry.times|{}times[0]
         final fun <get-times>(): kotlin/Int // com.mairwunnx.capsa/Retry.times.<get-times>|<get-times>(){}[0]
+
+    final fun toString(): kotlin/String // com.mairwunnx.capsa/Retry.toString|toString(){}[0]
 }
 
 final class com.mairwunnx.capsa/Work { // com.mairwunnx.capsa/Work|null[0]

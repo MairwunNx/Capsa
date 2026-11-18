@@ -70,7 +70,13 @@ public class Work internal constructor(
             emit(onError(it))
         }
 
-    override fun toString(): String = "Work(${key.name}, $policy${if (whileVisible) ", whileVisible" else ""})"
+    override fun toString(): String = buildString {
+        append("Work(").append(key.name).append(", ").append(policy)
+        if (whileVisible) append(", whileVisible")
+        if (debounce.isPositive()) append(", debounce=").append(debounce)
+        if (retry != null) append(", retry=").append(retry)
+        append(')')
+    }
 }
 
 /**

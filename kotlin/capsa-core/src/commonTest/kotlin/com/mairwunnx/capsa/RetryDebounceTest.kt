@@ -75,6 +75,17 @@ class RetryDebounceTest {
     }
 
     @Test
+    fun workToStringShowsDebounceAndRetry() {
+        val plain = work(key, onError = { Failed(it.message) }) { Done(1) }
+        val tuned = work(key, onError = { Failed(it.message) }, debounce = 300.milliseconds, retry = Retry(times = 3, delay = 1.seconds, factor = 2.0)) {
+            Done(1)
+        }
+
+        assertEquals("Work(load, Latest)", plain.toString())
+        assertEquals("Work(load, Latest, debounce=300ms, retry=Retry(times=3, delay=1s, factor=2.0, maxDelay=Infinity))", tuned.toString())
+    }
+
+    @Test
     fun retryRejectsMeaninglessSettings() {
         assertFailsWith<IllegalArgumentException> { Retry(times = 0, delay = 1.seconds) }
         assertFailsWith<IllegalArgumentException> { Retry(times = 1, delay = 1.seconds, factor = 0.5) }

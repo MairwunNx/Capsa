@@ -232,6 +232,7 @@ public final class com/mairwunnx/capsa/Retry {
 	public final fun getMaxDelay-UwyO8pc ()J
 	public final fun getRetryIf ()Lkotlin/jvm/functions/Function1;
 	public final fun getTimes ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/mairwunnx/capsa/Signal : com/mairwunnx/capsa/Fact {
