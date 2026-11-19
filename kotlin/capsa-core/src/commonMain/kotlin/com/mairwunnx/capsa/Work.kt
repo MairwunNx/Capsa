@@ -29,6 +29,10 @@ public enum class WorkPolicy {
      * Cancels the previous run and starts the new one. The [work] and [stream] factories use it by default.
      *
      * The runtime drops the signals of the previous run that still wait in the queue: an old answer never overwrites a new one.
+     *
+     * ![A cancelled search answers after the new one, and the runtime drops its answer](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/stale-signal.gif)
+     *
+     * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/stale-signal.gif)
      */
     Latest,
 

@@ -877,6 +877,61 @@ def kdoc_work_policies(seconds):
     return d
 
 
+@kdoc("stale-signal", 3.0)
+def kdoc_stale_signal(seconds):
+    x0, u = 150, 44
+    d = Card(600, 300, "WorkPolicy.Latest drops the late answer of a cancelled run",
+             "The UI sends “ca”, and work 1 starts. Then it sends “cat”: WorkPolicy.Latest cancels work 1 and starts work 2 "
+             "under the same key. Work 2 answers, and the slice shows the results for “cat”. The request of work 1 answers "
+             "later, but the runtime drops that signal, so the slice keeps “cat”.")
+    t, work, ui, sl = d.t, d.accent("work"), d.accent("ui"), d.accent("slice")
+    X = lambda v: x0 + v * u
+    heading(d, 20, 32, "WorkPolicy.Latest", "a cancelled run never overwrites a newer answer")
+    lanes(d, 20, [(46, "UI", "send(QueryChanged)"), (102, "work 1", "SEARCH, “ca”"), (158, "work 2", "SEARCH, “cat”"),
+                  (214, "slice", "SearchSlice")])
+    for y in (102, 158, 214):
+        d.add(f'<path d="M{x0 - 10} {y:g} L{X(9.6):g} {y:g}" stroke="{t["border"]}" stroke-width="1"/>')
+    r = Reveal(d, x0, u, 9.6, sweep=seconds, total=seconds + 4)
+    for v, q in ((0.5, "“ca”"), (2.5, "“cat”")):
+        s = len(d.parts)
+        triangle(d, X(v), 62, ui)
+        d.text(X(v) + 10, 71, q, 13, ui, bold=True)
+        r.show(v, s)
+    late = 7.2
+    s = len(d.parts); bar(d, X(0.5), X(2.5), 122, "runs"); r.grow(0.5, 2.5, s)
+    s = len(d.parts); bar(d, X(2.5), X(late), 122, "revoked"); r.grow(2.5, late, s)
+    s = len(d.parts)
+    d.cross(X(2.5), 129, 5)
+    d.text(X(2.5) + 10, 151, "cancelled, but the request still runs", 12, t["muted"])
+    r.show(2.5, s)
+    s = len(d.parts); bar(d, X(2.5), X(4.5), 178, "runs"); r.grow(2.5, 4.5, s)
+    s = len(d.parts)
+    dot(d, X(4.5) + 9, 185, work, r=5)
+    d.text(X(4.5) + 20, 190, "ResultsLoaded", 13, work, bold=True)
+    d.path([(X(4.5) + 9, 191), (X(4.5) + 9, 230)], color=work, sw=1.4)
+    r.show(4.5, s)
+    s = len(d.parts)
+    d.rect(X(0.5), 232, X(4.5) - X(0.5), 22, fill=t["line"], fill_opacity="0.15", stroke=t["line"], rx=11, sw=1)
+    d.text(X(0.5) + 10, 247, "loading", 12, t["muted"])
+    r.grow(0.5, 4.5, s)
+    s = len(d.parts)
+    d.rect(X(4.5) + 2, 232, X(9.6) - X(4.5) - 2, 22, fill=sl, fill_opacity=t["tint"], stroke=sl, stroke_opacity="0.7", rx=11, sw=1)
+    d.text(X(4.5) + 22, 247, "results for “cat”", 12, sl, bold=True)
+    r.show(4.5, s)
+    s = len(d.parts)
+    dot(d, X(late) + 8, 129, t["line"], r=5)
+    d.path([(X(late) + 8, 135), (X(late) + 8, 232)], color=t["line"], dashed=True, arrow=False, sw=1.4)
+    d.cross(X(late) + 8, 228, 6)
+    d.text(X(late) + 20, 134, "dropped", 13, t["danger"], bold=True)
+    d.text(X(late) + 20, 247, "still “cat”", 12, t["muted"])
+    r.show(late, s)
+    d.path([(x0, 274), (X(9.6), 274)], color=t["line"], sw=1.2)
+    d.text(X(9.6), 292, "time", 12, t["muted"], anchor="end")
+    d.text(20, 292, "capsaHarness reports it as WorkEvent.Dropped.", 12, t["muted"])
+    r.finish(46, 264)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])
