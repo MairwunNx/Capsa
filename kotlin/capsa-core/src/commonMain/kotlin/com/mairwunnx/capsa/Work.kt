@@ -97,6 +97,10 @@ public class Work internal constructor(
  * `debounce` delays `block`. Together with the default [WorkPolicy.Latest] this is a debounce:
  * a new run with the same key cancels the wait of the previous one, and the request leaves only after a pause.
  *
+ * ![Three keystrokes restart the wait, and one request leaves 300 ms after the last one](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/debounce.gif)
+ *
+ * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/debounce.gif)
+ *
  * ```
  * on<QueryChanged> { state, fact ->
  *     state.copy(query = fact.text).commit(

@@ -932,6 +932,46 @@ def kdoc_stale_signal(seconds):
     return d
 
 
+@kdoc("debounce", 2.6)
+def kdoc_debounce(seconds):
+    x0, u = 150, 42
+    d = Card(600, 240, "A work with debounce sends one request after the user stops typing",
+             "The user types c, ca, and cat. Each keystroke starts the work again: WorkPolicy.Latest cancels the wait of the "
+             "previous run. 300 ms after the last keystroke the request goes out once and answers with a signal.")
+    t, work, ui = d.t, d.accent("work"), d.accent("ui")
+    X = lambda v: x0 + v * u  # one unit is 100 ms
+    d.text(20, 32, "work(SEARCH, debounce = 300.milliseconds)", 14, bold=True, mono=True)
+    d.text(20, 52, "each keystroke restarts the wait, the request leaves once", 13, t["muted"])
+    lanes(d, 20, [(64, "typing", "send(QueryChanged)"), (114, "work", "SEARCH")])
+    r = Reveal(d, x0, u, 10, sweep=seconds, total=seconds + 4)
+    for v, q in ((0, "“c”"), (1.4, "“ca”"), (2.8, "“cat”")):
+        s = len(d.parts)
+        triangle(d, X(v), 80, ui)
+        d.text(X(v) + 9, 89, q, 13, ui, bold=True)
+        r.show(v, s)
+    by = 136
+    for a, b in ((0, 1.4), (1.4, 2.8)):
+        s = len(d.parts); bar(d, X(a), X(b), by, "waits"); r.grow(a, b, s)
+        s = len(d.parts); d.cross(X(b), by + 7, 5); r.show(b, s)
+    s = len(d.parts); bar(d, X(2.8), X(5.8), by, "waits"); r.grow(2.8, 5.8, s)
+    s = len(d.parts)
+    d.text((X(2.8) + X(5.8)) / 2, by + 30, "300 ms of quiet", 12, t["muted"], anchor="middle")
+    r.show(5.8, s)
+    s = len(d.parts); bar(d, X(5.8), X(8.6), by, "runs"); r.grow(5.8, 8.6, s)
+    s = len(d.parts)
+    d.text((X(5.8) + X(8.6)) / 2, by + 30, "one request", 12, t["muted"], anchor="middle")
+    dot(d, X(8.6) + 9, by + 7, work, r=5)
+    d.text(X(8.6) + 9, by - 8, "ResultsLoaded", 13, work, bold=True, anchor="middle")
+    r.show(8.6, s)
+    d.path([(x0, 196), (X(10), 196)], color=t["line"], sw=1.2)
+    for v in range(11):
+        d.add(f'<path d="M{X(v):g} 193 L{X(v):g} 199" stroke="{t["line"]}" stroke-width="1"/>')
+    d.text(X(0), 216, "0", 12, t["muted"], anchor="middle")
+    d.text(X(10), 216, "1000 ms", 12, t["muted"], anchor="end")
+    r.finish(60, 186)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])
