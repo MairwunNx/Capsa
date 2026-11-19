@@ -1,9 +1,15 @@
 name: Build
 
+# Documentation, pictures, and their generator build nothing, so a change to them alone runs no build.
 on:
   push:
     branches: [master]
+    paths-ignore: &docs
+      - "docs/**"
+      - "**/*.md"
+      - "tools/diagrams.py"
   pull_request:
+    paths-ignore: *docs
 
 permissions:
   contents: read
