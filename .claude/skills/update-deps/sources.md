@@ -1,0 +1,22 @@
+# Where fresh versions come from
+
+Ask the source, never your memory: versions move every week. Take the newest **stable** version. Skip anything marked alpha, beta, rc, pre, eap, dev, M1, or snapshot, unless the project already uses that channel: detekt 2 is still in alpha, so it moves to the newest `2.0.0-*` build until a stable 2.x appears, and never back to 1.x.
+
+Compare versions as numbers, part by part: 2.10 is newer than 2.9. A list sorted as text, or a `<latest>` and `<release>` tag, can name an older or a pre-release version: read all of `<versions>`.
+
+| What | Where to ask | Notes |
+|---|---|---|
+| Gradle | `https://services.gradle.org/versions/current` | Gives `version` and the distribution’s `checksum`. In `kotlin/`: `./gradlew wrapper --gradle-version <v> --gradle-distribution-sha256-sum <sha>`, then run it once more so the wrapper jar and scripts update too. `gradle-wrapper.properties` keeps `distributionSha256Sum` |
+| Kotlin | `https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-gradle-plugin/maven-metadata.xml` | The Gradle plugin, the Compose compiler plugin, allopen, and `kotlin-test` share one version, `kotlin` in the catalog. Release notes: `gh api repos/JetBrains/kotlin/releases/latest` |
+| kotlinx (coroutines, serialization, atomicfu, benchmark) | `https://repo1.maven.org/maven2/org/jetbrains/kotlinx/<artifact>/maven-metadata.xml` | Artifacts `kotlinx-coroutines-core`, `kotlinx-serialization-core`, `atomicfu`, `kotlinx-benchmark-runtime`. A kotlinx release may need a newer Kotlin: its release notes say which |
+| Compose Multiplatform | `https://repo1.maven.org/maven2/org/jetbrains/compose/runtime/runtime/maven-metadata.xml`, notes on `gh api repos/JetBrains/compose-multiplatform/releases` | `https://maven.pkg.jetbrains.space/public/p/compose/dev` holds the dev builds, never take one from there. The release notes list the Kotlin it needs and the Jetpack Compose, lifecycle, and savedstate versions it matches |
+| JetBrains lifecycle, savedstate | `https://repo1.maven.org/maven2/org/jetbrains/androidx/lifecycle/lifecycle-viewmodel/maven-metadata.xml`, `…/org/jetbrains/androidx/savedstate/savedstate/maven-metadata.xml` | Each version’s `.module` file next to the POM names the Google AndroidX version it builds on for Android |
+| AndroidX from Google (lifecycle-process, tracing, startup, compose runtime-retain) | `https://dl.google.com/android/maven2/<group with / for .>/<artifact>/maven-metadata.xml` | Like `androidx/tracing/tracing`. `lifecycle-process` and `runtime-retain` follow JetBrains’ builds, as SKILL.md says |
+| AGP | `https://dl.google.com/android/maven2/com/android/tools/build/gradle/maven-metadata.xml` | Its release notes give the Gradle it needs and the newest `compileSdk` it supports |
+| Android platforms for `compileSdk` | `https://dl.google.com/android/repository/repository2-3.xml` | Package paths read `platforms;android-<n>`. A path with `-beta` or `-rc` is a preview, never take it. `android-compileSdk` holds the major number: 37 for `android-37.2` |
+| Robolectric | `https://repo1.maven.org/maven2/org/robolectric/robolectric/maven-metadata.xml`, notes on `gh api repos/robolectric/robolectric/releases/latest` | The notes name the SDKs it supports. It moves with `compileSdk` |
+| Gradle plugins on Maven Central (Dokka, kover, the validator, the publish plugin, ktlint-gradle, detekt) | `https://repo1.maven.org/maven2/<group with / for .>/<artifact>/maven-metadata.xml` | `org/jetbrains/dokka/dokka-gradle-plugin`, `org/jetbrains/kotlinx/kover-gradle-plugin`, `org/jetbrains/kotlinx/binary-compatibility-validator`, `com/vanniktech/gradle-maven-publish-plugin`, `dev/detekt/detekt-gradle-plugin` |
+| Plugins on the Gradle plugin portal | `https://plugins.gradle.org/m2/<id with / for .>/<id>.gradle.plugin/maven-metadata.xml` | `org/jlleitschuh/gradle/ktlint/org.jlleitschuh.gradle.ktlint.gradle.plugin` for ktlint-gradle, `org/gradle/toolchains/foojay-resolver-convention/…` for the foojay resolver |
+| ktlint itself | `https://repo1.maven.org/maven2/com/pinterest/ktlint/ktlint-cli/maven-metadata.xml` | `ktlint` in the catalog, the engine that ktlint-gradle runs |
+| Java of CI | `https://api.adoptium.net/v3/info/available_releases` | `setup-java` in the workflows runs Gradle on the newest LTS. `jvm-toolchain` is a limit for users, not this |
+| GitHub Actions | `gh api repos/<owner>/<action>/releases/latest -q .tag_name` | Pin the major tag (`actions/checkout@v7`) as the workflows already do. The autopilot can’t push them, as SKILL.md says |
