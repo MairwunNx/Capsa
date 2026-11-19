@@ -55,7 +55,8 @@ public interface Capability<S : Any> {
  * The name comes from `name`, and the [Capability.handles] set comes from the registered reactions.
  *
  * ```
- * val likes = capability("likes", LikesSlice()) {
+ * context(_: CapabilityScope)
+ * fun likes() = capability("likes", LikesSlice()) {
  *     on<LikeClicked> { state, _ -> state.copy(count = state.count + 1).commit() }
  * }
  * ```
