@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="372" viewBox="0 0 900 372" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
+<title>A stream with whileVisible pauses while the screen is hidden</title>
+<desc>The screen is visible, the timer stream ticks, and the slice counts down. A rotation brings the screen back within the grace of one second, so the stream keeps running. The app goes to the background: the runtime cancels the stream, and no work runs. The app comes back: the runtime calls the block again, and the stream starts from the current value.</desc>
+<defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#818b98"/></marker></defs>
+<rect width="900" height="372" rx="12" fill="#ffffff"/>
+<text x="20" y="36" font-size="15" fill="#1f2328" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">stream(TICK, whileVisible = true)</text>
+<text x="350.76" y="36" font-size="13" fill="#59636e">the runtime pauses the stream while nobody sees the screen</text>
+<text x="20" y="86" font-size="14" fill="#1f2328" font-weight="700">screen</text>
+<text x="20" y="104" font-size="12" fill="#59636e">collected, in the foreground</text>
+<text x="20" y="146" font-size="14" fill="#1f2328" font-weight="700">stream</text>
+<text x="20" y="164" font-size="12" fill="#59636e">timer ticks</text>
+<text x="20" y="206" font-size="14" fill="#1f2328" font-weight="700">slice</text>
+<text x="20" y="224" font-size="12" fill="#59636e">seconds left</text>
+<path d="M220 124 L874.8 124" stroke="#d0d7de" stroke-width="1"/>
+<path d="M220 184 L874.8 184" stroke="#d0d7de" stroke-width="1"/>
+<rect x="230" y="84" width="258.4" height="24" rx="12" fill="#0969da" fill-opacity="0.08" stroke="#0969da" stroke-width="1" stroke-opacity="0.7"/>
+<text x="244" y="100" font-size="12" fill="#0969da" font-weight="700">visible</text>
+<rect x="664" y="84" width="208.8" height="24" rx="12" fill="#0969da" fill-opacity="0.08" stroke="#0969da" stroke-width="1" stroke-opacity="0.7"/>
+<text x="678" y="100" font-size="12" fill="#0969da" font-weight="700">visible</text>
+<rect x="492.4" y="84" width="169.6" height="24" rx="12" fill="#818b98" fill-opacity="0.12" stroke="#818b98" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="577.2" y="100" font-size="12" fill="#59636e" text-anchor="middle">hidden: in the background</text>
+<path d="M354 80 L354 112" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="2 2"/>
+<text x="362" y="78" font-size="12" fill="#59636e">rotation: back within the 1 s grace</text>
+<rect x="230" y="144" width="260.4" height="14" rx="3" fill="#1a7f37" fill-opacity="0.35" stroke="#1a7f37" stroke-width="1"/>
+<path d="M485.4 146 L495.4 156 M495.4 146 L485.4 156" stroke="#cf222e" stroke-width="2" stroke-linecap="round"/>
+<text x="577.2" y="155" font-size="12" fill="#59636e" text-anchor="middle">cancelled, no work runs</text>
+<path d="M658 132 L670 132 L664 141Z" fill="#1f2328" stroke="#1f2328" stroke-width="1.3"/>
+<text x="674" y="140" font-size="12" fill="#59636e">block() again</text>
+<rect x="664" y="144" width="210.8" height="14" rx="3" fill="#1a7f37" fill-opacity="0.35" stroke="#1a7f37" stroke-width="1"/>
+<circle cx="248.6" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="285.8" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="323" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="360.2" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="397.4" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="434.6" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="471.8" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="682.6" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="719.8" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="757" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="794.2" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="831.4" cy="151" r="3" fill="#1a7f37"/>
+<circle cx="868.6" cy="151" r="3" fill="#1a7f37"/>
+<text x="248.6" y="176" font-size="12" fill="#59636e">each tick is a signal</text>
+<rect x="230" y="204" width="644.8" height="24" rx="12" fill="#bf3989" fill-opacity="0.08" stroke="#bf3989" stroke-width="1" stroke-opacity="0.7"/>
+<text x="248.6" y="220" font-size="12" fill="#bf3989" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">04:59</text>
+<text x="434.6" y="220" font-size="12" fill="#bf3989" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">04:53</text>
+<text x="540" y="220" font-size="12" fill="#59636e" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">kept: 04:53</text>
+<text x="682.6" y="220" font-size="12" fill="#bf3989" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">04:47</text>
+<text x="825.2" y="220" font-size="12" fill="#bf3989" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">04:41</text>
+<path d="M230 254 L874.8 254" fill="none" stroke="#818b98" stroke-width="1.2" stroke-linejoin="round" marker-end="url(#m0)"/>
+<text x="874.8" y="276" font-size="13" fill="#59636e" text-anchor="end">time</text>
+<text x="20" y="308" font-size="13" fill="#59636e">The runtime counts the screen visible while someone collects a slice, a projection, or effects.flow,</text>
+<text x="20" y="328" font-size="13" fill="#59636e">and the app is in the foreground. After the last collector leaves, it waits one second,</text>
+<text x="20" y="348" font-size="13" fill="#59636e">so a rotation doesn’t restart the stream. On return the timer computes the time left from its deadline.</text>
+</svg>
