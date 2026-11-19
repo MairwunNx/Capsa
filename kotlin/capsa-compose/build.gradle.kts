@@ -31,6 +31,11 @@ kotlin {
             api(libs.compose.ui)
             api(libs.androidx.lifecycle.runtime.compose)
         }
+        // Compose Desktop has no Dispatchers.Main of its own, and rememberCapsa and CollectEffects run on it.
+        // Swing gives it on the desktop, the other platforms bring their own main dispatcher.
+        jvmMain.dependencies {
+            runtimeOnly(libs.kotlinx.coroutines.swing)
+        }
         commonTest.dependencies {
             implementation(projects.capsaViewmodel)
             implementation(libs.kotlinx.coroutines.test)

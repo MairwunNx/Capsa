@@ -56,6 +56,9 @@ import kotlinx.coroutines.cancel
  * while the entry is on the back stack. Navigation 3, for example, does it with a `NavEntryDecorator`
  * over `RetainedValuesStoreRegistry`.
  *
+ * Decisions run on `Dispatchers.Main.immediate`. On the desktop, `capsa-compose` brings `kotlinx-coroutines-swing`,
+ * which runs them on the Swing event thread. A test sets the main dispatcher with `Dispatchers.setMain`.
+ *
  * @param keys a change of any key creates a new runtime and retires the old one
  * @param logger the logger for failing effect handlers and the runtime journal
  * @param config the runtime settings. By default works run on `Dispatchers.Default`, and the journal goes to `logger`
