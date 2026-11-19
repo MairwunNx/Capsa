@@ -15,6 +15,10 @@ import kotlin.time.Duration
  * Here the retries come after 1, 2, and 4 seconds. The attempt counter is shared by the whole work: a `stream`
  * subscription that emitted something and then failed keeps spending the same attempts.
  *
+ * ![Two attempts fail, the pause grows from 1 s to 2 s, and the third attempt succeeds](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/retry.gif)
+ *
+ * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/retry.gif)
+ *
  * @param times how many times to retry after the first failure
  * @param delay the delay before the first retry
  * @param factor the backoff multiplier, at least `1.0`

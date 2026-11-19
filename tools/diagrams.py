@@ -972,6 +972,44 @@ def kdoc_debounce(seconds):
     return d
 
 
+@kdoc("retry", 2.8)
+def kdoc_retry(seconds):
+    x0, u = 150, 74
+    d = Card(600, 222, "Retry waits longer before each new attempt",
+             "Attempt 1 fails, the runtime waits 1 s, retry 1 fails, the runtime waits 2 s, and retry 2 succeeds with a signal. "
+             "onError gets the error only when the last retry fails too.")
+    t, work = d.t, d.accent("work")
+    X = lambda v: x0 + v * u
+    d.text(20, 32, "Retry(times = 3, delay = 1.seconds, factor = 2.0)", 14, bold=True, mono=True)
+    d.text(20, 52, "the pause doubles, and onError waits for the last attempt", 13, t["muted"])
+    lanes(d, 20, [(76, "work", "SEND")])
+    r = Reveal(d, x0, u, 5.6, sweep=seconds, total=seconds + 4)
+    by = 96
+    s = len(d.parts); triangle(d, X(0), by - 14, t["fg"]); r.show(0, s)
+    for a, b, label in ((0, 0.7, "attempt 1"), (1.7, 2.4, "retry 1")):
+        s = len(d.parts); bar(d, X(a), X(b), by, "fails"); r.grow(a, b, s)
+        s = len(d.parts)
+        d.cross(X(b), by + 7, 5)
+        d.text((X(a) + X(b)) / 2, by + 30, label, 12, t["muted"], anchor="middle")
+        r.show(b, s)
+    for a, b, label in ((0.7, 1.7, "waits 1 s"), (2.4, 4.4, "waits 2 s")):
+        s = len(d.parts); bar(d, X(a) + 3, X(b) - 3, by, "waits"); r.grow(a, b, s)
+        s = len(d.parts); d.text((X(a) + X(b)) / 2, by - 8, label, 12, t["muted"], anchor="middle"); r.show(a, s)
+    s = len(d.parts); bar(d, X(4.4), X(5.1), by, "runs"); r.grow(4.4, 5.1, s)
+    s = len(d.parts)
+    d.text((X(4.4) + X(5.1)) / 2, by + 30, "retry 2", 12, t["muted"], anchor="middle")
+    dot(d, X(5.1) + 9, by + 7, work, r=5)
+    d.text(X(5.1) + 9, by - 8, "Sent", 13, work, bold=True, anchor="middle")
+    r.show(5.1, s)
+    d.path([(x0, 150), (X(5.6), 150)], color=t["line"], sw=1.2)
+    for v in range(6):
+        d.add(f'<path d="M{X(v):g} 147 L{X(v):g} 153" stroke="{t["line"]}" stroke-width="1"/>')
+        d.text(X(v), 170, f"{v} s", 12, t["muted"], anchor="middle")
+    d.text(20, 202, "Had retry 2 failed, retry 3 would follow after 4 s, and only its failure reaches onError.", 13, t["muted"])
+    r.finish(70, 140)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])
