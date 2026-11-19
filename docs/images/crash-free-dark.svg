@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
+<title>A bug in decide: debug crashes with the history, release logs it and the screen lives</title>
+<desc>The like capability throws in decide on LikeClicked. In a debug build Capsa.failFast is true: Capsa throws CapsaViolationException, whose message lists the violation and the last events of the runtime, and the app crashes. In a release build Capsa.failFast is false: Capsa hands the error to CapsaLogger, which can send it to a crash reporter, and the screen keeps its last valid slice and goes on with the next facts.</desc>
+<defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#f85149"/></marker><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#6e7681"/></marker></defs>
+<rect width="960" height="470" rx="12" fill="#0d1117"/>
+<rect x="330" y="20" width="300" height="70" rx="10" fill="#ab7df8" fill-opacity="0.14" stroke="#ab7df8" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="480" y="52" font-size="16" fill="#e6edf3" font-weight="700" text-anchor="middle">Capability like</text>
+<text x="480" y="72" font-size="13" fill="#9198a1" text-anchor="middle">decide throws on LikeClicked</text>
+<path d="M440 90 L440 112 L245 112 L245 132" fill="none" stroke="#f85149" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<path d="M520 90 L520 112 L715 112 L715 132" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m1)"/>
+<text x="20" y="158" font-size="16" fill="#e6edf3" font-weight="700">Debug</text>
+<text x="85.08" y="158" font-size="13" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">Capsa.failFast = true</text>
+<rect x="20" y="172" width="450" height="238" rx="10" fill="#f85149" fill-opacity="0.06" stroke="#f85149" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="38" y="200" font-size="16" fill="#f85149" font-weight="700">CapsaViolationException</text>
+<text x="38" y="228" font-size="12" fill="#e6edf3" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">DecideFailed: like failed on Intent LikeClicked(id=7)</text>
+<text x="38" y="249" font-size="12" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">Capsa history, newest last:</text>
+<text x="38" y="270" font-size="12" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">  Signal Started -&gt; search, like</text>
+<text x="38" y="291" font-size="12" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">  Intent QueryChanged(query=cat) -&gt; search</text>
+<text x="38" y="312" font-size="12" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">  search: start work "search"</text>
+<text x="38" y="333" font-size="12" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">  Signal ResultsLoaded(count=12) -&gt; search</text>
+<text x="38" y="354" font-size="12" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">  Intent LikeClicked(id=7) -&gt; like</text>
+<text x="38" y="394" font-size="13" fill="#e6edf3">The app crashes. The report shows how the screen got there.</text>
+<text x="490" y="158" font-size="16" fill="#e6edf3" font-weight="700">Release</text>
+<text x="565.88" y="158" font-size="13" fill="#9198a1" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">Capsa.failFast = false</text>
+<rect x="490" y="172" width="450" height="64" rx="10" fill="#f0883e" fill-opacity="0.14" stroke="#f0883e" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="715" y="201" font-size="16" fill="#e6edf3" font-weight="700" text-anchor="middle">CapsaLogger</text>
+<text x="715" y="221" font-size="13" fill="#9198a1" text-anchor="middle">your logger sends the error to a crash reporter</text>
+<path d="M715 236 L715 266" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m1)"/>
+<rect x="490" y="268" width="450" height="64" rx="10" fill="#4493f8" fill-opacity="0.14" stroke="#4493f8" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="715" y="297" font-size="16" fill="#e6edf3" font-weight="700" text-anchor="middle">The screen lives</text>
+<text x="715" y="317" font-size="13" fill="#9198a1" text-anchor="middle">the slice stays as it was before the fact</text>
+<path d="M715 332 L715 362" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m1)"/>
+<rect x="490" y="364" width="450" height="46" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="715" y="391.9" font-size="14" fill="#e6edf3" font-weight="700" text-anchor="middle">The next facts run as usual</text>
+<text x="20" y="446" font-size="13" fill="#9198a1">Capsa detects the build: the debuggable flag on Android, Platform.isDebugBinary on iOS and macOS.</text>
+</svg>
