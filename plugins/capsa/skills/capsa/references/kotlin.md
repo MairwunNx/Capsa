@@ -107,6 +107,8 @@ work(SEND, onError = { SendFailed }, policy = WorkPolicy.KeepExisting, retry = R
 stream(TICK, onError = { TimerFailed }, whileVisible = true) { ticks(deadline) }
 ```
 
+The whole timer, with `ticks` and an effect on zero, is the recipe “Timer: a stream that pauses in the background” in `recipes.md`.
+
 | API | Parameters |
 |---|---|
 | `work(key, onError, policy, debounce, retry) { suspend -> Signal }` | One run, one signal. The block may make several calls |

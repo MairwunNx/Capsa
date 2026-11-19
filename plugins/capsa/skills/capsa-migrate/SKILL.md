@@ -53,7 +53,7 @@ Read the view model, its mappers, the UI of the screen, and everything they call
 | Resources, platform context, or the router used by the logic | A port, an effect, or the projector |
 | Loading in the view model’s `init` | A reaction to `Started` with a `work` or a `stream` |
 | `try`/`catch`, `runCatching`, error handling of a load | `onError` of the work → a signal → a field of the slice (`Load.Failed`) |
-| Timers, `delay`, debounce, manual jobs and their cancelling | A `stream` or a `work` with a `WorkKey` and a policy, `debounce`, `cancel`. A timer gets `whileVisible = true` |
+| Timers, `delay`, debounce, manual jobs and their cancelling | A `stream` or a `work` with a `WorkKey` and a policy, `debounce`, `cancel`. A timer gets `whileVisible = true`. A search that keeps the old results until the user stops typing: the recipe “Search: loading starts after a pause” in `references/recipes.md` of the `capsa` skill |
 | Manual retries of a request | `retry = Retry(…)` of the work |
 | A check that an answer is still current, such as comparing request ids | Nothing: `cancel` and `Latest` drop stale answers |
 | The result of another screen, a return from a dialog | `signal(…)` in the host → a signal |
