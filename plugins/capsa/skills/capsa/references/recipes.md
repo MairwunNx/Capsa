@@ -38,6 +38,48 @@ fun search(ports: SearchPorts): Capability<SearchSlice> = capability("search", S
 - `Latest` is the default policy, so each new query cancels the debounce wait or the request of the previous one.
 - An empty query cancels the work by its key, and its late answer never arrives.
 
+## Search: loading starts after a pause
+
+The recipe above shows `Loading` with the first character. Some screens keep the old results while the user types and show the loader only after a pause. Debounce stays a parameter of a work: the `PAUSE` work only waits and sends a signal, and the reaction to that signal starts the request.
+
+```kotlin
+data class SearchSlice(val query: String = "", val results: Load<List<Item>> = Load.Loaded(emptyList()))
+
+data class QueryChanged(val text: String) : Intent
+data class QueryPaused(val query: String) : Signal
+data class ResultsLoaded(val items: List<Item>) : Signal
+data object SearchFailed : Signal
+
+class SearchPorts(val search: suspend (query: String) -> List<Item>)
+
+private val PAUSE = WorkKey("pause")
+private val SEARCH = WorkKey("search")
+
+context(_: CapabilityScope)
+fun search(ports: SearchPorts): Capability<SearchSlice> = capability("search", SearchSlice()) {
+    on<QueryChanged> { state, fact ->
+        if (fact.text.isBlank()) {
+            state.copy(query = fact.text, results = Load.Loaded(emptyList())).commit(cancel = listOf(PAUSE, SEARCH))
+        } else {
+            state.copy(query = fact.text).commit(
+                work(PAUSE, onError = { SearchFailed }, debounce = 300.milliseconds) { QueryPaused(fact.text) },
+            )
+        }
+    }
+    on<QueryPaused> { state, fact ->
+        state.copy(results = Load.Loading).commit(
+            work(SEARCH, onError = { SearchFailed }) { ResultsLoaded(ports.search(fact.query)) },
+        )
+    }
+    on<ResultsLoaded> { state, fact -> state.copy(results = Load.Loaded(fact.items)).commit() }
+    on<SearchFailed> { state, _ -> state.copy(results = Load.Failed).commit() }
+}
+```
+
+- Each new character restarts `PAUSE` with `Latest`, so `QueryPaused` arrives only for the text the user stopped at.
+- A request that already runs keeps going while the user types, and its answer still shows. The next `QueryPaused` restarts `SEARCH` with `Latest`, and the runtime drops the old answer.
+- A blank query cancels both keys.
+
 ## Like: optimistic update and rollback
 
 The heart turns red at once, the request goes in the background, and a failure rolls the like back and shows a message.
