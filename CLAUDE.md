@@ -80,9 +80,11 @@ One SemVer covers the whole repository: the Maven modules and the plugin for age
 1. Add a `## X.Y.Z` section to the top of `CHANGELOG.md`. Each item starts with an emoji and a **bold** first phrase about what the user gets, no internals.
 2. Run Actions → Release → Run workflow on `master` with the version, or `gh workflow run release.yml -f version=X.Y.Z`. The `changelog` field replaces the section of `CHANGELOG.md` when you fill it.
 
-`release.yml` runs on `macos-latest`, since only macOS builds the iOS artifacts. It checks that the version is new and that `plugin.json` pins no other version, builds and tests with `-PcapsaVersion`, runs detekt, ktlint, and the coverage bound, then the full benchmarks against the runner’s baseline. A slower release stops there. Then it publishes every module to Maven Central, waits until `repo1.maven.org` serves `capsa-core`, and creates the tag and the GitHub release `Capsa X.Y.Z` with the notes and `capsa-skills.zip`. A `0.x` version goes out as a pre-release.
+`release.yml` runs on `macos-latest`, since only macOS builds the iOS artifacts. It checks that the version is new and that `plugin.json` pins no other version, builds and tests the libraries with `-PcapsaVersion`, runs detekt, ktlint, and the coverage bound, then the full benchmarks against the runner’s baseline. A slower release stops there. Then it publishes every module to Maven Central, waits until `repo1.maven.org` serves `capsa-core`, and creates the tag and the GitHub release `Capsa X.Y.Z` with the notes and `capsa-skills.zip`. A `0.x` version goes out as a pre-release.
 
-The run needs the repository secrets `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `SIGNING_KEY`, and `SIGNING_PASSWORD`. Without any of them the build stops before the upload. A rerun after a failure past the upload skips the upload and goes on.
+The run needs the repository secrets `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `SIGNING_KEY`, and `SIGNING_PASSWORD`. Without any of them the build stops before the upload. Before the upload the run asks the Central Portal about the version. It waits for a deployment that Central still validates or publishes instead of uploading again, and it skips the upload once Central has published the version. A failed deployment stops the run: read its errors in the Portal, drop it there, and rerun.
+
+The release leaves the samples out: they ship nowhere, and CI builds them on every push. The libraries’ `androidTarget` still needs the Android SDK, and the `macos-latest` image has one in `ANDROID_HOME`.
 
 The plugin for agents has no `version` in `plugin.json`: Claude Code then takes the commit of the plugin’s folder, and users follow `master`. A version there would pin users to it until the next release.
 
