@@ -53,27 +53,39 @@ jobs:
       - name: Coverage summary
         if: ${{ !cancelled() }}
         shell: python
+        # The merged report counts every test of the build, JVM and Android host, so capsa-viewmodel tests cover capsa-host too.
+        # A module's own report sees only its own tests. The rows split the merged report by the module that holds each source file.
         run: |
           import glob, os, xml.etree.ElementTree as ET
 
-          def percent(report, kind):
-              counter = report.find(f"counter[@type='{kind}']")
-              if counter is None:
-                  return "–"
-              missed, covered = int(counter.get("missed")), int(counter.get("covered"))
-              return f"{100 * covered / (missed + covered):.1f} %" if missed + covered else "–"
+          KINDS = ("LINE", "BRANCH", "INSTRUCTION")
+          path = "build/reports/kover/report.xml"
+          if os.path.exists(path):
+              owners = {}
+              for root in glob.glob("capsa-*/src/*Main/kotlin"):
+                  for source in glob.glob(f"{root}/**/*.kt", recursive=True):
+                      owners[os.path.relpath(source, root)] = root.split("/")[0]
 
-          rows = []
-          for path in sorted(glob.glob("capsa-*/build/reports/kover/report.xml")) + ["build/reports/kover/report.xml"]:
-              if not os.path.exists(path):
-                  continue
-              name = "**Total**" if path.startswith("build/") else path.split("/")[0]
-              report = ET.parse(path).getroot()
-              rows.append(f"| {name} | {percent(report, 'LINE')} | {percent(report, 'BRANCH')} | {percent(report, 'INSTRUCTION')} |")
+              def percent(counts):
+                  missed, covered = counts
+                  return f"{100 * covered / (missed + covered):.1f} %" if missed + covered else "–"
 
-          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
-              summary.write("### Coverage\n\n| Module | Lines | Branches | Instructions |\n|---|---|---|---|\n")
-              summary.write("\n".join(rows) + "\n")
+              modules, total = {}, {kind: [0, 0] for kind in KINDS}
+              for package in ET.parse(path).getroot().iter("package"):
+                  for source in package.iter("sourcefile"):
+                      module = owners.get(f"{package.get('name')}/{source.get('name')}", "other")
+                      counts = modules.setdefault(module, {kind: [0, 0] for kind in KINDS})
+                      for counter in source.iter("counter"):
+                          if counter.get("type") in KINDS:
+                              for sums in (counts, total):
+                                  sums[counter.get("type")][0] += int(counter.get("missed"))
+                                  sums[counter.get("type")][1] += int(counter.get("covered"))
+
+              rows = [(name, modules[name]) for name in sorted(modules)] + [("**Total**", total)]
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+                  summary.write("### Coverage\n\nEvery JVM and Android host test of the build counts for every module.\n\n")
+                  summary.write("| Module | Lines | Branches | Instructions |\n|---|---|---|---|\n")
+                  summary.writelines(f"| {name} | {' | '.join(percent(counts[kind]) for kind in KINDS)} |\n" for name, counts in rows)
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
