@@ -55,7 +55,7 @@ import kotlin.test.assertSame
 
 /**
  * Checks [rememberCapsa] with a [CapsaComposable] and with a lambda in a real composition: rotation, the end of the screen, keys, effects,
- * saving, and visibility. A rotation is a [ManagedRetainedValuesStore] that keeps the values while the content
+ * failing effect handlers, saving, visibility, and a scope used the wrong way. A rotation is a [ManagedRetainedValuesStore] that keeps the values while the content
  * leaves the composition and comes back, as the Android host of Compose does during a configuration change.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -79,6 +79,19 @@ class RememberCapsaTest : CompositionTest() {
 
         override fun EffectHandlers.Builder.handleEffects() {
             on<Tracked> { tracked += it }
+        }
+    }
+
+    /** A counter whose service handler throws. With `toSignal` the class turns the error into [Failed], otherwise the error policy gets it. */
+    private class FailingCounter(scope: CapsaScope, log: MutableList<String>, private val toSignal: Boolean) : CapsaComposable(scope) {
+        val count: StateFlow<Int> = install(counting(log))
+
+        override fun EffectHandlers.Builder.handleEffects() {
+            on<Tracked> { error(ANALYTICS_DOWN) }
+        }
+
+        override suspend fun onEffectFailed(effect: Effect, error: Exception) {
+            if (toSignal) signal(Failed) else super.onEffectFailed(effect, error)
         }
     }
 
@@ -371,7 +384,209 @@ class RememberCapsaTest : CompositionTest() {
         assertContains(error.message.orEmpty(), "expose()")
     }
 
+    @Test
+    fun aFailingServiceHandlerOfAClassGoesToTheErrorPolicyAndTheRuntimeGoesOn() = runTest {
+        val config = config()
+        var capsa: FailingCounter? = null
+        val host = compose {
+            capsa = rememberCapsa(logger = logger, config = config) { FailingCounter(this, log, toSignal = false) }
+        }
+        settle(host)
+
+        val counter = checkNotNull(capsa)
+        counter.send(Ping)
+        counter.send(Increment)
+        settle(host)
+
+        assertEquals(1, counter.count.value)
+        val error = logger.errors.single()
+        assertContains(error?.message.orEmpty(), "failed in the CapsaComposable")
+        assertEquals(ANALYTICS_DOWN, error?.cause?.message)
+    }
+
+    @Test
+    fun aClassTurnsAFailingServiceHandlerIntoASignal() = runTest {
+        val config = config()
+        var capsa: FailingCounter? = null
+        val host = compose {
+            capsa = rememberCapsa(logger = logger, config = config) { FailingCounter(this, log, toSignal = true) }
+        }
+        settle(host)
+
+        checkNotNull(capsa).send(Ping)
+        settle(host)
+
+        assertEquals(FAILED, checkNotNull(capsa).count.value)
+        assertEquals(emptyList(), logger.errors)
+    }
+
+    @Test
+    fun aFailingServiceHandlerOfALambdaGoesToTheErrorPolicyAndTheRuntimeGoesOn() = runTest {
+        val config = config()
+        var capsa: CapsaHandle<StateFlow<Int>>? = null
+        val host = compose {
+            capsa = rememberCapsa(logger = logger, config = config) {
+                val count = install(counting(log))
+                handleEffects { on<Tracked> { error(ANALYTICS_DOWN) } }
+                expose(count)
+            }
+        }
+        settle(host)
+
+        val handle = checkNotNull(capsa)
+        handle.send(Ping)
+        handle.send(Increment)
+        settle(host)
+
+        assertEquals(1, handle.state.value)
+        val error = logger.errors.single()
+        assertContains(error?.message.orEmpty(), "failed in rememberCapsa")
+        assertEquals(ANALYTICS_DOWN, error?.cause?.message)
+    }
+
+    @Test
+    fun aLambdaHandlesTheFailureOfItsServiceHandlerItself() = runTest {
+        val config = config()
+        val failures = mutableListOf<Pair<Effect, String?>>()
+        var capsa: CapsaHandle<StateFlow<Int>>? = null
+        val host = compose {
+            capsa = rememberCapsa(logger = logger, config = config) {
+                val count = install(counting(log))
+                handleEffects { on<Tracked> { error(ANALYTICS_DOWN) } }
+                onEffectFailed { effect, error -> failures += effect to error.message }
+                expose(count)
+            }
+        }
+        settle(host)
+
+        checkNotNull(capsa).send(Ping)
+        settle(host)
+
+        assertEquals(listOf<Pair<Effect, String?>>(Tracked to ANALYTICS_DOWN), failures)
+        assertEquals(emptyList(), logger.errors)
+    }
+
+    @Test
+    fun aHandlePassesAnOutsideSignalToTheRuntime() = runTest {
+        val config = config()
+        var capsa: CapsaHandle<StateFlow<Int>>? = null
+        val host = compose { capsa = counterHandle(config) }
+        settle(host)
+
+        checkNotNull(capsa).signal(Failed)
+        settle(host)
+
+        assertEquals(FAILED, checkNotNull(capsa).state.value)
+    }
+
+    @Test
+    fun aSnapshotWithoutTheKeyOfACapabilityStartsItFromTheInitialState() = runTest {
+        val config = config()
+        val before = SaveableStateRegistry(restoredValues = null) { true }
+        var registry = before
+        // A new version of the app saves the slice under another key, and the snapshot of the old one has no such key.
+        var key = "count"
+        var latest: CapsaHandle<StateFlow<Int>>? = null
+        val content: @Composable () -> Unit = {
+            CompositionLocalProvider(LocalSaveableStateRegistry provides registry) {
+                latest = rememberCapsa(logger = logger, config = config) { expose(installSaved(counting(log), CountSaver, key = key)) }
+            }
+        }
+        val host = compose(content)
+        settle(host)
+        checkNotNull(latest).send(Increment)
+        settle(host)
+
+        registry = SaveableStateRegistry(restoredValues = before.performSave()) { true }
+        key = "renamed"
+        settle(compose(content))
+
+        assertEquals(0, checkNotNull(latest).state.value)
+        assertEquals(emptyList(), logger.errors)
+    }
+
+    @Test
+    fun aScreenWithoutSavedSlicesLeavesNothingInTheRegistry() = runTest {
+        val config = config()
+        val registry = SaveableStateRegistry(restoredValues = null) { true }
+        var capsa: CapsaHandle<StateFlow<Int>>? = null
+        val host = compose {
+            CompositionLocalProvider(LocalSaveableStateRegistry provides registry) {
+                capsa = rememberCapsa(logger = logger, config = config) { expose(install(counting(log))) }
+            }
+        }
+        settle(host)
+        checkNotNull(capsa).send(Increment)
+        settle(host)
+
+        assertEquals(emptyMap(), registry.performSave())
+    }
+
+    @Test
+    fun aCompositionThatFailsAfterCreatingTheObjectStopsIt() = runTest {
+        val config = config()
+        assertFailsWith<IllegalStateException> {
+            compose {
+                counter(config)
+                error("the screen failed")
+            }
+        }
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, created.size)
+        assertEquals(emptyList(), log)
+    }
+
+    @Test
+    fun aScopeWithTheDefaultConfigWritesTheJournalToItsLogger() = runTest {
+        config()
+        val journal = mutableListOf<String>()
+        val scope = CoroutineScope(backgroundScope.coroutineContext + StandardTestDispatcher(testScheduler))
+        val capsaScope = CapsaScope(scope, CapsaLogger { level, _, message -> if (level == CapsaLogger.Level.Debug) journal += message() })
+        val handle = capsaScope.expose(capsaScope.install(capability("plain", 0) { on<Increment> { state, _ -> (state + 1).commit() } }))
+
+        handle.send(Increment)
+        testScheduler.runCurrent()
+
+        assertEquals(1, handle.state.value)
+        assertContains(journal, "Intent Increment")
+        assertContains(journal, "  plain: state 1")
+    }
+
+    // The call fails before it returns anything.
+    @Suppress("IgnoredReturnValue")
+    @Test
+    fun aLambdaThatInstallsAfterCreatingAClassFailsAtOnce() = runTest {
+        val config = config()
+        val error = assertFailsWith<IllegalStateException> {
+            compose {
+                rememberCapsa(logger = logger, config = config) {
+                    Counter(this, log, tracked).also { install(capability("extra", 0) {}) }
+                }
+            }
+        }
+        assertContains(error.message.orEmpty(), "install() on the scope of a CapsaComposable")
+    }
+
+    // The call fails before it returns anything.
+    @Suppress("IgnoredReturnValue")
+    @Test
+    fun oneScopeServesOneClass() = runTest {
+        val config = config()
+        val error = assertFailsWith<IllegalStateException> {
+            compose {
+                rememberCapsa(logger = logger, config = config) {
+                    Counter(this, log, tracked)
+                    Counter(this, log, tracked)
+                }
+            }
+        }
+        assertContains(error.message.orEmpty(), "serves one CapsaComposable")
+    }
+
     private companion object {
+        const val ANALYTICS_DOWN = "analytics is down"
+        const val FAILED = -1
         val WORK = WorkKey("work")
         val VISIBLE = WorkKey("visible")
 
@@ -386,6 +601,7 @@ class RememberCapsaTest : CompositionTest() {
             }
             on<Increment> { state, _ -> (state + 1).commit() }
             on<Ping> { state, _ -> state.commit(effects = listOf(Pong, Tracked)) }
+            on<Failed> { _, _ -> FAILED.commit() }
         }
 
         fun recorded(log: MutableList<String>, name: String) = flow<Signal> { awaitCancellation() }
