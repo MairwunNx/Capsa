@@ -50,7 +50,6 @@ kotlin {
             // Clicks through every sample on the desktop, without a window.
             implementation(libs.compose.ui.test)
             implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }
