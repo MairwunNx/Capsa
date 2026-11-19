@@ -14,8 +14,6 @@ kotlin {
 dependencies {
     implementation(projects.samples.shared)
     implementation(compose.desktop.currentOs)
-    // Dispatchers.Main on the desktop: the Swing event thread.
-    implementation(libs.kotlinx.coroutines.swing)
 }
 
 compose.desktop {
