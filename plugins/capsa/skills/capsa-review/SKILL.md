@@ -55,6 +55,7 @@ Review only code on Capsa: files that import `com.mairwunnx.capsa`, and the wiri
 
 - Every work has its own `onError` that returns a signal, and a reaction turns that signal into state.
 - `WorkKey` is a private constant of the capability file.
+- Jobs that must start, stop, or fail apart have keys of their own. A work that makes several calls, or only waits and sends a signal, breaks no rule.
 - `KeepExisting` isn’t used for a work that depends on input, such as a reload with a new filter.
 - No manual `delay` for debounce, no retry loop, no request token to guard against stale answers.
 - A timer or a frequent subscription is a `stream` with `whileVisible = true`, and its flow starts from the current value, not from the moment of subscription.

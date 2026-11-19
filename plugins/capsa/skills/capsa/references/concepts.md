@@ -40,7 +40,7 @@ A decision is what a capability returns for a fact:
 
 A work is an async job described as data: a key, a policy, a source, and an error handler.
 
-- **work** runs one suspending call and turns its answer into one signal.
+- **work** runs a suspending block and turns its result into one signal. The block may make several calls or only wait.
 - **stream** subscribes to a flow and turns each value into a signal.
 - **WorkKey** names the work inside its capability. Equal keys of different capabilities don’t clash.
 - **WorkPolicy** decides what a second start with the same key does: `Latest` cancels the old run (the default), `KeepExisting` ignores the new one, `Parallel` runs both.

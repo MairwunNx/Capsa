@@ -109,7 +109,7 @@ stream(TICK, onError = { TimerFailed }, whileVisible = true) { ticks(deadline) }
 
 | API | Parameters |
 |---|---|
-| `work(key, onError, policy, debounce, retry) { suspend -> Signal }` | One call, one signal |
+| `work(key, onError, policy, debounce, retry) { suspend -> Signal }` | One run, one signal. The block may make several calls |
 | `stream(key, onError, policy, whileVisible, retry) { Flow<Signal> }` | A subscription. No debounce parameter |
 | `WorkKey(name)` | A value class. Keep it in a `private val` of the capability file |
 | `WorkPolicy.Latest`, `KeepExisting`, `Parallel` | `Latest` is the default |

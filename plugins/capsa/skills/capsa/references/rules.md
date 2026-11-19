@@ -49,12 +49,14 @@ Don’t create a new module for a screen. Extend the existing one. Don’t move 
 
 ## Works
 
-- One work is one request or one subscription. Its key is a private constant in the capability file: `private val SEARCH = WorkKey("search")`.
+- A work is one job under one key. The key is a private constant in the capability file: `private val SEARCH = WorkKey("search")`.
+- The key, the policy, and `onError` cover the whole block: it starts, gets cancelled, and fails as one. The block may call several ports, wait, or do both. Jobs that must start, stop, or fail apart get keys of their own.
+- A `work` ends with one signal. Signals over time, such as a subscription or a timer, come from a `stream`.
 - Policy: `Latest` by default, `KeepExisting` for an initial load, `Parallel` for independent jobs.
 - Every work has its own `onError` that returns a signal, and a reaction turns it into state. If the UI needs the reason, put it into the signal: `onError = { SearchFailed(it.toReason()) }`.
 - A cancel or a `Latest` restart drops the queued signals of the old run. Don’t add a request token to signals to guard against stale answers.
 - Debounce is a parameter of the work. Don’t write a manual `delay` at the start of the block.
-- Retries are a parameter of the work. Don’t write a retry loop inside the block.
+- Retries are a parameter of the work. A retry runs the whole block again, every call in it. Don’t write a retry loop inside the block.
 - A subscription the back stack doesn’t need (a timer, frequent updates) is a `stream` with `whileVisible`. Its flow must start from the current value.
 - Start the initial load and subscriptions in the reaction to `Started`.
 
