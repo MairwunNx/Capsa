@@ -13,6 +13,7 @@ import html
 import math
 import os
 import pathlib
+import re
 import sys
 
 from PIL import ImageFont
@@ -95,6 +96,11 @@ def wrap(text, size, limit, bold=False):
 
 # ---------- Drawing ----------
 
+def keep_spaces(s):
+    """SVG collapses a run of spaces and drops leading ones. No-break spaces keep them, so an indent in mono text survives."""
+    return re.sub(r"^ +| {2,}", lambda m: "\xa0" * len(m.group()), s)
+
+
 class Drawing:
     def __init__(self, theme, w, h, title, desc):
         self.t, self.theme, self.w, self.h, self.title, self.desc = THEMES[theme], theme, w, h, title, desc
@@ -116,7 +122,7 @@ class Drawing:
             attrs += f' font-family="{MONO}"'
         if opacity:
             attrs += f' fill-opacity="{opacity}"'
-        self.add(f"<text {attrs}>{html.escape(s, quote=False)}</text>")
+        self.add(f"<text {attrs}>{html.escape(keep_spaces(s), quote=False)}</text>")
 
     def rect(self, x, y, w, h, fill="none", stroke=None, rx=10, sw=1.5, dash=None, fill_opacity=None, stroke_opacity=None):
         attrs = f'x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" rx="{rx}" fill="{fill}"'
@@ -583,8 +589,7 @@ def crash_free(theme):
     for i, line in enumerate(HISTORY):
         if mw(line, 12) > 414:
             raise SystemExit(f"crash-free: “{line}” is too long")
-        # SVG collapses leading spaces, no-break spaces keep the indent.
-        d.text(38, 228 + i * 21, line.replace("  ", "\u00a0\u00a0"), 12, t["fg"] if i == 0 else t["muted"], mono=True)
+        d.text(38, 228 + i * 21, line, 12, t["fg"] if i == 0 else t["muted"], mono=True)
     d.text(38, 394, "The app crashes. The report shows how the screen got there.", 13, t["fg"])
     # Release
     d.text(490, 158, "Release", 16, bold=True)
