@@ -88,4 +88,10 @@ The plugin for agents has no `version` in `plugin.json`: Claude Code then takes 
 
 ## Autopilot
 
-To be written: the autopilot workflow and the `update-deps` skill.
+`.github/workflows/autopilot.yml` runs Claude every Monday at 03:00 UTC on `macos-latest`, where the iOS and macOS targets build too. Claude runs `/update-deps` (`.claude/skills/update-deps/`): it moves every dependency to its newest stable version, checks the result with the full build, the iOS link, and the benchmarks against a run on the old versions, and pushes to `master`. When the update reaches Maven Central, it writes a new patch section to `CHANGELOG.md`, runs the “Release” workflow with that version, and checks that Central serves every module. This is the owner’s standing go-ahead to release a patch. An unreleased section that was there before stays the owner’s, and the autopilot never releases it.
+
+The run decides alone, and it keeps what limits users where it is: `minSdk`, the Kotlin API and language version, the iOS deployment target, and `jvm-toolchain`. With nothing behind, it ends without a commit. Its token can’t push changes to `.github/workflows/`, so it only lists the Actions that fell behind, and you update them by hand. Its pushes don’t start “Build” either, since GitHub starts no workflow for a push with the workflow’s own token: the run checks the build itself.
+
+The run needs the `CLAUDE_CODE_OAUTH_TOKEN` secret, made by `claude setup-token` on the owner’s subscription, and the release needs the four secrets from “Releases”. When the token expires, the run fails at its first step: make a new one and set it with `gh secret set CLAUDE_CODE_OAUTH_TOKEN`.
+
+Start a run by hand in Actions → Autopilot → Run workflow, or with `gh workflow run autopilot.yml`. Its report sits at the end of the run’s log. To update without the autopilot, run `/update-deps` here, optionally with the names of the dependencies to move.
