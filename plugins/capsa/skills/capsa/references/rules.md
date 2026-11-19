@@ -57,6 +57,7 @@ Don’t create a new module for a screen. Extend the existing one. Don’t move 
 - A cancel or a `Latest` restart drops the queued signals of the old run. Don’t add a request token to signals to guard against stale answers.
 - Debounce is a parameter of the work. Don’t write a manual `delay` at the start of the block.
 - Retries are a parameter of the work. A retry runs the whole block again, every call in it. Don’t write a retry loop inside the block.
+- A call that must not run twice, such as sending a form or a payment, gets a work of its own. Its success signal starts the next work from a reaction, and only the work that is safe to repeat gets `retry`.
 - A subscription the back stack doesn’t need (a timer, frequent updates) is a `stream` with `whileVisible`. Its flow must start from the current value.
 - Start the initial load and subscriptions in the reaction to `Started`.
 

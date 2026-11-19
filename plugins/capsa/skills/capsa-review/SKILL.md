@@ -58,6 +58,7 @@ Review only code on Capsa: files that import `com.mairwunnx.capsa`, and the wiri
 - Jobs that must start, stop, or fail apart have keys of their own. A work that makes several calls, or only waits and sends a signal, breaks no rule.
 - `KeepExisting` isn’t used for a work that depends on input, such as a reload with a new filter.
 - No manual `delay` for debounce, no retry loop, no request token to guard against stale answers.
+- A work with `retry` makes no call that must not run twice (a form, a payment) before another call that can fail: a retry would repeat it. Such a call gets its own work.
 - A timer or a frequent subscription is a `stream` with `whileVisible = true`, and its flow starts from the current value, not from the moment of subscription.
 - The initial load and subscriptions start in the reaction to `Started`. Nothing relies on `Started` to refresh on return.
 - No `CancellationException` used to stop a work: cancel by the key.
