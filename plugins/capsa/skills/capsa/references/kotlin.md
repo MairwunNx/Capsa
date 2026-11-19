@@ -104,7 +104,7 @@ work(SEND, onError = { SendFailed }, policy = WorkPolicy.KeepExisting, retry = R
     Sent
 }
 
-stream(TICK, onError = { TimerFailed }, whileVisible = true) { ticks(deadline) }
+stream(TICK, onError = { TimerFailed }, whileVisible = true) { ticks(fact.deadlineMillis, ports.nowMillis) }
 ```
 
 The whole timer, with `ticks` and an effect on zero, is the recipe “Timer: a stream that pauses in the background” in `recipes.md`.
