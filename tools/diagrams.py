@@ -1118,6 +1118,57 @@ def kdoc_crash_free(seconds):
     return d
 
 
+@kdoc("harness", 3.0)
+def kdoc_harness(seconds):
+    d = Card(600, 316, "capsaHarness: facts in, slices, effects, and work events out",
+             "A test builds capsaHarness from the like capability. append(LikeClicked(4)) changes the slice and starts the "
+             "save work. advanceTimeBy moves the virtual clock, the work answers with LikeSaved, and the capability sends "
+             "the ShowThanks(4) effect. The test asserts the effects.")
+    t = d.t
+    r = steps(d, seconds)
+    heading(d, 20, 32, "capsaHarness(likes)", "a real runtime on virtual time", mono_title=True)
+    d.box(226, 92, 140, 112, None, "harness", "the runtime", solid=True, title_size=16)
+
+    def output(y, family, title, values):
+        """An output box whose value changes at the given seconds: [(from, text)]."""
+        accent = d.accent(family)
+        d.rect(392, y, 188, 58, fill=accent, fill_opacity=t["tint"], stroke=accent, stroke_opacity="0.7")
+        d.text(404, y + 22, title, 13, bold=True, mono=True)
+        for i, (at, value) in enumerate(values):
+            if 404 + mw(value, 12) > 572:
+                raise SystemExit(f"harness: “{value}” is too long")
+            s = len(d.parts)
+            d.text(404, y + 44, value, 12, accent, bold=True, mono=True)
+            end = values[i + 1][0] if i + 1 < len(values) else None
+            if end is None:
+                r.show(at, s)
+            else:
+                between(r, at, end, s)
+
+    output(56, "slice", "stateOf(like)", [(0, "liked = []"), (0.9, "liked = [4]")])
+    output(126, "work", "workEvents", [(0, "[]"), (0.9, "[Started(like, SAVE)]")])
+    output(196, "effect", "effects", [(0, "[]"), (2.1, "[ShowThanks(4)]")])
+    for y in (85, 155, 225):
+        d.path([(366, 148 + (y - 155) / 3), (390, y)])
+    for i, (at, call) in enumerate(((0.4, "append(LikeClicked(4))"), (1.6, "advanceTimeBy(200.ms)"))):
+        y = 92 + i * 66
+        s = len(d.parts)
+        d.rect(20, y, 180, 46, fill=d.accent("runtime"), fill_opacity=t["tint"], stroke=d.accent("runtime"), stroke_opacity="0.7")
+        d.text(110, y + 28, call, 12, bold=True, mono=True, anchor="middle")
+        d.path([(200, y + 23), (224, y + 23)])
+        r.show(at, s)
+    s = len(d.parts)
+    d.text(296, 222, "signal LikeSaved", 12, d.accent("work"), bold=True, anchor="middle")
+    r.show(2.1, s)
+    d.add(f'<path d="M20 266 L580 266" stroke="{t["border"]}" stroke-width="1"/>')
+    s = len(d.parts)
+    d.text(20, 294, "assertEquals(listOf(ShowThanks(4)), harness.effects)", 12, mono=True)
+    d.text(580, 294, "passes", 13, d.accent("work"), bold=True, anchor="end")
+    r.show(2.8, s)
+    settle(r)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])

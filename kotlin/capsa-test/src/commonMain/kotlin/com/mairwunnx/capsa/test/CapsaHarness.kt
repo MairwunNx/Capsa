@@ -157,6 +157,10 @@ public class CapsaHarness internal constructor(
  * The factory starts the runtime in `backgroundScope`, subscribes a collector of effects, and queues
  * [com.mairwunnx.capsa.Started]. The test drives the handling with virtual time.
  *
+ * ![A test appends a fact, moves the clock, and reads the slice, work events, and effects](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/harness.gif)
+ *
+ * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/harness.gif)
+ *
  * ```
  * @Test fun showsThanks() = runTest {
  *     val harness = capsaHarness(likes)
