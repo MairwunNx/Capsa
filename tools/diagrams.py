@@ -9,14 +9,18 @@ with prefers-color-scheme. Pillow measures the text, so boxes fit their labels: 
 The palette below is a copy of the one in tools/diagrams.py of Capability Slice Architecture, so an intent is blue
 and a work is green in both repositories. Change a colour there and here together.
 """
+import concurrent.futures
 import html
 import math
 import os
 import pathlib
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 
-from PIL import ImageFont
+from PIL import Image, ImageFont
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "images"
 
@@ -710,5 +714,122 @@ def main(names):
             print(path.relative_to(OUT.parent.parent))
 
 
+# ---------- Animations for KDoc ----------
+#
+#     python3 tools/diagrams.py --kdoc                  # every animation
+#     python3 tools/diagrams.py --kdoc retry debounce   # only these
+#
+# Each animation lands in docs/kdoc as <name>.gif, and KDoc links it from master on raw.githubusercontent.com.
+# One light card with a border on a transparent page reads in a light and a dark IDE. Headless Chrome draws the frames:
+# a copy of the animated SVG pauses every animation at a negative delay, and the browser shows that moment.
+# --virtual-time-budget doesn't move CSS animations. Set CHROME when Chrome lives elsewhere.
+
+KDOC_OUT = OUT.parent / "kdoc"
+KDOC = {}  # name -> (draw, seconds of motion, seconds to hold the last frame)
+FPS = 12
+
+
+def kdoc(name, seconds, hold=1.0):
+    """Registers an animation: draw(seconds) returns a Card whose motion takes that long."""
+    def register(draw):
+        KDOC[name] = (draw, seconds, hold)
+        return draw
+    return register
+
+
+class Card(Drawing):
+    """A light card with a border. The page around it stays transparent."""
+
+    def __init__(self, w, h, title, desc):
+        super().__init__("light", w, h, title, desc)
+
+    def svg(self):
+        bg = f'<rect width="{self.w}" height="{self.h}" rx="12" fill="{self.t["bg"]}"/>'
+        card = (f'<rect x="0.5" y="0.5" width="{self.w - 1}" height="{self.h - 1}" rx="12" fill="{self.t["bg"]}" '
+                f'stroke="{self.t["border"]}"/>')
+        return super().svg().replace(bg, card, 1)
+
+
+def steps(d, seconds):
+    """A Reveal for a sequence without a timeline: its time is in seconds, and settle() adds no playhead."""
+    return Reveal(d, 0, 1, seconds, sweep=seconds, total=seconds + 4)
+
+
+def settle(r):
+    r.css.append("@media (prefers-reduced-motion: reduce){.anim{animation:none}}")
+    r.d.style = "".join(r.css)
+
+
+def between(r, t0, t1, start):
+    """The parts added since start show from t0 until t1, then give way to what replaces them."""
+    p0, p1 = r.pct(t0), r.pct(t1)
+    r._wrap(start, f"0%,{p0:.2f}%{{opacity:0}}{p0 + 0.01:.2f}%,{p1:.2f}%{{opacity:1}}{p1 + 0.01:.2f}%,100%{{opacity:0}}")
+
+
+def chrome():
+    for path in (os.environ.get("CHROME"), "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                 shutil.which("google-chrome"), shutil.which("chromium")):
+        if path and os.path.exists(path):
+            return path
+    raise SystemExit("no Chrome to draw the frames: set CHROME to its binary")
+
+
+def shoot(svg, at, w, h, folder):
+    """Draws the SVG at second at into folder/frame.png."""
+    folder.mkdir()
+    page = folder / "frame.svg"
+    page.write_text(svg.replace("</style>", f"*{{animation-play-state:paused!important;animation-delay:-{at:.3f}s!important}}</style>", 1),
+                    encoding="utf-8")
+    png = folder / "frame.png"
+    subprocess.run([chrome(), "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1",
+                    f"--user-data-dir={folder / 'profile'}", f"--window-size={w},{h}", "--default-background-color=00000000",
+                    f"--screenshot={png}", page.as_uri()], check=True, capture_output=True, timeout=60)
+    return png
+
+
+def to_gif(pngs):
+    """Quantizes the frames to one palette, so a frame stores only what changed since the previous one.
+
+    Half-transparent pixels of the rounded corners become either the card or the page: GIF has no partial alpha."""
+    images = [Image.open(p).convert("RGBA") for p in pngs]
+    w, h = images[0].size
+    sample = Image.new("RGB", (w, h * 2), "white")
+    sample.paste(images[len(images) // 2].convert("RGB"), (0, 0))
+    sample.paste(images[-1].convert("RGB"), (0, h))
+    palette = sample.quantize(255, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    frames = []
+    for im in images:
+        frame = im.convert("RGB").quantize(palette=palette, dither=Image.Dither.NONE)
+        frame.paste(255, mask=im.getchannel("A").point(lambda a: 255 if a < 128 else 0))
+        frames.append(frame)
+    return frames
+
+
+def animate(name):
+    draw, seconds, hold = KDOC[name]
+    d = draw(seconds)
+    svg = d.svg()
+    times = [i / FPS for i in range(int(seconds * FPS))] + [seconds + 0.3]
+    with tempfile.TemporaryDirectory() as tmp, concurrent.futures.ThreadPoolExecutor(8) as pool:
+        pngs = list(pool.map(lambda it: shoot(svg, it[1], d.w, d.h, pathlib.Path(tmp) / str(it[0])), enumerate(times)))
+        frames = to_gif(pngs)
+    KDOC_OUT.mkdir(parents=True, exist_ok=True)
+    out = KDOC_OUT / f"{name}.gif"
+    durations = [round(1000 / FPS)] * (len(frames) - 1) + [round(hold * 1000)]
+    frames[0].save(out, save_all=True, append_images=frames[1:], duration=durations, loop=0, transparency=255, disposal=1, optimize=True)
+    print(f"{out.relative_to(OUT.parent.parent)}: {len(frames)} frames, {out.stat().st_size // 1024} KB")
+
+
+def kdoc_main(names):
+    unknown = [n for n in names if n not in KDOC]
+    if unknown:
+        raise SystemExit(f"unknown animations: {', '.join(unknown)}. Known: {', '.join(KDOC)}")
+    for name in names or KDOC:
+        animate(name)
+
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    if sys.argv[1:2] == ["--kdoc"]:
+        kdoc_main(sys.argv[2:])
+    else:
+        main(sys.argv[1:])
