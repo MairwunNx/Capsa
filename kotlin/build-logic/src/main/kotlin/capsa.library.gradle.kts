@@ -7,6 +7,8 @@ plugins {
     id("capsa.lint")
     id("org.jetbrains.kotlinx.kover")
     id("org.jetbrains.kotlinx.binary-compatibility-validator")
+    // The Maven publish plugin sees Dokka and builds the javadoc jar of every publication from its HTML.
+    id("org.jetbrains.dokka")
 }
 
 kotlin {
