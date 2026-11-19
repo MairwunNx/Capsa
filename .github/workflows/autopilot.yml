@@ -1,0 +1,68 @@
+name: Autopilot
+
+# Every Monday Claude updates the dependencies of Capsa and releases a patch when what users get from Maven Central changed.
+# “Autopilot” in CLAUDE.md explains what a run decides alone.
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+# Pushes to master and starts the Release workflow.
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: autopilot
+  cancel-in-progress: false
+
+jobs:
+  autopilot:
+    # Only macOS builds and tests the iOS and macOS targets, so only here can an update prove itself.
+    runs-on: macos-latest
+    # The most a GitHub-hosted job may run. Builds before and after each group, two full benchmark runs,
+    # and a release that waits for Maven Central up to an hour take hours on a cold runner.
+    timeout-minutes: 360
+    env:
+      GRADLE_CACHE_INCLUDES: |
+        caches
+        notifications
+        jdks
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-home-cache-includes: ${{ env.GRADLE_CACHE_INCLUDES }}
+      - name: Read the Kotlin version
+        id: kotlin
+        run: echo "version=$(sed -nE 's/^kotlin = "(.*)"/\1/p' kotlin/gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        # The Kotlin/Native compiler of the current Kotlin. A run that moves Kotlin downloads the new one.
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ steps.kotlin.outputs.version }}
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          claude_args: >-
+            --model claude-opus-5-5
+            --permission-mode bypassPermissions
+          prompt: |
+            You are Capsa’s autopilot. You run unattended in GitHub Actions with the owner’s standing go-ahead. Nobody will answer questions, so decide as CLAUDE.md and the skills say.
+
+            1. Run /update-deps.
+            2. If it pushed a change that reaches Maven Central and wrote a new “## X.Y.Z” section at the top of CHANGELOG.md for it, release that version. Never release a section this run didn’t create: an unreleased section that was there before is the owner’s.
+               - Start it: `gh workflow run release.yml --ref master -f version=X.Y.Z`. Find its run: `gh run list --workflow release.yml --event workflow_dispatch --limit 1 --json databaseId,status,createdAt`.
+               - Wait with a loop of `gh run view <id> --json status,conclusion` and `sleep 300` between checks, each command well under ten minutes. Never use `gh run watch`: it drops on a 502 from GitHub while the run goes on. The release runs long: a full build, the benchmarks, and up to an hour of waiting for Central.
+               - If it fails, read `gh run view <id> --log-failed`. A rerun skips the upload once Central has the version, so rerun a failure past the upload with `gh run rerun <id> --failed` once. Otherwise stop and report.
+               - When it succeeds, check that `https://repo1.maven.org/maven2/com/mairwunnx/capsa/<module>/X.Y.Z/<module>-X.Y.Z.pom` answers for capsa-core, capsa-host, capsa-viewmodel, capsa-compose, capsa-test, and capsa-bom, and that `gh release view vX.Y.Z` shows the release with capsa-skills.zip.
+
+            If nothing was behind, stop without a commit or a release. Never print a secret. End with the report the skill describes and the release’s result.
