@@ -144,7 +144,8 @@ fun offer(ports: OfferPorts): Capability<OfferSlice> = capability("offer", Offer
     }
     on<Ticked> { state, fact ->
         val next = state.copy(left = Load.Loaded(fact.left))
-        if (fact.left == Duration.ZERO) next.commit(OfferExpired) else next.commit()
+        // Zero may arrive more than once: the slice tells whether the offer expires right now.
+        if (fact.left == Duration.ZERO && state.left != next.left) next.commit(OfferExpired) else next.commit()
     }
     on<OfferFailed> { state, _ -> state.copy(left = Load.Failed).commit() }
 }
@@ -161,7 +162,9 @@ private fun ticks(deadlineMillis: Long, nowMillis: () -> Long): Flow<Signal> = f
 ```
 
 - `decide` reads no clock: the stream reads it through a port, and the time arrives as a fact.
-- `whileVisible` stops the flow in the back stack and calls the block again on return.
+- `whileVisible` stops the flow in the back stack and calls the block again on return. If the deadline passed in the background, the first tick after the return is already zero.
+- A stream that has ended doesn’t start again. The runtime restarts only the runs that were alive when the screen hid. After the zero tick `ticks` ends, so hiding and showing the screen leaves `Loaded(Duration.ZERO)` and sends no new ticks. To count again, start `TICK` from a reaction, as `DeadlineLoaded` does.
+- `OfferExpired` leaves once because the reaction compares the tick with the slice, not because the flow sends zero once. A run that is still alive when the screen hides, such as a flow that does more after the last tick, starts over on return and sends zero again. The check `state.left != next.left` lets only the change to zero through.
 
 ## Form: validation, submit once, input that survives process death
 

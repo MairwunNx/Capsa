@@ -56,7 +56,7 @@ A capability that answers a signal with a signal that leads back to it loops. Th
 
 ### `whileVisible` and the current value
 
-When the screen comes back, the runtime calls the stream’s block again. A stream that counts from the moment of subscription (“30 seconds from now”) restarts the countdown after every pause. Count from a fixed point instead: the deadline minus the current time, read through a port.
+When the screen comes back, the runtime calls the stream’s block again. A stream that counts from the moment of subscription (“30 seconds from now”) restarts the countdown after every pause. Count from a fixed point instead: the deadline minus the current time, read through a port. A stream that has already ended doesn’t start again. The timer recipe in `recipes.md` shows both cases and an effect on zero that leaves once.
 
 ### Who reports visibility
 
