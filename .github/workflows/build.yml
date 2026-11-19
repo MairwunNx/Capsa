@@ -105,6 +105,9 @@ jobs:
       - name: Benchmarks, one short iteration
         # Proves that the benchmarks still compile and run. The numbers mean nothing.
         run: ./gradlew :capsa-benchmarks:jvmSmokeBenchmark
+      - name: Build the demo app for Android and the desktop
+        # jvmTest above already ran the tests of samples:shared, including a click through every sample on the desktop.
+        run: ./gradlew :samples:androidApp:assembleDebug :samples:desktopApp:assemble
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -139,6 +142,11 @@ jobs:
         run: ./gradlew macosArm64Test linkDebugTestIosSimulatorArm64 compileTestKotlinIosArm64
       - name: Benchmarks, one short iteration
         run: ./gradlew :capsa-benchmarks:macosArm64SmokeBenchmark
+      - name: Build the iOS demo app
+        # Xcode runs Gradle for the Shared framework itself. CI has no signing identity, and the simulator needs only arm64.
+        run: >-
+          xcodebuild -project samples/iosApp/iosApp.xcodeproj -target iosApp -configuration Debug
+          -sdk iphonesimulator ARCHS=arm64 CODE_SIGNING_ALLOWED=NO build
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
