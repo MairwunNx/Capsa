@@ -410,7 +410,8 @@ public class CapsaRuntime internal constructor(
             paused.clear()
             resumed.forEach { (owner, work) -> startWork(owner, work) }
         } else {
-            val hidden = jobs.values.flatten().filter { it.work.whileVisible && !it.revoked }
+            // A finished run stays in the map until its WorkDone: it has nothing left to pause, and a pause would restart it.
+            val hidden = jobs.values.flatten().filter { it.work.whileVisible && !it.revoked && it.job.isActive }
             // cancelWork clears the paused entries of its key, so all cancels go first: with WorkPolicy.Parallel
             // one key has several runs, and a cancel after a pause would erase the runs paused before it.
             hidden.map { it.owner to it.work.key }.distinct().forEach { (owner, key) -> cancelWork(owner, key) }

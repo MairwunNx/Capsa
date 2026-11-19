@@ -287,6 +287,38 @@ class VisibilityTest {
     }
 
     @Test
+    fun aStreamThatEndedBeforeTheHideDoesNotRestart() = runTest {
+        val log = mutableListOf<String>()
+        lateinit var runtime: CapsaRuntime
+        val once = capability("once", 0) {
+            on<Started> { state, _ ->
+                state.commit(
+                    stream(ticks, onError = { Tick }, whileVisible = true) {
+                        flow<Signal> {
+                            log += "start"
+                            // The hide lands in the queue after the stream ends but before its WorkDone,
+                            // like a host thread hiding the screen while a work on another thread finishes.
+                            runtime.onVisibilityChanged(false)
+                        }
+                    },
+                )
+            }
+            on<Tick> { state, _ -> state.commit() }
+        }
+        val builder = CapsaBuilder()
+
+        @Suppress("IgnoredReturnValue")
+        builder.install(once)
+        runtime = builder.build(backgroundScope, CapsaConfig(visibility = CapsaVisibility.Host))
+        testScheduler.runCurrent()
+
+        runtime.onVisibilityChanged(true)
+        testScheduler.runCurrent()
+
+        assertEquals(listOf("start"), log)
+    }
+
+    @Test
     fun aNegativeGraceIsRejected() {
         assertFailsWith<IllegalArgumentException> { CapsaVisibility.Watched(grace = (-1).seconds) }
     }
