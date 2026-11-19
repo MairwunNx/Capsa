@@ -29,7 +29,7 @@ Show every change to a file of the project before you make it, and make it only 
 
 ## 2. Find the version
 
-Take the latest release of `capsa-bom` from Maven Central: `<release>` in `https://repo1.maven.org/maven2/com/mairwunnx/capsa/capsa-bom/maven-metadata.xml`, or the latest release of `MairwunNx/Capsa` on GitHub. Never guess the version. If neither answers, tell the user and stop.
+Pick the version as “Modules and coordinates” in `references/kotlin.md` describes: the one the project already pins, or the latest release when the project has no Capsa yet. If you need the latest release and neither source answers, tell the user and stop.
 
 **A local build, for Capsa developers.** When the user asks for a local build of Capsa (`./gradlew publishToMavenLocal` in `kotlin/` of the Capsa repository), use the version the user names and add the local repository before the others, for Capsa only:
 

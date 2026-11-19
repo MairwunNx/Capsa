@@ -4,7 +4,7 @@ The Kotlin Multiplatform implementation of Capsa. Read this file when the projec
 
 ## Modules and coordinates
 
-The group is `com.mairwunnx.capsa`. All modules share one version. Find the latest one on Maven Central (`https://central.sonatype.com/namespace/com.mairwunnx.capsa`) or in the releases of `MairwunNx/Capsa` on GitHub, and don’t guess it.
+The group is `com.mairwunnx.capsa`. All modules share one version. If the project already has Capsa, a release or a local build, use the version it pins and don’t change it on your own. Only when you add Capsa to a project for the first time, take the latest release of `capsa-bom`: `<release>` in `https://repo1.maven.org/maven2/com/mairwunnx/capsa/capsa-bom/maven-metadata.xml`, or the latest release of `MairwunNx/Capsa` on GitHub. Never guess the version.
 
 | Artifact | Package | What it holds | Depends on |
 |---|---|---|---|
@@ -22,7 +22,7 @@ A typical Compose Multiplatform screen module:
 ```toml
 # gradle/libs.versions.toml
 [versions]
-capsa = "<latest>"
+capsa = "<version>"
 
 [libraries]
 capsa-bom = { module = "com.mairwunnx.capsa:capsa-bom", version.ref = "capsa" }
