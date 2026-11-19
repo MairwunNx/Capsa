@@ -47,3 +47,16 @@ mavenPublishing {
         }
     }
 }
+
+// Central rejects an unsigned or unauthorised upload only after it lands. The publish tasks stop before it when a secret is missing.
+val centralSecrets = listOf("mavenCentralUsername", "mavenCentralPassword", "signingInMemoryKey", "signingInMemoryKeyPassword")
+val missingSecrets = centralSecrets.filter { providers.gradleProperty(it).orNull.isNullOrBlank() }
+tasks.matching { "MavenCentral" in it.name }.configureEach {
+    // A local copy: an action that reads a property of the script drags the script into the configuration cache.
+    val missing = missingSecrets
+    doFirst {
+        check(missing.isEmpty()) {
+            "Maven Central needs the Gradle properties ${missing.joinToString()}: set ORG_GRADLE_PROJECT_<name> in the environment"
+        }
+    }
+}
