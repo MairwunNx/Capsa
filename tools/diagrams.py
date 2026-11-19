@@ -1010,6 +1010,58 @@ def kdoc_retry(seconds):
     return d
 
 
+@kdoc("while-visible", 3.0)
+def kdoc_while_visible(seconds):
+    x0, u = 150, 41
+    d = Card(600, 280, "A stream with whileVisible pauses while the screen is hidden",
+             "The timer stream ticks while the screen is visible. A rotation brings the screen back within the grace of one "
+             "second, so the stream keeps running. In the background the runtime cancels the stream. When the app comes back, "
+             "the runtime calls the block again, and the stream starts from the current value.")
+    t, work, ui, sl = d.t, d.accent("work"), d.accent("ui"), d.accent("slice")
+    X = lambda v: x0 + v * u
+    heading(d, 20, 32, "stream(TICK, whileVisible = true)", "pauses while hidden", mono_title=True)
+    lanes(d, 20, [(56, "screen", "collected, foreground"), (116, "stream", "timer ticks"), (176, "slice", "seconds left")])
+    r = Reveal(d, x0, u, 10.4, sweep=seconds, total=seconds + 4)
+    py = 78
+    for a, b in ((0, 4.2), (7, 10.4)):
+        s = len(d.parts)
+        d.rect(X(a), py, X(b) - X(a) - 2, 24, fill=ui, fill_opacity=t["tint"], stroke=ui, stroke_opacity="0.7", rx=12, sw=1)
+        d.text(X(a) + 12, py + 16, "visible", 12, ui, bold=True)
+        r.grow(a, b, s)
+    s = len(d.parts)
+    d.rect(X(4.2) + 2, py, X(7) - X(4.2) - 4, 24, fill=t["line"], fill_opacity="0.12", stroke=t["line"], rx=12, sw=1, dash="3 2")
+    d.text((X(4.2) + X(7)) / 2, py + 16, "background", 12, t["muted"], anchor="middle")
+    r.grow(4.2, 7, s)
+    s = len(d.parts)
+    d.add(f'<path d="M{X(2):g} {py - 4} L{X(2):g} {py + 28}" stroke="{t["fg"]}" stroke-width="1.2" stroke-dasharray="2 2"/>')
+    d.text(X(2) + 6, py - 8, "rotation: back within 1 s", 12, t["muted"])
+    r.show(2, s)
+    by = 138
+    s = len(d.parts); bar(d, X(0), X(4.2), by, "runs"); r.grow(0, 4.2, s)
+    s = len(d.parts)
+    d.cross(X(4.2), by + 7, 5)
+    d.text((X(4.2) + X(7)) / 2, by + 11, "cancelled", 12, t["muted"], anchor="middle")
+    r.show(4.2, s)
+    s = len(d.parts)
+    triangle(d, X(7), by - 12, t["fg"])
+    d.text(X(7) + 9, by - 4, "block() again", 12, t["muted"])
+    r.show(7, s)
+    s = len(d.parts); bar(d, X(7), X(10.4), by, "runs"); r.grow(7, 10.4, s)
+    for v in [i * 0.6 + 0.3 for i in range(7)] + [7.3 + i * 0.6 for i in range(6)]:
+        s = len(d.parts); dot(d, X(v), by + 7, work, r=3); r.show(v, s)
+    sy = 198
+    s = len(d.parts)
+    d.rect(X(0), sy, X(10.4) - X(0), 24, fill=sl, fill_opacity=t["tint"], stroke=sl, stroke_opacity="0.7", rx=12, sw=1)
+    r.grow(0, 10.4, s)
+    for v, label, color in ((0.3, "04:59", sl), (2.7, "04:55", sl), (4.6, "kept: 04:53", t["muted"]), (7.3, "04:47", sl), (9.1, "04:43", sl)):
+        s = len(d.parts); d.text(X(v), sy + 16, label, 12, color, bold=color == sl, mono=True); r.show(v, s)
+    d.path([(x0, 244), (X(10.4), 244)], color=t["line"], sw=1.2)
+    d.text(X(10.4), 264, "time", 12, t["muted"], anchor="end")
+    d.text(20, 264, "Each tick is a signal.", 12, t["muted"])
+    r.finish(52, 234)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])

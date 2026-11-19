@@ -150,6 +150,10 @@ public fun work(
  * Until the first collector the screen is hidden, so the stream waits for the UI. A rotation doesn’t restart the stream:
  * the new screen comes back within [CapsaVisibility.Watched.grace].
  *
+ * ![A timer survives a rotation, stops in the background, and starts again on return](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/while-visible.gif)
+ *
+ * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/while-visible.gif)
+ *
  * @param key the key of the work within the capability
  * @param onError turns an exception from the flow into a signal
  * @param policy what to do when a work with this key is already running
