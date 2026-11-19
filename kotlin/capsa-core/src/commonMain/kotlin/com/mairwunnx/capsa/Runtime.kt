@@ -359,6 +359,17 @@ public class CapsaRuntime internal constructor(
         }
     }
 
+    /** Revokes and cancels the given runs of one key and leaves the other runs of the key alone. */
+    private fun cancelRuns(id: Pair<String, WorkKey>, runs: List<Launch>) {
+        val running = jobs[id]
+        runs.forEach { it.revoked = true }
+        running?.removeAll(runs)
+        if (running?.isEmpty() == true) jobs.remove(id)
+        history.add(CapsaHistory.WorkCancelled(id.first, id.second))
+        notify { onWorkCancelled(id.first, id.second) }
+        runs.forEach { it.job.cancel() }
+    }
+
     /** Removes a finished run, so the map doesn’t grow with dynamic keys. */
     private fun forget(launch: Launch) {
         val key = launch.owner to launch.work.key
@@ -412,9 +423,8 @@ public class CapsaRuntime internal constructor(
         } else {
             // A finished run stays in the map until its WorkDone: it has nothing left to pause, and a pause would restart it.
             val hidden = jobs.values.flatten().filter { it.work.whileVisible && !it.revoked && it.job.isActive }
-            // cancelWork clears the paused entries of its key, so all cancels go first: with WorkPolicy.Parallel
-            // one key has several runs, and a cancel after a pause would erase the runs paused before it.
-            hidden.map { it.owner to it.work.key }.distinct().forEach { (owner, key) -> cancelWork(owner, key) }
+            // Only the hidden runs stop: a plain work under the same key with WorkPolicy.Parallel keeps running.
+            hidden.groupBy { it.owner to it.work.key }.forEach { (id, runs) -> cancelRuns(id, runs) }
             hidden.forEach { paused += it.owner to it.work }
         }
     }

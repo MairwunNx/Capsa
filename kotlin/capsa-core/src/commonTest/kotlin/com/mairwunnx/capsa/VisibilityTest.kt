@@ -6,6 +6,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,8 @@ import kotlin.time.Duration.Companion.seconds
 class VisibilityTest {
 
     private data object Tick : Signal
+
+    private data object Done : Signal
 
     private val ticks = WorkKey("ticks")
 
@@ -316,6 +319,39 @@ class VisibilityTest {
         testScheduler.runCurrent()
 
         assertEquals(listOf("start"), log)
+    }
+
+    @Test
+    fun aHideKeepsAPlainWorkThatSharesAKeyWithAStream() = runTest {
+        val log = mutableListOf<String>()
+        val mixed = capability("mixed", 0) {
+            on<Started> { state, _ ->
+                val plain = work(ticks, onError = { Done }, policy = WorkPolicy.Parallel) {
+                    delay(2.seconds)
+                    Done
+                }
+                val ticker = stream(ticks, onError = { Tick }, policy = WorkPolicy.Parallel, whileVisible = true) {
+                    flow<Signal> { awaitCancellation() }
+                        .onStart { log += "start" }
+                        .onCompletion { log += "stop" }
+                }
+                state.commit(works = listOf(plain, ticker))
+            }
+            on<Done> { state, _ -> (state + 1).commit() }
+            on<Tick> { state, _ -> state.commit() }
+        }
+        val builder = CapsaBuilder()
+        val slice = builder.install(mixed)
+        val runtime = builder.build(backgroundScope, CapsaConfig(visibility = CapsaVisibility.Host))
+        testScheduler.runCurrent()
+
+        runtime.onVisibilityChanged(false)
+        testScheduler.runCurrent()
+        runtime.onVisibilityChanged(true)
+        testScheduler.advanceTimeBy(5.seconds)
+
+        assertEquals(listOf("start", "stop", "start"), log)
+        assertEquals(1, slice.value)
     }
 
     @Test
