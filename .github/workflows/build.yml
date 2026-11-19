@@ -93,6 +93,9 @@ jobs:
           path: |
             kotlin/build/reports/kover/
             kotlin/*/build/reports/kover/report.xml
+      - name: Check the coverage bound
+        # The bound lives in build-logic/src/main/kotlin/capsa.coverage.gradle.kts. The tests above are up to date, so this only reads their coverage.
+        run: ./gradlew :koverVerify
       - name: Benchmarks, one short iteration
         # Proves that the benchmarks still compile and run. The numbers mean nothing.
         run: ./gradlew :capsa-benchmarks:jvmSmokeBenchmark
