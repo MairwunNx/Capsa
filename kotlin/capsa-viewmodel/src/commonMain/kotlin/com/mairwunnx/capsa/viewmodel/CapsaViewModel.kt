@@ -74,6 +74,10 @@ import kotlinx.coroutines.flow.StateFlow
  * With [Capsa.failFast] on, they crash the app, so a bug shows up at once. Otherwise they go to [logger] as errors,
  * and the screen keeps working on its last valid state.
  *
+ * ![A failing decide crashes a debug build and leaves a release build running](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/crash-free.gif)
+ *
+ * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/crash-free.gif)
+ *
  * @param logger the logger for failing effect handlers and the runtime journal
  * @param savedStateHandle the store of snapshots for [installSaved], or `null` if the screen saves nothing
  * @param config the runtime settings

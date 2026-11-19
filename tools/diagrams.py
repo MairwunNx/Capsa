@@ -1062,6 +1062,62 @@ def kdoc_while_visible(seconds):
     return d
 
 
+KDOC_HISTORY = [
+    "DecideFailed in like",
+    "Capsa history, newest last:",
+    "  Intent QueryChanged -> search",
+    "  Signal ResultsLoaded -> search",
+    "  Intent LikeClicked -> like",
+]
+
+
+@kdoc("crash-free", 2.8)
+def kdoc_crash_free(seconds):
+    d = Card(600, 336, "A bug in decide: a debug build crashes with the history, a release build logs it and lives on",
+             "The like capability throws in decide on LikeClicked. With Capsa.failFast on, in a debug build, Capsa throws "
+             "CapsaViolationException with the last events of the runtime, and the app crashes. With failFast off, in a "
+             "release build, Capsa hands the error to CapsaLogger, the screen keeps its last valid slice, and the next "
+             "facts run as usual.")
+    t = d.t
+    r = steps(d, seconds)
+    s = len(d.parts)
+    d.box(170, 14, 260, 58, "capability", "Capability like", "decide throws on LikeClicked", title_size=15)
+    r.show(0, s)
+    s = len(d.parts)
+    d.path([(250, 72), (250, 84), (156, 84), (156, 92)], color=t["danger"])
+    d.path([(350, 72), (350, 84), (444, 84), (444, 92)])
+    d.text(20, 108, "Debug", 15, bold=True)
+    d.text(20 + tw("Debug", 15, True) + 8, 108, "failFast = true", 12, t["muted"], mono=True)
+    d.text(308, 108, "Release", 15, bold=True)
+    d.text(308 + tw("Release", 15, True) + 8, 108, "failFast = false", 12, t["muted"], mono=True)
+    r.show(0.5, s)
+    s = len(d.parts)
+    d.rect(20, 118, 272, 200, fill=t["danger"], fill_opacity="0.06", stroke=t["danger"], stroke_opacity="0.7")
+    d.text(34, 142, "CapsaViolationException", 15, t["danger"], bold=True)
+    for i, line in enumerate(KDOC_HISTORY):
+        if 34 + mw(line, 11) > 284:
+            raise SystemExit(f"crash-free: “{line}” is too long")
+        d.text(34, 166 + i * 19, line, 11, t["fg"] if i == 0 else t["muted"], mono=True)
+    r.show(1.0, s)
+    s = len(d.parts)
+    d.text(34, 284, "The app crashes, and the report", 13, t["danger"], bold=True)
+    d.text(34, 304, "shows how the screen got there.", 13, t["fg"])
+    r.show(1.8, s)
+    s = len(d.parts)
+    d.box(308, 118, 272, 56, "effect", "CapsaLogger", "your logger reports the error", title_size=15)
+    r.show(1.0, s)
+    s = len(d.parts)
+    d.path([(444, 174), (444, 188)])
+    d.box(308, 190, 272, 56, "ui", "The screen lives", "the slice stays as before the fact", title_size=15)
+    r.show(1.8, s)
+    s = len(d.parts)
+    d.path([(444, 246), (444, 260)])
+    d.box(308, 262, 272, 56, None, "The next facts run", "as if nothing happened", title_size=15)
+    r.show(2.6, s)
+    settle(r)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])

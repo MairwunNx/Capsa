@@ -20,6 +20,10 @@ public object Capsa {
      *
      * The app can set the value itself, for example `Capsa.failFast = BuildConfig.DEBUG` in `Application.onCreate`.
      * A host, `CapsaViewModel` or `CapsaComposable`, reads it once, when it is created.
+     *
+     * ![A failing decide crashes a debug build and leaves a release build running](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/crash-free.gif)
+     *
+     * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/crash-free.gif)
      */
     public var failFast: Boolean
         get() = failFastValue.value
