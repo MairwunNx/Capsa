@@ -33,4 +33,5 @@ include(
     ":capsa-benchmarks",
     ":samples:shared",
     ":samples:androidApp",
+    ":samples:desktopApp",
 )

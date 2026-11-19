@@ -3,6 +3,8 @@ kotlin = "2.4.21"
 agp = "9.5.1"
 android-compileSdk = "37"
 android-minSdk = "23"
+# Navigation 3 in the demo app needs Android 7.0.
+android-samples-minSdk = "24"
 jvm-toolchain = "17"
 compose-multiplatform = "1.12.2"
 # JetBrains doesn’t republish runtime-retain: Compose Multiplatform takes it from Google as is. Keep it on the version that compose-ui pulls.
@@ -20,6 +22,11 @@ androidx-lifecycle-process = "2.11.0"
 androidx-savedstate = "1.4.0"
 androidx-tracing = "2.0.5"
 androidx-startup = "1.2.0"
+# The demo app in samples/ only.
+compose-material3 = "1.9.0"
+compose-material-icons = "1.7.3"
+androidx-navigation3 = "1.2.0"
+androidx-activity = "1.13.0"
 maven-publish = "0.37.0"
 dokka = "2.3.0"
 kover = "0.9.11"
@@ -30,6 +37,7 @@ detekt = "2.0.0-alpha.6"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
@@ -45,6 +53,14 @@ compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.re
 compose-runtime-saveable = { module = "org.jetbrains.compose.runtime:runtime-saveable", version.ref = "compose-multiplatform" }
 compose-runtime-retain = { module = "androidx.compose.runtime:runtime-retain", version.ref = "androidx-compose-runtime-retain" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "compose-material-icons" }
+androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
+androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
@@ -66,3 +82,4 @@ detekt-gradle-plugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref
 # These ones are for builds and modules that don't use build-logic.
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

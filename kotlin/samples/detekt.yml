@@ -1,0 +1,11 @@
+# The demo app adds to config/detekt.yml.
+
+naming:
+  # A sample keeps its view model next to the screen that uses it, so the wiki shows both from one file.
+  MatchingDeclarationName:
+    active: false
+
+style:
+  # Compose code is made of sizes, weights, and colors, so numbers stay as they are.
+  MagicNumber:
+    active: false
