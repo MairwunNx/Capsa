@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
+<title>capsaHarness: facts in, slices and work events out</title>
+<desc>A test appends facts to capsaHarness, a real runtime on virtual time, and moves the clock with runCurrent and advanceTimeBy. It reads the slice of a capability with stateOf, the effects with takeEffects, the works with workEvents: Started, Cancelled, Failed, Dropped, and the violations. replay feeds facts straight into decide and starts no works.</desc>
+<defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#6e7681"/></marker></defs>
+<rect width="960" height="470" rx="12" fill="#0d1117"/>
+<text x="20" y="36" font-size="15" fill="#e6edf3" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">capsaHarness(search, results)</text>
+<text x="311.88" y="36" font-size="13" fill="#9198a1">a real runtime on virtual time in a runTest</text>
+<rect x="20" y="70" width="250" height="64" rx="10" fill="#8b8cf8" fill-opacity="0.14" stroke="#8b8cf8" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="145" y="99" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">append(fact)</text>
+<text x="145" y="119" font-size="13" fill="#9198a1" text-anchor="middle">queues an intent or a signal</text>
+<path d="M270 102 L336 142" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<rect x="20" y="152" width="250" height="64" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="145" y="181" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">runCurrent()</text>
+<text x="145" y="201" font-size="13" fill="#9198a1" text-anchor="middle">runs what is due now</text>
+<path d="M270 184 L336 172" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<rect x="20" y="234" width="250" height="64" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="145" y="263" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">advanceTimeBy(d)</text>
+<text x="145" y="283" font-size="13" fill="#9198a1" text-anchor="middle">moves the virtual clock</text>
+<path d="M270 266 L336 202" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<rect x="338" y="112" width="264" height="120" rx="10" fill="#5b52e0" stroke="#5b52e0" stroke-width="1.5"/>
+<text x="470" y="169" font-size="17" fill="#ffffff" font-weight="700" text-anchor="middle">capsaHarness</text>
+<text x="470" y="189" font-size="13" fill="#ffffff" text-anchor="middle" fill-opacity="0.85">a real runtime</text>
+<rect x="690" y="56" width="250" height="54" rx="10" fill="#db61a2" fill-opacity="0.14" stroke="#db61a2" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="815" y="80" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">stateOf(capability)</text>
+<text x="815" y="100" font-size="13" fill="#9198a1" text-anchor="middle">the slice now</text>
+<path d="M602 130 L688 83" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<rect x="690" y="120" width="250" height="54" rx="10" fill="#f0883e" fill-opacity="0.14" stroke="#f0883e" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="815" y="144" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">takeEffects()</text>
+<text x="815" y="164" font-size="13" fill="#9198a1" text-anchor="middle">the effects since the last take</text>
+<path d="M602 150 L688 147" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<rect x="690" y="184" width="250" height="54" rx="10" fill="#3fb950" fill-opacity="0.14" stroke="#3fb950" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="815" y="208" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">workEvents</text>
+<text x="815" y="228" font-size="13" fill="#9198a1" text-anchor="middle">Started, Cancelled, Failed, Dropped</text>
+<path d="M602 170 L688 211" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<rect x="690" y="248" width="250" height="54" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text x="815" y="272" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">violations</text>
+<text x="815" y="292" font-size="13" fill="#9198a1" text-anchor="middle">with strict = false</text>
+<path d="M602 190 L688 275" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<path d="M20 322 L940 322" stroke="#30363d" stroke-width="1"/>
+<text x="20" y="350" font-size="15" fill="#e6edf3" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">capability.replay(facts)</text>
+<text x="263.28" y="350" font-size="13" fill="#9198a1">no runtime: facts go straight into decide</text>
+<rect x="20" y="370" width="250" height="60" rx="10" fill="#8b8cf8" fill-opacity="0.14" stroke="#8b8cf8" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="145" y="397" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">LikeClicked, LikeSaved</text>
+<text x="145" y="417" font-size="13" fill="#9198a1" text-anchor="middle">facts in order</text>
+<rect x="338" y="370" width="264" height="60" rx="10" fill="#ab7df8" fill-opacity="0.14" stroke="#ab7df8" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="470" y="397" font-size="16" fill="#e6edf3" font-weight="700" text-anchor="middle">decide</text>
+<text x="470" y="417" font-size="13" fill="#9198a1" text-anchor="middle">of one capability</text>
+<rect x="690" y="370" width="250" height="60" rx="10" fill="#db61a2" fill-opacity="0.14" stroke="#db61a2" stroke-width="1.5" stroke-opacity="0.7"/>
+<text x="815" y="397" font-size="15" fill="#e6edf3" font-weight="700" text-anchor="middle">state, states</text>
+<text x="815" y="417" font-size="13" fill="#9198a1" text-anchor="middle">works, effects, signals</text>
+<path d="M270 400 L336 400" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<path d="M602 400 L688 400" fill="none" stroke="#6e7681" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
+<text x="20" y="458" font-size="13" fill="#9198a1">replay starts no works: it shows what decide returned. The harness runs them.</text>
+</svg>
