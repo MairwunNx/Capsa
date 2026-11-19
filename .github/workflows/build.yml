@@ -49,7 +49,8 @@ jobs:
           path: ~/.m2/repository/org/robolectric
           key: ${{ runner.os }}-${{ steps.robolectric.outputs.key }}
       - name: Test on the JVM and the Android host, check the public API
-        run: ./gradlew jvmTest testAndroidHostTest apiCheck koverXmlReport koverHtmlReport
+        # Only the root reports: a module's own report sees only its own tests and understates capsa-host.
+        run: ./gradlew jvmTest testAndroidHostTest apiCheck :koverXmlReport :koverHtmlReport
       - name: Coverage summary
         if: ${{ !cancelled() }}
         shell: python
@@ -90,11 +91,10 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: coverage
-          path: |
-            kotlin/build/reports/kover/
-            kotlin/*/build/reports/kover/report.xml
+          path: kotlin/build/reports/kover/
       - name: Check the coverage bound
-        # The bound lives in build-logic/src/main/kotlin/capsa.coverage.gradle.kts. The tests above are up to date, so this only reads their coverage.
+        # The bound lives in build-logic/src/main/kotlin/capsa.coverage.gradle.kts. Locally ./gradlew build checks it, CI runs no build.
+        # The tests above are up to date, so this only reads their coverage.
         run: ./gradlew :koverVerify
       - name: Benchmarks, one short iteration
         # Proves that the benchmarks still compile and run. The numbers mean nothing.
