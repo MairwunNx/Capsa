@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="444" viewBox="0 0 900 444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
+<title>Debounce and retry of a work on a timeline</title>
+<desc>Debounce: the user types c, ca, and cat. Each keystroke restarts the wait of 300 ms, and the request goes out once, 300 ms after the last keystroke, and answers with a signal. Retry: the first attempt fails, the runtime waits 1 s, the second attempt fails, the runtime waits 2 s, and the third attempt succeeds. onError receives the error only after the last failed attempt.</desc>
+<defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#6e7681"/></marker></defs>
+<rect width="900" height="444" rx="12" fill="#0d1117"/>
+<path d="M40 22 L52 22 L46 31Z" fill="#e6edf3" stroke="#e6edf3" stroke-width="1.3"/>
+<text x="58" y="33" font-size="13" fill="#9198a1">start</text>
+<rect x="110" y="22" width="28" height="12" rx="3" fill="#6e7681" fill-opacity="0.18" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="146" y="33" font-size="13" fill="#9198a1">waits</text>
+<rect x="210" y="22" width="28" height="12" rx="3" fill="#3fb950" fill-opacity="0.35" stroke="#3fb950" stroke-width="1"/>
+<text x="246" y="33" font-size="13" fill="#9198a1">work runs</text>
+<rect x="336" y="22" width="28" height="12" rx="3" fill="#f85149" fill-opacity="0.18" stroke="#f85149" stroke-width="1"/>
+<path d="M359 23 L369 33 M369 23 L359 33" stroke="#f85149" stroke-width="2" stroke-linecap="round"/>
+<text x="378" y="33" font-size="13" fill="#9198a1">fails</text>
+<path d="M433 23 L443 33 M443 23 L433 33" stroke="#f85149" stroke-width="2" stroke-linecap="round"/>
+<text x="450" y="33" font-size="13" fill="#9198a1">cancelled</text>
+<circle cx="542" cy="28" r="6" fill="#3fb950"/>
+<text x="554" y="33" font-size="13" fill="#9198a1">signal</text>
+<rect x="20" y="56" width="860" height="176" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+<text x="40" y="86" font-size="16" fill="#e6edf3" font-weight="700">debounce</text>
+<text x="133.16" y="86" font-size="13" fill="#9198a1">work(SEARCH, debounce = 300.milliseconds) { … }</text>
+<path d="M54 106 L66 106 L60 115Z" fill="#e6edf3" stroke="#e6edf3" stroke-width="1.3"/>
+<text x="70" y="115" font-size="12" fill="#9198a1">“c”</text>
+<path d="M162 106 L174 106 L168 115Z" fill="#e6edf3" stroke="#e6edf3" stroke-width="1.3"/>
+<text x="178" y="115" font-size="12" fill="#9198a1">“ca”</text>
+<path d="M255.6 106 L267.6 106 L261.6 115Z" fill="#e6edf3" stroke="#e6edf3" stroke-width="1.3"/>
+<text x="271.6" y="115" font-size="12" fill="#9198a1">“cat”</text>
+<rect x="60" y="128" width="108" height="14" rx="3" fill="#6e7681" fill-opacity="0.18" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+<path d="M163 130 L173 140 M173 130 L163 140" stroke="#f85149" stroke-width="2" stroke-linecap="round"/>
+<rect x="168" y="128" width="93.6" height="14" rx="3" fill="#6e7681" fill-opacity="0.18" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+<path d="M256.6 130 L266.6 140 M266.6 130 L256.6 140" stroke="#f85149" stroke-width="2" stroke-linecap="round"/>
+<rect x="261.6" y="128" width="216" height="14" rx="3" fill="#6e7681" fill-opacity="0.18" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="369.6" y="160" font-size="12" fill="#9198a1" text-anchor="middle">300 ms of quiet</text>
+<rect x="477.6" y="128" width="273.6" height="14" rx="3" fill="#3fb950" fill-opacity="0.35" stroke="#3fb950" stroke-width="1"/>
+<text x="614.4" y="160" font-size="12" fill="#9198a1" text-anchor="middle">one request</text>
+<circle cx="761.2" cy="135" r="6" fill="#3fb950"/>
+<text x="773.2" y="140" font-size="13" fill="#3fb950" font-weight="700">ResultsLoaded</text>
+<path d="M60 188 L852 188" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-linejoin="round" marker-end="url(#m0)"/>
+<path d="M60 185 L60 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M132 185 L132 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M204 185 L204 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M276 185 L276 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M348 185 L348 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M420 185 L420 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M492 185 L492 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M564 185 L564 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M636 185 L636 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M708 185 L708 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M780 185 L780 191" stroke="#6e7681" stroke-width="1"/>
+<path d="M852 185 L852 191" stroke="#6e7681" stroke-width="1"/>
+<text x="852" y="208" font-size="12" fill="#9198a1" text-anchor="end">ms</text>
+<text x="40" y="218" font-size="13" fill="#9198a1">Each keystroke cancels the wait and starts it again. The request goes out once.</text>
+<rect x="20" y="252" width="860" height="176" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+<text x="40" y="282" font-size="16" fill="#e6edf3" font-weight="700">retry</text>
+<text x="87.8" y="282" font-size="13" fill="#9198a1">work(SEND, retry = Retry(times = 3, delay = 1.seconds, factor = 2.0)) { … }</text>
+<path d="M54 302 L66 302 L60 311Z" fill="#e6edf3" stroke="#e6edf3" stroke-width="1.3"/>
+<rect x="60" y="324" width="91" height="14" rx="3" fill="#f85149" fill-opacity="0.18" stroke="#f85149" stroke-width="1"/>
+<path d="M146 326 L156 336 M156 326 L146 336" stroke="#f85149" stroke-width="2" stroke-linecap="round"/>
+<text x="105.5" y="356" font-size="12" fill="#9198a1" text-anchor="middle">attempt 1</text>
+<rect x="281" y="324" width="91" height="14" rx="3" fill="#f85149" fill-opacity="0.18" stroke="#f85149" stroke-width="1"/>
+<path d="M367 326 L377 336 M377 326 L367 336" stroke="#f85149" stroke-width="2" stroke-linecap="round"/>
+<text x="326.5" y="356" font-size="12" fill="#9198a1" text-anchor="middle">retry 1</text>
+<path d="M155 331 L277 331" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="2 3"/>
+<text x="216" y="320" font-size="12" fill="#9198a1" text-anchor="middle">1 s</text>
+<path d="M376 331 L628 331" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="2 3"/>
+<text x="502" y="320" font-size="12" fill="#9198a1" text-anchor="middle">2 s</text>
+<rect x="632" y="324" width="91" height="14" rx="3" fill="#3fb950" fill-opacity="0.35" stroke="#3fb950" stroke-width="1"/>
+<text x="677.5" y="356" font-size="12" fill="#9198a1" text-anchor="middle">retry 2</text>
+<circle cx="733" cy="331" r="6" fill="#3fb950"/>
+<text x="745" y="336" font-size="13" fill="#3fb950" font-weight="700">Sent</text>
+<path d="M60 384 L853 384" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-linejoin="round" marker-end="url(#m0)"/>
+<path d="M60 381 L60 387" stroke="#6e7681" stroke-width="1"/>
+<path d="M190 381 L190 387" stroke="#6e7681" stroke-width="1"/>
+<path d="M320 381 L320 387" stroke="#6e7681" stroke-width="1"/>
+<path d="M450 381 L450 387" stroke="#6e7681" stroke-width="1"/>
+<path d="M580 381 L580 387" stroke="#6e7681" stroke-width="1"/>
+<path d="M710 381 L710 387" stroke="#6e7681" stroke-width="1"/>
+<path d="M840 381 L840 387" stroke="#6e7681" stroke-width="1"/>
+<text x="853" y="404" font-size="12" fill="#9198a1" text-anchor="end">s</text>
+<text x="40" y="414" font-size="13" fill="#9198a1">The pause doubles: 1 s, then 2 s. onError gets the error only when the last retry fails too.</text>
+</svg>
