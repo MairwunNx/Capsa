@@ -2,6 +2,7 @@
 // When this stops compiling or passing, the README needs the same change.
 package com.mairwunnx.capsa.samples.readme
 
+import com.mairwunnx.capsa.CapabilityScope
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
 import com.mairwunnx.capsa.commit
@@ -9,6 +10,8 @@ import com.mairwunnx.capsa.work
 
 private val save = WorkKey("save")
 
+// Only a host or a test harness provides this scope.
+context(_: CapabilityScope)
 fun likes(api: LikeApi) = capability("likes", LikeSlice()) {
     on<LikeClicked> { state, _ ->
         val liked = !state.liked

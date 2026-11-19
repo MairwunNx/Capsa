@@ -3,6 +3,7 @@
 package com.mairwunnx.capsa.samples.readme
 
 import com.mairwunnx.capsa.test.capsaHarness
+import com.mairwunnx.capsa.test.inCapabilityScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +12,7 @@ class LikesTest {
 
     @Test
     fun `a failed save rolls the like back`() = runTest {
-        val likes = likes(api = { error("offline") })
+        val likes = inCapabilityScope { likes(api = { error("offline") }) }
         val harness = capsaHarness(likes)
 
         harness.append(LikeClicked)
