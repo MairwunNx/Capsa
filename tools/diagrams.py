@@ -44,6 +44,7 @@ ACCENTS = {
     "projection": dict(light="#1b7c83", dark="#39c5cf"),  # Projection
     "work": dict(light="#1a7f37", dark="#3fb950"),        # Work, Signal
     "effect": dict(light="#bc4c00", dark="#f0883e"),      # Effect, Host
+    "ports": dict(light="#8a6a00", dark="#d4a72c"),       # Ports
 }
 # The runtime box is filled solid. White text needs a deeper indigo than the dark accent.
 RUNTIME_SOLID = dict(light="#4f46e5", dark="#5b52e0")
@@ -55,6 +56,7 @@ ENTITY = {
     "Slice": "slice", "Projection": "projection",
     "Work": "work", "Signal": "work",
     "Effect": "effect", "Host": "effect",
+    "Ports": "ports",
 }
 
 SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
