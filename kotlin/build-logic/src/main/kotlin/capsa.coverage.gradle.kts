@@ -4,6 +4,8 @@
 import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 
 plugins {
+    // base gives the root project check and build. Kover hangs koverVerify on check, so ./gradlew build checks the bound.
+    base
     id("org.jetbrains.kotlinx.kover")
 }
 
