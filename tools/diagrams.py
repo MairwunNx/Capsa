@@ -828,6 +828,55 @@ def kdoc_main(names):
         animate(name)
 
 
+@kdoc("work-policies", 3.0)
+def kdoc_work_policies(seconds):
+    x0, u = 170, 58
+    d = Card(600, 336, "What each WorkPolicy does when a work starts again under the same key",
+             "Run 1 starts, and run 2 starts later under the same key. Latest cancels run 1 and lets run 2 answer. "
+             "KeepExisting ignores run 2 while run 1 goes on, and run 1 answers. Parallel runs both, and both answer.")
+    t, work = d.t, d.accent("work")
+    X = lambda v: x0 + v * u
+    heading(d, 20, 32, "WorkPolicy", "what a second start under the same key does")
+    lanes(d, 20, [(46, "work(KEY)", "starts twice")])
+    r = Reveal(d, x0, u, 7, sweep=seconds, total=seconds + 4)
+    for v, label in ((0.5, "run 1"), (3, "run 2")):
+        s = len(d.parts)
+        triangle(d, X(v), 62, t["fg"])
+        d.text(X(v) + 10, 71, label, 13, bold=True)
+        r.show(v, s)
+    policies = [("Latest", "cancels run 1", [(0.5, 3, True, False), (3, 6, False, True)]),
+                ("KeepExisting", "ignores run 2", [(0.5, 5.5, False, True), None]),
+                ("Parallel", "runs both", [(0.5, 5.5, False, True), (3, 6, False, True)])]
+    for i, (title, note, runs) in enumerate(policies):
+        y = 92 + i * 72
+        d.add(f'<path d="M20 {y - 4:g} L580 {y - 4:g}" stroke="{t["border"]}" stroke-width="1"/>')
+        lanes(d, 20, [(y, title, note)])
+        for j, run in enumerate(runs):
+            by = y + 12 + j * 26
+            if run is None:
+                s = len(d.parts)
+                triangle(d, X(3), by - 2, t["line"], hollow=True)
+                d.text(X(3) + 12, by + 8, "ignored: run 1 still goes", 12, t["muted"])
+                r.show(3, s)
+                continue
+            a, b, cancelled, answers = run
+            s = len(d.parts)
+            bar(d, X(a), X(b), by, "runs")
+            r.grow(a, b, s)
+            s = len(d.parts)
+            if cancelled:
+                d.cross(X(b), by + 7, 5)
+                d.text(X(b) + 10, by + 12, "cancelled", 12, t["muted"])
+            if answers:
+                dot(d, X(b) + 9, by + 7, work, r=5)
+            r.show(b, s)
+    d.path([(x0, 308), (X(7), 308)], color=t["line"], sw=1.2)
+    d.text(X(7), 326, "time", 12, t["muted"], anchor="end")
+    d.text(20, 326, "A green dot is the signal of a run.", 12, t["muted"])
+    r.finish(50, 300)
+    return d
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--kdoc"]:
         kdoc_main(sys.argv[2:])

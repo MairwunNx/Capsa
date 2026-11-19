@@ -17,7 +17,13 @@ import kotlin.time.Duration
 @JvmInline
 public value class WorkKey(public val name: String)
 
-/** Tells the runtime what to do when a work starts again with the same [WorkKey]. */
+/**
+ * Tells the runtime what to do when a work starts again with the same [WorkKey].
+ *
+ * ![Latest cancels the running work, KeepExisting ignores the new one, Parallel runs both](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/work-policies.gif)
+ *
+ * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/work-policies.gif)
+ */
 public enum class WorkPolicy {
     /**
      * Cancels the previous run and starts the new one. The [work] and [stream] factories use it by default.
