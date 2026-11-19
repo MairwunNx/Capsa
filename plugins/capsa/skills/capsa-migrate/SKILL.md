@@ -34,7 +34,7 @@ Write out, and show the user briefly:
 
 A slot doesn’t define the depth. Add one only for a real boundary of the UI: a shared host, several UI implementations, or a public module API.
 
-If the user named no depth, take **A** and say so. If the user named no host, stop before any code: name the three hosts and recommend one, with the reason taken from the project, as “Choosing a host” in `SKILL.md` describes. If the project has no way to toggle features and the user named no switch, ask about it in the same message. Wait for the answer. If the request contradicts itself or the screen is unclear, ask one question and wait. Decide the rest yourself.
+If the user named no depth, take **A** and say so. If the user named no host, stop before any code and recommend one as “Choosing a host” in `SKILL.md` describes: `CapsaViewModel` for a module without Compose, otherwise the three hosts with the reason taken from the project. If the project has no way to toggle features and the user named no switch, ask about it in the same message. Wait for the answer. If the request contradicts itself or the screen is unclear, ask one question and wait. Decide the rest yourself.
 
 ## 2. Study the screen
 

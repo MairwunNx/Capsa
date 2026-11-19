@@ -28,7 +28,7 @@ Write out, and show the user briefly:
 - **The host,** for a new screen: `CapsaViewModel`, `rememberCapsa` with a `CapsaComposable` class, or `rememberCapsa` with a lambda. A new capability goes into the host its screen already has: never move a screen to another host on your own.
 - **The data:** which use cases, repositories, or APIs of the project the ports wrap.
 
-If the user named no host for a new screen, stop before any code: name the three hosts and recommend one, with the reason taken from the project, as “Choosing a host” in `SKILL.md` describes. Wait for the answer. If a scenario or the data source is unclear, ask one question and wait. If the user asked you not to wait, pick the simplest option and list it under open decisions. Decide the rest yourself.
+If the user named no host for a new screen, stop before any code and recommend one as “Choosing a host” in `SKILL.md` describes: `CapsaViewModel` for a module without Compose, otherwise the three hosts with the reason taken from the project. Wait for the answer. If a scenario or the data source is unclear, ask one question and wait. If the user asked you not to wait, pick the simplest option and list it under open decisions. Decide the rest yourself.
 
 ## 2. Look around
 
