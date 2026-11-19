@@ -69,13 +69,22 @@ cd kotlin && ./gradlew build
 
 **How to read them.** The mode is throughput: operations per millisecond, more is better. `Alloc` is bytes allocated per operation, from `gc.alloc.rate.norm`. The `±` error is the spread between iterations: a difference smaller than the error is noise. A change in allocations is exact and doesn’t depend on the machine, a change in speed does. The comparison warns when the baseline comes from another processor or JDK.
 
-**When to update the baseline.** The release and the autopilot run the full JVM run and the comparison. After each release, its numbers become the new baseline if they stay within the threshold, so every comparison goes against the previous release. Update the baseline on purpose only, in its own commit `perf(bench): new baseline after …` with the reason: `python3 tools/bench_compare.py --write-baseline`. Never update it to hide a slowdown.
+**When to update the baseline.** `baseline/jvm.json` comes from the owner’s machine, and `python3 tools/bench_compare.py` compares a local run with it. The release runs on a GitHub runner and compares with the baseline of that runner’s processor, `baseline/jvm-<cpu>.json`. When the runner has none yet, the release writes it instead of comparing and commits it to `master`, and the next releases compare with it. Update a baseline on purpose only, in its own commit `perf(bench): new baseline after …` with the reason: `python3 tools/bench_compare.py --write-baseline`, with `--baseline` for a runner’s file. Never update it to hide a slowdown.
 
 **When you change the runtime for speed:** measure before, change, measure after on the benchmark of that path, and keep the change only when the numbers show a gain.
 
 ## Releases
 
-To be written: the release workflow, the version, and `CHANGELOG.md`.
+One SemVer covers the whole repository: the Maven modules and the plugin for agents. The tag is `vX.Y.Z`. Until `1.0.0` every version is a preview, and the API may still change.
+
+1. Add a `## X.Y.Z` section to the top of `CHANGELOG.md`. Each item starts with an emoji and a **bold** first phrase about what the user gets, no internals.
+2. Run Actions → Release → Run workflow on `master` with the version, or `gh workflow run release.yml -f version=X.Y.Z`. The `changelog` field replaces the section of `CHANGELOG.md` when you fill it.
+
+`release.yml` runs on `macos-latest`, since only macOS builds the iOS artifacts. It checks that the version is new and that `plugin.json` pins no other version, builds and tests with `-PcapsaVersion`, runs detekt, ktlint, and the coverage bound, then the full benchmarks against the runner’s baseline. A slower release stops there. Then it publishes every module to Maven Central, waits until `repo1.maven.org` serves `capsa-core`, and creates the tag and the GitHub release `Capsa X.Y.Z` with the notes and `capsa-skills.zip`. A `0.x` version goes out as a pre-release.
+
+The run needs the repository secrets `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `SIGNING_KEY`, and `SIGNING_PASSWORD`. Without any of them the build stops before the upload. A rerun after a failure past the upload skips the upload and goes on.
+
+The plugin for agents has no `version` in `plugin.json`: Claude Code then takes the commit of the plugin’s folder, and users follow `master`. A version there would pin users to it until the next release.
 
 ## Autopilot
 
