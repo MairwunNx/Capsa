@@ -1,0 +1,186 @@
+name: Release
+
+# Run by hand: Actions → Release → Run workflow, with the new version. One run publishes everything:
+# the modules to Maven Central, the tag, the GitHub release with its notes, and capsa-skills.zip.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, like 0.99.0"
+        required: true
+      changelog:
+        description: "Changelog in Markdown; leave empty to take the version's section from CHANGELOG.md"
+        required: false
+
+# The tag, the release, and the benchmark baseline the run commits to master.
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+
+defaults:
+  run:
+    working-directory: kotlin
+
+jobs:
+  release:
+    # Kotlin/Native builds the iOS and macOS artifacts only on macOS.
+    runs-on: macos-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      CHANGELOG: ${{ inputs.changelog }}
+      # Outside the repository files: .gitignore keeps it out of git.
+      NOTES: ${{ github.workspace }}/release-notes.md
+      SKILLS_ZIP: ${{ github.workspace }}/capsa-skills.zip
+      GRADLE_CACHE_INCLUDES: |
+        caches
+        notifications
+        jdks
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the version
+        working-directory: .
+        run: |
+          [[ "$GITHUB_REF" == refs/heads/master ]] || { echo "::error::Release from master, not from $GITHUB_REF"; exit 1; }
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::$VERSION isn't a version like 0.99.0"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::v$VERSION is already released"; exit 1
+          fi
+      - name: Check the plugin version
+        # plugin.json and marketplace.json need no version: without one, Claude Code takes the commit of the plugin's folder,
+        # so users follow master. A version, once written, pins users to it, so it must be the version being released.
+        working-directory: .
+        shell: python3 {0}
+        run: |
+          import json, os, sys
+          from pathlib import Path
+
+          version = os.environ["VERSION"]
+          found = []
+          plugin = Path("plugins/capsa/.claude-plugin/plugin.json")
+          if plugin.exists():
+              found.append((str(plugin), json.loads(plugin.read_text(encoding="utf-8")).get("version")))
+          marketplace = Path(".claude-plugin/marketplace.json")
+          if marketplace.exists():
+              for entry in json.loads(marketplace.read_text(encoding="utf-8")).get("plugins", []):
+                  found.append((f"{marketplace}, plugin {entry.get('name')}", entry.get("version")))
+          wrong = [f"{where} says {pinned}" for where, pinned in found if pinned is not None and pinned != version]
+          if wrong:
+              sys.exit(f"::error::The plugin version must be {version} or absent: {'; '.join(wrong)}")
+      - name: Write the release notes
+        working-directory: .
+        shell: python3 {0}
+        run: |
+          import os, re, sys
+          version, typed = os.environ["VERSION"], os.environ["CHANGELOG"].strip()
+          if typed:
+              notes = typed
+          else:
+              text = open("CHANGELOG.md", encoding="utf-8").read()
+              match = re.search(rf"^## {re.escape(version)}\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+              notes = match.group(1).strip() if match else ""
+          if not notes:
+              sys.exit(f"::error::No changelog: add a “## {version}” section to CHANGELOG.md or fill the changelog field")
+          open(os.environ["NOTES"], "w", encoding="utf-8").write(notes + "\n")
+          print(notes)
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-home-cache-includes: ${{ env.GRADLE_CACHE_INCLUDES }}
+      - name: Read the Kotlin version
+        id: kotlin
+        run: echo "version=$(sed -nE 's/^kotlin = "(.*)"/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ steps.kotlin.outputs.version }}
+      - name: Build and test, run detekt and ktlint
+        # build covers every target, the tests, detekt, ktlint, and the API dumps. The coverage bound lives on the root project.
+        run: ./gradlew build :koverVerify -PcapsaVersion="$VERSION"
+      - name: Find the benchmark baseline of this runner
+        id: baseline
+        # The baseline in jvm.json comes from the owner's machine and says nothing about a runner. Each processor gets its own file.
+        run: |
+          cpu=$(sysctl -n machdep.cpu.brand_string)
+          slug=$(echo "$cpu" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')
+          path="capsa-benchmarks/baseline/jvm-$slug.json"
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+          if [[ -f "$path" ]]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+          echo "$cpu: $path"
+      - name: Run the benchmarks
+        # The JVM run with the GC profiler feeds the comparison. The native run only shows its numbers in the log.
+        run: ./gradlew :capsa-benchmarks:jvmGcBenchmark :capsa-benchmarks:macosArm64Benchmark
+      - name: Compare with the baseline
+        # A release slower than the baseline doesn't ship.
+        if: steps.baseline.outputs.exists == 'true'
+        run: python3 -I ../tools/bench_compare.py --baseline "${{ steps.baseline.outputs.path }}"
+      - name: Write the first baseline of this runner
+        # Nothing to compare with yet: this run becomes the baseline, and the step at the end commits it to master.
+        if: steps.baseline.outputs.exists != 'true'
+        run: python3 -I ../tools/bench_compare.py --write-baseline --baseline "${{ steps.baseline.outputs.path }}"
+      - name: Check Maven Central
+        id: central
+        # A version reaches Central once. A rerun after a failure past the upload goes on with what is already there.
+        run: |
+          pom="https://repo1.maven.org/maven2/com/mairwunnx/capsa/capsa-core/$VERSION/capsa-core-$VERSION.pom"
+          if curl -fsSIL "$pom" >/dev/null; then
+            echo "::notice::capsa-core $VERSION is on Maven Central already, the run skips the upload"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish to Maven Central
+        # capsa.publish.gradle.kts stops the upload when any of the four secrets is missing.
+        # The plugin uploads every module as one deployment, and Central releases it once it validates.
+        if: steps.central.outputs.published != 'true'
+        run: ./gradlew publishAndReleaseToMavenCentral -PcapsaVersion="$VERSION" --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+      - name: Wait for Maven Central
+        # The release goes out only once a build can fetch Capsa: repo1.maven.org usually serves a new version within half an hour.
+        working-directory: .
+        shell: python3 {0}
+        run: |
+          import os, sys, time, urllib.error, urllib.request
+
+          version = os.environ["VERSION"]
+          url = f"https://repo1.maven.org/maven2/com/mairwunnx/capsa/capsa-core/{version}/capsa-core-{version}.pom"
+          end = time.time() + 60 * 60
+          while time.time() < end:
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(url, method="HEAD"), timeout=60):
+                      print(f"On Maven Central: {url}")
+                      sys.exit(0)
+              except (urllib.error.URLError, TimeoutError):
+                  time.sleep(30)
+          sys.exit(f"::error::{url} still answers nothing after an hour. Central may still finish: rerun the workflow, it skips the upload")
+      - name: Pack the skills
+        # The skill folders sit at the root of the archive, so it unpacks straight into a skills folder such as .claude/skills/.
+        working-directory: plugins/capsa/skills
+        run: zip -r -X "$SKILLS_ZIP" . -x '*.DS_Store'
+      - name: Publish the GitHub release
+        # 0.x is a preview, and so is a version with a suffix such as 1.0.0-rc.1.
+        working-directory: .
+        run: |
+          prerelease=()
+          if [[ "$VERSION" == 0.* || "$VERSION" == *-* ]]; then prerelease=(--prerelease); fi
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "Capsa $VERSION" --notes-file "$NOTES" "${prerelease[@]}" "$SKILLS_ZIP"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Commit the baseline of this runner
+        if: steps.baseline.outputs.exists != 'true'
+        # A push with the workflow's token starts no other workflow, so the build doesn't run for this commit.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${{ steps.baseline.outputs.path }}"
+          git commit -m "perf(bench): jvm baseline of the release runner" -m "Measured by the release of $VERSION."
+          git pull --rebase origin master
+          git push origin HEAD:master
