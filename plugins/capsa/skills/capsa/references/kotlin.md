@@ -54,6 +54,8 @@ kotlin {
 
 A module with capabilities only (`business`) needs just `capsa-core`. A screen on `rememberCapsa` needs only `capsa-compose`, a screen on `CapsaViewModel` adds `capsa-viewmodel`, and a host without Compose, such as SwiftUI, needs just `capsa-viewmodel`. The two hosts don’t depend on each other. On Android, `capsa-core` ships R8 rules that keep the names of facts and effects, so crash reports stay readable.
 
+On the JVM desktop, `capsa-compose` brings `kotlinx-coroutines-swing` at runtime, so `Dispatchers.Main` is the Swing event thread. `capsa-viewmodel` alone doesn’t: without a main dispatcher, decisions run on `Dispatchers.Default`, so add `kotlinx-coroutines-swing` to a desktop app without Compose.
+
 ## Facts, slices, capabilities
 
 ```kotlin

@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.StateFlow
  * A subclass installs capabilities with [install] or [installSaved], builds the UI state, and, if it needs to, registers handlers
  * in [handleEffects]. The runtime starts when the subclass constructor ends, or earlier on the first [send]
  * or the first access to [effects]. On the JVM without a main dispatcher, only [send] or [effects] start it.
+ * `capsa-viewmodel` doesn’t bring one: a desktop app gets it from `capsa-compose` or adds `kotlinx-coroutines-swing` itself,
+ * and a test sets it with `Dispatchers.setMain`.
  *
  * The view model is the [CapabilityScope], so it creates its capabilities itself from their ports:
  *
