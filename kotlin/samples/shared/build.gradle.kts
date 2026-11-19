@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
     id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     id("capsa.lint")
 }
@@ -44,6 +45,12 @@ kotlin {
         commonTest.dependencies {
             implementation(projects.capsaTest)
             implementation(libs.kotlin.test)
+        }
+        jvmTest.dependencies {
+            // Clicks through every sample on the desktop, without a window.
+            implementation(libs.compose.ui.test)
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }
