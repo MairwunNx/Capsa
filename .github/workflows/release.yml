@@ -100,7 +100,11 @@ jobs:
           key: ${{ runner.os }}-konan-${{ steps.kotlin.outputs.version }}
       - name: Build and test, run detekt and ktlint
         # build covers every target, the tests, detekt, ktlint, and the API dumps. The coverage bound lives on the root project.
-        run: ./gradlew build :koverVerify -PcapsaVersion="$VERSION"
+        # The samples ship nowhere, and CI builds them on every push, so the release leaves them out.
+        # The androidTarget of the libraries still needs the Android SDK: macos-latest has one in ANDROID_HOME.
+        run: >-
+          ./gradlew build :koverVerify -PcapsaVersion="$VERSION"
+          -x :samples:shared:build -x :samples:androidApp:build -x :samples:desktopApp:build
       - name: Find the benchmark baseline of this runner
         id: baseline
         # The baseline in jvm.json comes from the owner's machine and says nothing about a runner. Each processor gets its own file.
