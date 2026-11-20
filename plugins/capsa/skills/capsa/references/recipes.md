@@ -118,6 +118,11 @@ fun likes(ports: LikePorts): Capability<LikeSlice> = capability("likes", LikeSli
 
 An offer ends at a deadline. The countdown ticks only while the user sees the screen, and it starts from the real time left when the screen comes back.
 
+“Pauses in the background” means one of two timers, and the request rarely says which. Ask the user before you write it:
+
+- **Go on from the deadline:** the time runs out in the background too, the screen only stops ticking. An offer, a parking ticket, a code that expires. This recipe.
+- **Freeze the countdown:** the time left stays as it was while the screen is hidden. A game round, a workout, a quiz question. The variant after this recipe.
+
 ```kotlin
 data class OfferSlice(val left: Load<Duration> = Load.Loading)
 
@@ -165,6 +170,38 @@ private fun ticks(deadlineMillis: Long, nowMillis: () -> Long): Flow<Signal> = f
 - `whileVisible` stops the flow in the back stack and calls the block again on return. If the deadline passed in the background, the first tick after the return is already zero.
 - A stream that has ended doesn’t start again. The runtime restarts only the runs that were alive when the screen hid. After the zero tick `ticks` ends, so hiding and showing the screen leaves `Loaded(Duration.ZERO)` and sends no new ticks. To count again, start `TICK` from a reaction, as `DeadlineLoaded` does.
 - `OfferExpired` leaves once because the reaction compares the tick with the slice, not because the flow sends zero once. A run that is still alive when the screen hides, such as a flow that does more after the last tick, starts over on return and sends zero again. The check `state.left != next.left` lets only the change to zero through.
+
+**Variant: freeze the countdown.** The stream only beats once a second, and the slice keeps the time left. A hidden screen gets no beats, so it loses no time, and no clock port is needed:
+
+```kotlin
+data class RoundSlice(val left: Duration = 60.seconds)
+
+data object Beat : Signal
+data object RoundFailed : Signal
+data object RoundOver : Effect
+
+private val TICK = WorkKey("tick")
+
+context(_: CapabilityScope)
+fun round(): Capability<RoundSlice> = capability("round", RoundSlice()) {
+    on<Started> { state, _ -> state.commit(stream(TICK, onError = { RoundFailed }, whileVisible = true) { beats() }) }
+    on<Beat> { state, _ ->
+        val left = (state.left - 1.seconds).coerceAtLeast(Duration.ZERO)
+        if (left == Duration.ZERO) state.copy(left = left).commit(effects = listOf(RoundOver), cancel = listOf(TICK)) else state.copy(left = left).commit()
+    }
+    on<RoundFailed> { state, _ -> state.commit() }
+}
+
+private fun beats(): Flow<Signal> = flow {
+    while (true) {
+        delay(1.seconds)
+        emit(Beat)
+    }
+}
+```
+
+- On return the flow starts over, and the first beat comes a second later: the round loses up to a second per hide, never more.
+- `RoundOver` leaves once: the beat that reaches zero cancels `TICK`, so no beat follows.
 
 ## Form: validation, submit once, input that survives process death
 
