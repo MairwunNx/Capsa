@@ -1,0 +1,86 @@
+name: ctxray
+
+# ctxray checks what each agent harness loads from the skills of plugins/capsa, L1 to L7 (ctxray.config.ts, ctxray/).
+# Every push to them runs L1–L5 on the mock model and L6–L7 on the answers recorded in ctxray/__cassettes__.
+# A run by hand or on schedule asks the real model, and only when the repository holds a token for it.
+on:
+  push:
+    branches: [master]
+    paths: &ctxray
+      - "plugins/**"
+      - ".claude-plugin/**"
+      - "ctxray/**"
+      - "ctxray.config.ts"
+      - "ctxray.lock"
+      - ".github/workflows/ctxray.yml"
+  pull_request:
+    paths: *ctxray
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ctxray-${{ github.ref }}-${{ github.event_name == 'push' && github.sha || '' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: L1–L7, the model on recorded answers
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: L1–L5 on every harness, on the mock model
+        uses: MairwunNx/ctxray-action@v0.1.0
+        with:
+          args: test --layer L1-L5
+      - name: L6–L7 on Claude Code, on the recorded answers
+        # The answers exist for Claude Code only, so the other harnesses would fail on a missing cassette.
+        run: ctxray test --layer L6-L7 --harness claude-code --backend ci --report-dir .ctxray/report-recorded
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: ctxray-report
+          path: .ctxray/
+
+  token:
+    name: Look for a model token
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - id: check
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY$CLAUDE_CODE_OAUTH_TOKEN" ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::No ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN in the repository secrets: the live run is skipped"; fi
+
+  live:
+    name: L6–L7 on the real model
+    needs: token
+    # A job's if can't read secrets, so the token job tells whether there is one.
+    if: needs.token.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: L6–L7 on Claude Code, on the real model
+        uses: MairwunNx/ctxray-action@v0.1.0
+        with:
+          args: test --layer L6-L7 --harness claude-code --backend live --record --budget 5
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      - uses: actions/upload-artifact@v7
+        # The fresh answers: commit them to ctxray/__cassettes__ when the skills changed on purpose.
+        if: ${{ !cancelled() }}
+        with:
+          name: ctxray-live
+          path: |
+            .ctxray/
+            ctxray/__cassettes__/
