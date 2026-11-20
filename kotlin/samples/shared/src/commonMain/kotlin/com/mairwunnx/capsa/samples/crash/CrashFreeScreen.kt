@@ -50,7 +50,7 @@ fun CrashFreeScreen(onBack: () -> Unit) {
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
         )
-        Text("${state.taps} taps", style = MaterialTheme.typography.displayMedium)
+        Text(if (state.taps == 1) "1 tap" else "${state.taps} taps", style = MaterialTheme.typography.displayMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Button(onClick = { viewModel.send(TapClicked) }) { Text("Tap") }
             Button(
