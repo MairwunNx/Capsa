@@ -18,7 +18,7 @@ Show every change to a file of the project before you make it, and make it only 
 
 1. Find the platform of the project. Gradle build files that apply the Kotlin Multiplatform plugin (`org.jetbrains.kotlin.multiplatform`, `kotlin("multiplatform")`) or an Android plugin (`com.android.application`, `com.android.library`, `com.android.kotlin.multiplatform.library`) mean Kotlin. Look in `settings.gradle.kts`, the `build.gradle.kts` files, and `gradle/libs.versions.toml`.
 2. If there are no Gradle build files, the platform is something else, or you can’t tell, say that Capsa doesn’t support this project yet, name what you found, and stop. Don’t guess.
-3. Load the `capsa` skill and read its `SKILL.md`, then the platform file: `references/kotlin.md` for Kotlin. Before the setup the skill may still be missing: then read the platform file straight from GitHub, `https://raw.githubusercontent.com/MairwunNx/Capsa/master/plugins/capsa/skills/capsa/references/kotlin.md`.
+3. Load the `capsa` skill and read its `SKILL.md`, then the platform file: `references/kotlin.md` for Kotlin. Before the setup the skill may still be missing: then read both files straight from GitHub, `https://raw.githubusercontent.com/MairwunNx/Capsa/master/plugins/capsa/skills/capsa/SKILL.md` and `https://raw.githubusercontent.com/MairwunNx/Capsa/master/plugins/capsa/skills/capsa/references/kotlin.md`.
 
 ## 1. Look at the project
 
@@ -64,17 +64,22 @@ Sync and build the changed modules with the narrowest task that compiles them, s
 
 ## 5. Install the skills
 
-Check whether the agent sees the `capsa` skill. If the five `capsa` skills already sit in the project’s skills folder, say so and go on.
+Check whether the agent sees the `capsa` skill. If the five `capsa` skills already sit in a skills folder of the project or of the user, say where and go on.
 
-- **Claude Code:** if this command runs from the `capsa` plugin, the skills are in place. Otherwise offer the plugin, with the user’s consent:
+Find out which harnesses the project uses: ask the user, or look for their files (`.claude/`, `CLAUDE.md`, `.opencode/`, `opencode.json`, `.codex/`, `.gemini/`, `GEMINI.md`, `.cursor/`, `AGENTS.md`). Then install the skills in the way of this table, with the user’s consent:
 
-  ```sh
-  claude plugin marketplace add MairwunNx/Capsa
-  claude plugin install capsa@capsa
-  ```
+| Harness | Where the skills go | How the user calls a command |
+|---|---|---|
+| Claude Code | The plugin: `claude plugin marketplace add MairwunNx/Capsa`, then `claude plugin install capsa@capsa`. Without the plugin: `.claude/skills/` | `/capsa:capsa-migrate` with the plugin, `/capsa-migrate` from `.claude/skills/` |
+| OpenCode | `.agents/skills/` | `/capsa-migrate` |
+| Codex | `.agents/skills/` | `$capsa-migrate`, or pick it in `/skills` |
+| Gemini CLI | `.agents/skills/` | Ask for it by name: “use the capsa-migrate skill to …”. Gemini asks to activate the skill |
+| Cursor and Cursor CLI | `.agents/skills/` | `/capsa-migrate` |
 
-- **Other harnesses,** or Claude Code without the plugin: copy the folders of `plugins/capsa/skills/` from `MairwunNx/Capsa` into the skills folder of the project that this harness reads. Take the folder from the harness’s documentation, don’t guess it. Put the skills into one folder only: some harnesses load a skill twice when two of their folders hold it.
-- **A harness without skills:** create a thin rules file in the format of that harness, with one pointer to the `capsa` skill in `MairwunNx/Capsa` and no copy of the rules. Only with the user’s consent.
+- **Copy the skills** with `npx skills add MairwunNx/Capsa/plugins/capsa/skills`, or with `curl -fsSL https://raw.githubusercontent.com/MairwunNx/Capsa/master/tools/install-skills.sh | sh -s -- --agents` (`.agents/skills/`, without `--agents` it fills `.claude/skills/`). Without either, copy the folders of `plugins/capsa/skills/` from `MairwunNx/Capsa` by hand. When `npx skills` asks for the agents, leave out Claude Code if it has the plugin: for Claude Code it links the skills into `.claude/skills/` as well.
+- **One folder per project.** OpenCode and Cursor read both `.claude/skills/` and `.agents/skills/`. When both folders hold the skills, OpenCode warns about every name, and Cursor may load each skill twice. When the team uses Claude Code and another harness, take the plugin for Claude Code and `.agents/skills/` for the rest: the plugin lives outside the project, so nothing doubles. If the user wants the skills in git for Claude Code without the plugin, `.claude/skills/` serves Claude Code, OpenCode, and Cursor, while Codex and Gemini CLI need `.agents/skills/`: name the trade-off and let the user choose.
+- **For one user instead of the project:** `~/.claude/skills/` for Claude Code, `~/.agents/skills/` for the others.
+- **A harness that reads no skills folder:** create a thin rules file in the format of that harness, with one pointer to the `capsa` skill in `MairwunNx/Capsa` and no copy of the rules. Only with the user’s consent.
 
 ## 6. Point the agents to the skill
 
