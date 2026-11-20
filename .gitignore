@@ -42,6 +42,9 @@ out/
 # Release notes the release workflow writes
 release-notes.md
 
+# ctxray reports
+.ctxray/
+
 # Python helpers in tools/
 __pycache__/
 
