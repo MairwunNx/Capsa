@@ -1,0 +1,27 @@
+[versions]
+kotlin = "2.4.21"
+agp = "9.5.1"
+compose-multiplatform = "1.12.2"
+androidx-lifecycle = "2.11.0"
+kotlinx-coroutines = "1.11.0"
+capsa = "0.99.0"
+
+[libraries]
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+capsa-bom = { module = "com.mairwunnx.capsa:capsa-bom", version.ref = "capsa" }
+capsa-core = { module = "com.mairwunnx.capsa:capsa-core", version.ref = "capsa" }
+capsa-viewmodel = { module = "com.mairwunnx.capsa:capsa-viewmodel", version.ref = "capsa" }
+capsa-compose = { module = "com.mairwunnx.capsa:capsa-compose", version.ref = "capsa" }
+capsa-test = { module = "com.mairwunnx.capsa:capsa-test", version.ref = "capsa" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
