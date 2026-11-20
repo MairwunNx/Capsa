@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -18,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mairwunnx.capsa.Intent
@@ -32,6 +34,9 @@ import com.mairwunnx.capsa.samples.backend.Backend
 import com.mairwunnx.capsa.samples.backend.LikeServer
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
+/** The red of a liked heart, the same in the light and the dark theme. */
+private val LikeRed = Color(0xFFE53935)
 
 data class LikeUi(val liked: Boolean, val label: String)
 
@@ -63,7 +68,15 @@ fun LikeScreen(onBack: () -> Unit) {
 
 @Composable
 private fun LikeContent(ui: LikeUi, onIntent: (Intent) -> Unit) {
-    FilledTonalIconToggleButton(checked = ui.liked, onCheckedChange = { onIntent(LikeClicked) }, modifier = Modifier.size(96.dp)) {
+    FilledTonalIconToggleButton(
+        checked = ui.liked,
+        onCheckedChange = { onIntent(LikeClicked) },
+        modifier = Modifier.size(96.dp),
+        colors = IconButtonDefaults.filledTonalIconToggleButtonColors(
+            checkedContainerColor = LikeRed.copy(alpha = 0.16f),
+            checkedContentColor = LikeRed,
+        ),
+    ) {
         Icon(
             if (ui.liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
             contentDescription = "Like",
