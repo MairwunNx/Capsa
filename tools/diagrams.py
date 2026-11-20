@@ -648,8 +648,8 @@ def testing(theme):
 
 INSTALL = [  # title, who, commands, note
     ("Plugin", "Claude Code", ["claude plugin marketplace add MairwunNx/Capsa", "claude plugin install capsa@capsa"], "then /capsa:capsa-setup"),
-    ("npx skills", "harnesses with skills", ["npx skills add MairwunNx/Capsa"], "then call capsa-setup in your harness"),
-    ("Manual copy", "any harness", ["cp -R plugins/capsa/skills/* .claude/skills/"], "from a clone, or into the skills folder your harness reads"),
+    ("npx skills", "other harnesses", ["npx skills add MairwunNx/Capsa/plugins/capsa/skills"], "into .agents/skills/ for OpenCode, Codex, Gemini CLI, Cursor"),
+    ("Manual copy", "any harness", ["cp -R plugins/capsa/skills/* .agents/skills/"], "from a clone, .claude/skills/ for Claude Code without the plugin")
 ]
 SKILLS = ["capsa", "capsa-setup", "capsa-migrate", "capsa-new", "capsa-review"]
 
@@ -657,8 +657,9 @@ SKILLS = ["capsa", "capsa-setup", "capsa-migrate", "capsa-new", "capsa-review"]
 def install(theme):
     d = Drawing(theme, 900, 488, "Three ways to install the skills of Capsa",
                 "1: the Claude Code plugin, claude plugin marketplace add MairwunNx/Capsa and claude plugin install capsa@capsa. "
-                "2: npx skills add MairwunNx/Capsa. 3: copy the folders of plugins/capsa/skills into the skills folder of your "
-                "harness. Each way brings the same five skills: capsa, capsa-setup, capsa-migrate, capsa-new, and capsa-review.")
+                "2: npx skills add MairwunNx/Capsa/plugins/capsa/skills puts them into .agents/skills for OpenCode, Codex, Gemini CLI, "
+                "and Cursor. 3: copy the folders of plugins/capsa/skills into .agents/skills, or into .claude/skills for Claude Code "
+                "without the plugin. Each way brings the same five skills: capsa, capsa-setup, capsa-migrate, capsa-new, and capsa-review.")
     t = d.t
     rail = 860
     for i, (title, who, commands, note) in enumerate(INSTALL):

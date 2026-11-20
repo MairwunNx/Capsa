@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="488" viewBox="0 0 900 488" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
 <title>Three ways to install the skills of Capsa</title>
-<desc>1: the Claude Code plugin, claude plugin marketplace add MairwunNx/Capsa and claude plugin install capsa@capsa. 2: npx skills add MairwunNx/Capsa. 3: copy the folders of plugins/capsa/skills into the skills folder of your harness. Each way brings the same five skills: capsa, capsa-setup, capsa-migrate, capsa-new, and capsa-review.</desc>
+<desc>1: the Claude Code plugin, claude plugin marketplace add MairwunNx/Capsa and claude plugin install capsa@capsa. 2: npx skills add MairwunNx/Capsa/plugins/capsa/skills puts them into .agents/skills for OpenCode, Codex, Gemini CLI, and Cursor. 3: copy the folders of plugins/capsa/skills into .agents/skills, or into .claude/skills for Claude Code without the plugin. Each way brings the same five skills: capsa, capsa-setup, capsa-migrate, capsa-new, and capsa-review.</desc>
 <defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#818b98"/></marker></defs>
 <rect width="900" height="488" rx="12" fill="#ffffff"/>
 <rect x="20" y="20" width="800" height="92" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
@@ -16,17 +16,17 @@
 <circle cx="54" cy="170" r="16" fill="#4f46e5"/>
 <text x="54" y="176" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">2</text>
 <text x="86" y="162" font-size="16" fill="#1f2328" font-weight="700">npx skills</text>
-<text x="86" y="184" font-size="13" fill="#59636e">harnesses with skills</text>
-<text x="290" y="168" font-size="13" fill="#1f2328" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">npx skills add MairwunNx/Capsa</text>
-<text x="290" y="204" font-size="12" fill="#59636e">then call capsa-setup in your harness</text>
+<text x="86" y="184" font-size="13" fill="#59636e">other harnesses</text>
+<text x="290" y="168" font-size="13" fill="#1f2328" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">npx skills add MairwunNx/Capsa/plugins/capsa/skills</text>
+<text x="290" y="204" font-size="12" fill="#59636e">into .agents/skills/ for OpenCode, Codex, Gemini CLI, Cursor</text>
 <path d="M820 170 L860 170" fill="none" stroke="#818b98" stroke-width="1.6" stroke-linejoin="round"/>
 <rect x="20" y="228" width="800" height="92" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
 <circle cx="54" cy="274" r="16" fill="#4f46e5"/>
 <text x="54" y="280" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">3</text>
 <text x="86" y="266" font-size="16" fill="#1f2328" font-weight="700">Manual copy</text>
 <text x="86" y="288" font-size="13" fill="#59636e">any harness</text>
-<text x="290" y="272" font-size="13" fill="#1f2328" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">cp -R plugins/capsa/skills/* .claude/skills/</text>
-<text x="290" y="308" font-size="12" fill="#59636e">from a clone, or into the skills folder your harness reads</text>
+<text x="290" y="272" font-size="13" fill="#1f2328" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">cp -R plugins/capsa/skills/* .agents/skills/</text>
+<text x="290" y="308" font-size="12" fill="#59636e">from a clone, .claude/skills/ for Claude Code without the plugin</text>
 <path d="M820 274 L860 274" fill="none" stroke="#818b98" stroke-width="1.6" stroke-linejoin="round"/>
 <path d="M860 64 L860 336" fill="none" stroke="#818b98" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#m0)"/>
 <rect x="20" y="338" width="860" height="130" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
