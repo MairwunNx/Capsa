@@ -1,0 +1,15 @@
+{
+  "name": "capsa",
+  "description": "Capsa's plugin for Claude Code",
+  "owner": {
+    "name": "Pavel Erokhin",
+    "url": "https://github.com/MairwunNx"
+  },
+  "plugins": [
+    {
+      "name": "capsa",
+      "source": "./plugins/capsa",
+      "description": "Build, migrate, and review screens on Capsa, the Kotlin Multiplatform engine for Capability Slice Architecture."
+    }
+  ]
+}

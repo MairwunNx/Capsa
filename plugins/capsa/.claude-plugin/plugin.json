@@ -1,0 +1,20 @@
+{
+  "name": "capsa",
+  "displayName": "Capsa",
+  "description": "Build, migrate, and review screens on Capsa, the Kotlin Multiplatform engine for Capability Slice Architecture: the capsa skill and the capsa-setup, capsa-migrate, capsa-new, and capsa-review commands.",
+  "author": {
+    "name": "Pavel Erokhin",
+    "url": "https://github.com/MairwunNx"
+  },
+  "homepage": "https://github.com/MairwunNx/Capsa/wiki",
+  "repository": "https://github.com/MairwunNx/Capsa",
+  "license": "MIT",
+  "keywords": [
+    "kotlin",
+    "kotlin-multiplatform",
+    "compose",
+    "architecture",
+    "capsa",
+    "csa"
+  ]
+}
