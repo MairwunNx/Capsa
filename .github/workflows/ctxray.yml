@@ -48,6 +48,7 @@ jobs:
         with:
           name: ctxray-report
           path: .ctxray/
+          include-hidden-files: true
 
   token:
     name: Look for a model token
@@ -87,3 +88,4 @@ jobs:
           path: |
             .ctxray/
             ctxray/__cassettes__/
+          include-hidden-files: true
