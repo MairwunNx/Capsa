@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -38,7 +39,8 @@ fun SampleScaffold(
                 },
             )
         },
-        snackbarHost = { if (snackbar != null) SnackbarHost(snackbar) },
+        // The keyboard would cover a snackbar at the bottom of the screen, so the snackbar rises above it.
+        snackbarHost = { if (snackbar != null) SnackbarHost(snackbar, Modifier.imePadding()) },
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp, vertical = 16.dp),
