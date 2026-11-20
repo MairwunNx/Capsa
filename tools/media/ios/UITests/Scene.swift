@@ -47,9 +47,31 @@ class Scene: XCTestCase {
 
     func pause(_ seconds: Double) { usleep(useconds_t(seconds * 1_000_000)) }
 
+    /// Opens the app from its icon on the home screen, or activates it if the icon is on another page.
+    func tapIcon() {
+        let icon = XCUIApplication(bundleIdentifier: "com.apple.springboard").icons
+            .matching(NSPredicate(format: "label CONTAINS[c] 'capsa'")).firstMatch
+        if icon.exists && icon.isHittable {
+            taps.append(["t": Date().timeIntervalSince(start), "x": Double(icon.frame.midX), "y": Double(icon.frame.midY), "ms": 120])
+            icon.tap()
+        } else {
+            app.activate()
+        }
+    }
+
+    /// Asks ios.py to do what a test can't, such as ending the app the way iOS does, and waits until it's done.
+    func askHost(_ request: String) {
+        put(request)
+        while !FileManager.default.fileExists(atPath: dir + "/" + request + "-done") { usleep(50_000) }
+    }
+
     /// Starts the app afresh and opens a sample from its home screen.
     func open(_ title: String) {
         app.launch()
+        // The demo restores its last screen after the end of the process: go back to the list first.
+        while app.buttons["Back"].waitForExistence(timeout: 2) {
+            app.buttons["Back"].tap()
+        }
         let card = app.staticTexts[title]
         if !card.waitForExistence(timeout: 3) || !card.isHittable {
             app.swipeUp()

@@ -49,22 +49,14 @@ final class Scenes: Scene {
         pause(3)
         XCUIDevice.shared.press(.home)
         pause(3)
-        let icon = XCUIApplication(bundleIdentifier: "com.apple.springboard").icons
-            .matching(NSPredicate(format: "label CONTAINS[c] 'capsa'")).firstMatch
-        if icon.exists && icon.isHittable {
-            taps.append(["t": Date().timeIntervalSince(start), "x": Double(icon.frame.midX), "y": Double(icon.frame.midY), "ms": 120])
-            icon.tap()
-        } else {
-            app.activate()
-        }
+        tapIcon()
         pause(4)
         finish()
     }
 
     func testProfile() {
-        // iOS gives no saved state to an app it has ended, so this scene saves the form instead of killing the app.
         open("Profile form")
-        let name = at("Name"), email = at("Email"), save = at("Save")
+        let name = at("Name"), email = at("Email")
         waitGo()
         tap(name)
         pause(0.5)
@@ -73,10 +65,16 @@ final class Scenes: Scene {
         tap(email)
         pause(0.5)
         app.typeText("alex@example.com")
-        pause(0.7)
-        tap(save)
-        ok = app.staticTexts["Profile saved"].waitForExistence(timeout: 5)
+        pause(0.9)
+        XCUIDevice.shared.press(.home)
         pause(1.5)
+        // What iOS does to an app in the background when it needs memory. Closing it in the switcher would drop the state.
+        askHost("terminate")
+        pause(1)
+        tapIcon()
+        ok = app.descendants(matching: .any).matching(NSPredicate(format: "value == %@", "alex@example.com")).firstMatch
+            .waitForExistence(timeout: 5)
+        pause(1)
         finish()
     }
 

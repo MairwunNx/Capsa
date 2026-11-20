@@ -125,6 +125,10 @@ class Session:
         go = time.time() - start
         (IO / "go").write_text("")
         while not (IO / "done").exists() and runner.poll() is None:
+            if (IO / "terminate").exists() and not (IO / "terminate-done").exists():
+                # Ends the process like Xcode's stop button, which Apple suggests for testing state restoration.
+                simctl("terminate", self.udid, BUNDLE, check=False)
+                (IO / "terminate-done").write_text("")
             time.sleep(0.1)
         time.sleep(0.7)
         recorder.send_signal(signal.SIGINT)
