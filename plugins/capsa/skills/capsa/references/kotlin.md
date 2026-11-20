@@ -17,6 +17,30 @@ The group is `com.mairwunnx.capsa`. All modules share one version. If the projec
 
 Targets: Android, `iosArm64`, `iosSimulatorArm64`, `macosArm64`, and the JVM. Capsa builds with Kotlin 2.4, where context parameters are stable, so the project needs Kotlin 2.4 or newer.
 
+Capsa has no `js` and no `wasmJs` targets. A module that also builds for the web can’t take Capsa in `commonMain`: its dependencies and code go into a shared source set of the supported targets. Don’t drop the web targets on your own.
+
+```kotlin
+// build.gradle.kts of a module with js or wasmJs
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
+kotlin {
+    // Every target but the web: Android, iOS, macOS, and the JVM.
+    applyDefaultHierarchyTemplate {
+        common {
+            group("capsa") {
+                withCompilations { it.platformType != KotlinPlatformType.js && it.platformType != KotlinPlatformType.wasm }
+            }
+        }
+    }
+    sourceSets {
+        getByName("capsaMain").dependencies { implementation(libs.capsa.compose) }
+        getByName("capsaTest").dependencies { implementation(libs.capsa.test) }
+    }
+}
+```
+
+Screens on Capsa live in `src/capsaMain`. The web app keeps its own screens in `commonMain` or `webMain`.
+
 A typical Compose Multiplatform screen module:
 
 ```toml
