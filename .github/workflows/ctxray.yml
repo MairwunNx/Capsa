@@ -2,7 +2,7 @@ name: ctxray
 
 # ctxray checks what each agent harness loads from the skills of plugins/capsa, L1 to L7 (ctxray.config.ts, ctxray/).
 # Every push to them runs L1–L5 on the mock model and L6–L7 on the answers recorded in ctxray/__cassettes__.
-# A run by hand or on schedule asks the real model, and only when the repository holds a token for ctxray:
+# A run by hand asks the real model, and only when the repository holds a token for ctxray:
 # CTXRAY_ANTHROPIC_API_KEY or CTXRAY_CLAUDE_CODE_OAUTH_TOKEN. They stay apart from the token of the autopilot.
 on:
   push:
@@ -17,8 +17,6 @@ on:
   pull_request:
     paths: *ctxray
   workflow_dispatch:
-  schedule:
-    - cron: "0 4 * * 1"
 
 permissions:
   contents: read
@@ -30,7 +28,6 @@ concurrency:
 jobs:
   test:
     name: L1–L7, the model on recorded answers
-    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -53,7 +50,7 @@ jobs:
 
   token:
     name: Look for a model token
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       present: ${{ steps.check.outputs.present }}
