@@ -84,7 +84,7 @@ private fun ProfileContent(ui: ProfileUi, onIntent: (Intent) -> Unit) {
         Text(if (ui.sending) "Saving…" else "Save")
     }
     Text(
-        "Type something, then let the system kill the app in the background: the input comes back.",
+        saveHint,
         style = MaterialTheme.typography.bodyLarge,
         textAlign = TextAlign.Center,
     )
