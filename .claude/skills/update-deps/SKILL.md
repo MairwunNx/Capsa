@@ -2,6 +2,8 @@
 name: update-deps
 description: Updates the dependencies of Capsa, a Kotlin Multiplatform library, to their newest stable versions, while minSdk, the Kotlin API and language version, and the iOS deployment target stay as they are. Covers Gradle, Kotlin, AGP, the Gradle plugins, kotlinx, AndroidX, Compose Multiplatform, Robolectric with compileSdk, and GitHub Actions. Use when the owner asks to update dependencies, libraries, or tools, and in the weekly autopilot.
 argument-hint: "[only these, e.g. gradle kotlin]"
+metadata:
+  internal: true
 ---
 
 # Update dependencies
