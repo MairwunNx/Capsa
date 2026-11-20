@@ -1,0 +1,33 @@
+# The XCUITest driver that plays the scenes on the simulator. ios.py generates the project with xcodegen into build/media.
+name: CapsaMediaDriver
+options:
+  bundleIdPrefix: com.mairwunnx.capsa.media
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  DriverHost:
+    type: application
+    platform: iOS
+    sources: [Host]
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      CODE_SIGN_IDENTITY: "-"
+  DriverUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: DriverHost
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      TEST_TARGET_NAME: DriverHost
+      CODE_SIGN_IDENTITY: "-"
+schemes:
+  DriverUITests:
+    build:
+      targets:
+        DriverHost: all
+        DriverUITests: [test]
+    test:
+      targets: [DriverUITests]
