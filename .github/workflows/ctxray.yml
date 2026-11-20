@@ -33,6 +33,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Install ripgrep
+        # OpenCode's skill tool runs rg, and ctxray's network guard stops OpenCode from downloading its own.
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
       - name: L1–L5 on every harness, on the mock model
         uses: MairwunNx/ctxray-action@v0.1.0
         with:
