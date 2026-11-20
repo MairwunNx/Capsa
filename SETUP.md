@@ -30,6 +30,6 @@ Then ask your agent for that version, for example: “Add Capsa to this project 
 Install the skills yourself, then call `capsa-setup` in your harness:
 
 - **Claude Code:** `claude plugin install capsa --marketplace MairwunNx/Capsa`, then `/capsa:capsa-setup`. Before Claude Code 2.1.275, run `claude plugin marketplace add MairwunNx/Capsa` and `claude plugin install capsa@capsa` instead.
-- **OpenCode, Codex, Gemini CLI, Cursor, and Cursor CLI:** `npx skills add MairwunNx/Capsa/plugins/capsa/skills`, or `curl -fsSL https://raw.githubusercontent.com/MairwunNx/Capsa/master/tools/install-skills.sh | sh -s -- --agents`. Both put the skills into `.agents/skills/`.
+- **OpenCode, Codex, Gemini CLI, Cursor, and Cursor CLI:** `npx skills add MairwunNx/Capsa/plugins/capsa/skills`, or `curl -fsSL https://raw.githubusercontent.com/MairwunNx/Capsa/master/tools/install-skills.sh | sh -s -- --agents`. Both put the skills into `.agents/skills/`. For Gemini CLI too: its own `gemini skills install` fails on a git URL.
 
 Step 5 of the skill lists the folder and the command for each harness.
