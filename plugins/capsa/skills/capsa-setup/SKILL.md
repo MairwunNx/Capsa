@@ -23,6 +23,7 @@ Show every change to a file of the project before you make it, and make it only 
 ## 1. Look at the project
 
 - **Kotlin version.** Capsa needs Kotlin 2.4 or newer. On an older one, tell the user and stop: updating Kotlin is the user’s decision.
+- **Targets.** Compare the targets of each module that gets Capsa with the targets in `references/kotlin.md`. Capsa has no `js` and no `wasmJs`, so a module that builds for them can’t take Capsa in `commonMain`. Tell the user and offer a shared source set for the supported targets, such as `nonWebMain` between `commonMain` and the Android, iOS, and JVM source sets, where the Capsa code and its dependencies live. Don’t drop a target on your own.
 - **Capsa already there.** Search the build files for `com.mairwunnx.capsa`. If Capsa is in place, do only the steps that are missing and say which ones you skipped.
 - **Modules.** Find the modules with screens. Ask the user which ones get Capsa, unless the request names them.
 - **How the project adds libraries:** a version catalog, versions in the build files, or a convention plugin. Follow the same way.
