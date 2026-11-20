@@ -647,7 +647,7 @@ def testing(theme):
 
 
 INSTALL = [  # title, who, commands, note
-    ("Plugin", "Claude Code", ["claude plugin marketplace add MairwunNx/Capsa", "claude plugin install capsa@capsa"], "then /capsa:capsa-setup"),
+    ("Plugin", "Claude Code", ["claude plugin install capsa --marketplace MairwunNx/Capsa"], "then /capsa:capsa-setup"),
     ("npx skills", "other harnesses", ["npx skills add MairwunNx/Capsa/plugins/capsa/skills"], "into .agents/skills/ for OpenCode, Codex, Gemini CLI, Cursor"),
     ("Manual copy", "any harness", ["cp -R plugins/capsa/skills/* .agents/skills/"], "from a clone, .claude/skills/ for Claude Code without the plugin")
 ]
@@ -656,7 +656,7 @@ SKILLS = ["capsa", "capsa-setup", "capsa-migrate", "capsa-new", "capsa-review"]
 
 def install(theme):
     d = Drawing(theme, 900, 488, "Three ways to install the skills of Capsa",
-                "1: the Claude Code plugin, claude plugin marketplace add MairwunNx/Capsa and claude plugin install capsa@capsa. "
+                "1: the Claude Code plugin, claude plugin install capsa --marketplace MairwunNx/Capsa. "
                 "2: npx skills add MairwunNx/Capsa/plugins/capsa/skills puts them into .agents/skills for OpenCode, Codex, Gemini CLI, "
                 "and Cursor. 3: copy the folders of plugins/capsa/skills into .agents/skills, or into .claude/skills for Claude Code "
                 "without the plugin. Each way brings the same five skills: capsa, capsa-setup, capsa-migrate, capsa-new, and capsa-review.")
