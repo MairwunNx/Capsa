@@ -1,6 +1,8 @@
 package com.mairwunnx.capsa
 
 import kotlin.concurrent.Volatile
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.native.ObjCName
 import kotlin.reflect.KClass
 
 /**
@@ -50,6 +52,10 @@ public class EffectHandlers internal constructor(
     }
 
     /** Registers handlers inside the [effectHandlers] block. */
+    // Swift nests a class only inside a class the framework declares. A framework that uses CapsaViewModel declares Builder
+    // through handleEffects, but EffectHandlers only if its own API names it, so Swift gets a top-level name instead.
+    @OptIn(ExperimentalObjCName::class)
+    @ObjCName(name = "CapsaEffectHandlersBuilder", swiftName = "EffectHandlersBuilder", exact = true)
     public class Builder internal constructor() {
         internal val handlers: MutableList<Handler<*>> = mutableListOf()
 
