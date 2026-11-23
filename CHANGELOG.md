@@ -18,3 +18,4 @@ The first preview of Capsa. The API may still change before `1.0.0`: try it on a
 - 🧪 **A harness for tests.** `replay` feeds facts straight into `decide`, and `capsaHarness` runs the real runtime on virtual time: you move the clock and read slices, effects, and works.
 - 📱 **Compose Multiplatform on Android and iOS.** Pick a host: `CapsaViewModel` on AndroidX `ViewModel`, which SwiftUI can use too, or `rememberCapsa` right in the composition. Capsa runs on Android, iOS, macOS, and the JVM, and `capsa-bom` keeps the versions of the modules in line.
 - 🤖 **A plugin for coding agents.** The `capsa` skill teaches an agent the rules, and `capsa-setup`, `capsa-migrate`, `capsa-new`, and `capsa-review` add Capsa to a project, move a screen to it, write a new screen or capability, and review code against the rules. The skills follow the Agent Skills standard, so agents beyond Claude Code read them too.
+- ⬆️ **Fresh dependencies.** Builds on Android Gradle Plugin 9.5.2.

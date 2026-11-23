@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.4.21"
-agp = "9.5.1"
+agp = "9.5.2"
 android-compileSdk = "37"
 android-minSdk = "23"
 # Navigation 3 in the demo app needs Android 7.0.
