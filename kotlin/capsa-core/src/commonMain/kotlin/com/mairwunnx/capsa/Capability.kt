@@ -79,14 +79,14 @@ public interface Capability<S : Any> {
  * context(_: CapabilityScope)
  * fun likes(ports: LikePorts) = capability<LikeSlice, LikeIntent, LikeSignal>(name = "likes", initial = LikeSlice()) {
  *     val works = object {
- *         fun save(liked: Boolean) = work(key = SAVE, onError = { LikeSignal.Failed }) { LikeSignal.Saved(ports.setLiked(liked)) }
+ *         fun save(liked: Boolean) = work(key = SAVE, onError = { LikeFailed }) { LikeSaved(ports.setLiked(liked)) }
  *     }
  *
- *     onIntent<LikeIntent.Clicked> { state, _ ->
+ *     onIntent<LikeClicked> { state, _ ->
  *         Decision(state = state.copy(liked = !state.liked), work = works.save(!state.liked))
  *     }
- *     onSignal<LikeSignal.Saved> { state, saved -> Decision(state = state.copy(likes = saved.likes)) }
- *     onSignal<LikeSignal.Failed> { state, _ -> Decision(state = state.copy(liked = !state.liked), effect = LikeEffect.ShowError) }
+ *     onSignal<LikeSaved> { state, saved -> Decision(state = state.copy(likes = saved.likes)) }
+ *     onSignal<LikeFailed> { state, _ -> Decision(state = state.copy(liked = !state.liked), effect = ShowLikeError) }
  * }
  * ```
  *

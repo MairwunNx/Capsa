@@ -28,7 +28,7 @@ public class Decision<out S : Any, out O : Signal> internal constructor(
  * after the reaction returns. A `null` in a single-item argument means “nothing”, so a condition fits right into the call.
  *
  * ```
- * onIntent<SearchIntent.QueryChanged> { state, intent ->
+ * onIntent<QueryChanged> { state, intent ->
  *     Decision(
  *         state = state.copy(query = intent.text),
  *         work = works.search(intent.text).takeIf { intent.text.isNotBlank() },

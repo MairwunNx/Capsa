@@ -103,11 +103,11 @@ public class Work<out O : Signal> internal constructor(
  * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/debounce.gif)
  *
  * ```
- * onIntent<SearchIntent.QueryChanged> { state, intent ->
+ * onIntent<QueryChanged> { state, intent ->
  *     Decision(
  *         state = state.copy(query = intent.text),
- *         work = work(key = SEARCH, onError = { SearchSignal.Failed }, debounce = 300.milliseconds) {
- *             SearchSignal.Loaded(ports.search(intent.text))
+ *         work = work(key = SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) {
+ *             ResultsLoaded(ports.search(intent.text))
  *         },
  *     )
  * }

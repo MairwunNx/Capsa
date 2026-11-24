@@ -164,7 +164,7 @@ public class CapsaHarness internal constructor(
  * ```
  * @Test fun showsThanks() = runTest {
  *     val harness = capsaHarness(likes)
- *     harness.append(LikeIntent.Clicked(4))
+ *     harness.append(HighlightClicked(4))
  *     harness.advanceTimeBy(200.milliseconds)
  *     assertEquals(listOf(ShowThanks(4)), harness.effects)
  * }

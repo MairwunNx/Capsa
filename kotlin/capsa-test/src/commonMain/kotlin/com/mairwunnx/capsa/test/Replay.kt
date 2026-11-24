@@ -47,12 +47,12 @@ public class Replay<S : Any> internal constructor(
  * Feeds `facts` into the capability one by one and returns a snapshot of every decision.
  *
  * The replay starts from `from` and skips the facts that are not in [Capability.handles].
- * [Started] runs the bootstrap of the capability, as the runtime does: `replay(Started, OrdersIntent.Retry)`.
+ * [Started] runs the bootstrap of the capability, as the runtime does: `replay(Started, RetryClicked)`.
  * A capability without a bootstrap ignores it.
  * To check works, virtual time, and chains of signals, use [capsaHarness].
  *
  * ```
- * val replay = likes.replay(LikeIntent.Clicked(4))
+ * val replay = likes.replay(HighlightClicked(4))
  * assertEquals(LikesSlice(highlighted = 4, busy = true), replay.state)
  * ```
  *
