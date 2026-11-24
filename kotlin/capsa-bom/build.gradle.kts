@@ -13,5 +13,6 @@ dependencies {
         api(projects.capsaCompose)
         api(projects.capsaTest)
         api(projects.capsaViewmodelTest)
+        api(projects.capsaDetekt)
     }
 }

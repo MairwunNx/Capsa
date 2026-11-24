@@ -1,0 +1,10 @@
+capsa:
+  active: true
+  FactWithoutData:
+    active: true
+  DecisionWithPositionalArguments:
+    active: true
+  EagerStateInHost:
+    active: true
+  AdvanceUntilIdleWithHarness:
+    active: true

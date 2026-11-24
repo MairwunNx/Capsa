@@ -30,6 +30,7 @@ include(
     ":capsa-compose",
     ":capsa-test",
     ":capsa-viewmodel-test",
+    ":capsa-detekt",
     ":capsa-bom",
     ":capsa-benchmarks",
     ":samples:shared",
