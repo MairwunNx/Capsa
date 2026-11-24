@@ -61,7 +61,8 @@ import kotlinx.coroutines.cancel
  *
  * @param keys a change of any key creates a new runtime and retires the old one
  * @param logger the logger for failing effect handlers and the runtime journal
- * @param config the runtime settings. By default works run on `Dispatchers.Default`, and the journal goes to `logger`
+ * @param config the runtime settings, [CapsaScope.defaultConfig] unless you pass your own: works run on `Dispatchers.Default`,
+ * and the journal goes to `logger`. To change one setting, pass `CapsaScope.defaultConfig(logger).copy(…)`
  * @param create returns a [CapsaComposable] or the result of [CapsaScope.expose]
  * @return the same object on every recomposition
  * @throws IllegalStateException if `create` returns something else
@@ -70,7 +71,7 @@ import kotlinx.coroutines.cancel
 public fun <R : Any> rememberCapsa(
     vararg keys: Any?,
     logger: CapsaLogger = CapsaLogger.Default,
-    config: CapsaConfig = defaultCapsaConfig(logger),
+    config: CapsaConfig = CapsaScope.defaultConfig(logger),
     create: CapsaScope.() -> R,
 ): R {
     val registry = LocalSaveableStateRegistry.current

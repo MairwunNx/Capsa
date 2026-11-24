@@ -47,12 +47,13 @@ public class CapsaScope internal constructor(
      *
      * @param scope the lifetime of the runtime. Decisions run on its dispatcher
      * @param logger the logger for failing effect handlers and the runtime journal
-     * @param config the runtime settings
+     * @param config the runtime settings, [defaultConfig] unless you pass your own. To change one setting,
+     * pass `defaultConfig(logger).copy(…)`: a config built from scratch drops the work dispatcher and the journal
      */
     public constructor(
         scope: CoroutineScope,
         logger: CapsaLogger = CapsaLogger.Default,
-        config: CapsaConfig = defaultCapsaConfig(logger),
+        config: CapsaConfig = defaultConfig(logger),
     ) : this(scope, logger, config, NoSnapshots)
 
     private var registerEffects: EffectHandlers.Builder.() -> Unit = {}
@@ -154,18 +155,34 @@ public class CapsaScope internal constructor(
         check(owner == null) { "$method() on the scope of a CapsaComposable. $MIXED" }
         installedHere = true
     }
+
+    public companion object {
+
+        /**
+         * Returns the config a screen of [rememberCapsa] takes by default: works on `Dispatchers.Default`
+         * and the runtime journal in `logger` through [LoggingCapsaObserver].
+         *
+         * Change one setting on top of it with [CapsaConfig.copy], and the rest stays:
+         *
+         * ```
+         * val clock = rememberCapsa(config = CapsaScope.defaultConfig().copy(visibility = CapsaVisibility.Watched(grace = 2.seconds))) {
+         *     expose(install(clock()))
+         * }
+         * ```
+         *
+         * @param logger the logger that receives the runtime journal. Pass the one you give to [rememberCapsa]
+         */
+        // Dispatchers.Default is only the default: a test passes a config of its own.
+        @Suppress("InjectDispatcher")
+        public fun defaultConfig(logger: CapsaLogger = CapsaLogger.Default): CapsaConfig = CapsaConfig(
+            workContext = Dispatchers.Default,
+            observer = LoggingCapsaObserver(logger),
+        )
+    }
 }
 
 /** Why the lambda of [rememberCapsa] can’t both install and return a [CapsaComposable]. */
 private const val MIXED = "Either install in the lambda of rememberCapsa and end it with expose(), or return a CapsaComposable that installs itself."
-
-/** The default settings of a screen: works on `Dispatchers.Default` and the runtime journal in `logger`. */
-// Dispatchers.Default is only the default: a test passes a config of its own.
-@Suppress("InjectDispatcher")
-internal fun defaultCapsaConfig(logger: CapsaLogger): CapsaConfig = CapsaConfig(
-    workContext = Dispatchers.Default,
-    observer = LoggingCapsaObserver(logger),
-)
 
 /** Saves nothing: the capabilities start from their initial state. */
 private object NoSnapshots : SnapshotStore {

@@ -50,6 +50,10 @@ final class com.mairwunnx.capsa.compose/CapsaScope : com.mairwunnx.capsa/Capabil
     final fun <#A1: kotlin/Any?> expose(#A1): com.mairwunnx.capsa.compose/CapsaHandle<#A1> // com.mairwunnx.capsa.compose/CapsaScope.expose|expose(0:0){0§<kotlin.Any?>}[0]
     final fun handleEffects(kotlin/Function1<com.mairwunnx.capsa/EffectHandlers.Builder, kotlin/Unit>) // com.mairwunnx.capsa.compose/CapsaScope.handleEffects|handleEffects(kotlin.Function1<com.mairwunnx.capsa.EffectHandlers.Builder,kotlin.Unit>){}[0]
     final fun onEffectFailed(kotlin.coroutines/SuspendFunction2<com.mairwunnx.capsa/Effect, kotlin/Exception, kotlin/Unit>) // com.mairwunnx.capsa.compose/CapsaScope.onEffectFailed|onEffectFailed(kotlin.coroutines.SuspendFunction2<com.mairwunnx.capsa.Effect,kotlin.Exception,kotlin.Unit>){}[0]
+
+    final object Companion { // com.mairwunnx.capsa.compose/CapsaScope.Companion|null[0]
+        final fun defaultConfig(com.mairwunnx.capsa/CapsaLogger = ...): com.mairwunnx.capsa/CapsaConfig // com.mairwunnx.capsa.compose/CapsaScope.Companion.defaultConfig|defaultConfig(com.mairwunnx.capsa.CapsaLogger){}[0]
+    }
 }
 
 final val com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaComposable$stableprop // com.mairwunnx.capsa.compose/com_mairwunnx_capsa_compose_CapsaComposable$stableprop|#static{}com_mairwunnx_capsa_compose_CapsaComposable$stableprop[0]

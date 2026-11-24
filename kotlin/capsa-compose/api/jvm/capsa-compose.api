@@ -22,6 +22,7 @@ public final class com/mairwunnx/capsa/compose/CapsaHandle {
 
 public final class com/mairwunnx/capsa/compose/CapsaScope : com/mairwunnx/capsa/CapabilityScope {
 	public static final field $stable I
+	public static final field Companion Lcom/mairwunnx/capsa/compose/CapsaScope$Companion;
 	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/mairwunnx/capsa/CapsaLogger;Lcom/mairwunnx/capsa/CapsaConfig;)V
 	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/mairwunnx/capsa/CapsaLogger;Lcom/mairwunnx/capsa/CapsaConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun expose (Ljava/lang/Object;)Lcom/mairwunnx/capsa/compose/CapsaHandle;
@@ -30,6 +31,11 @@ public final class com/mairwunnx/capsa/compose/CapsaScope : com/mairwunnx/capsa/
 	public final fun install (Lcom/mairwunnx/capsa/Capability;)Lkotlinx/coroutines/flow/StateFlow;
 	public final fun installSaved (Lcom/mairwunnx/capsa/Capability;Lcom/mairwunnx/capsa/SliceSaver;Ljava/lang/String;)Lkotlinx/coroutines/flow/StateFlow;
 	public final fun onEffectFailed (Lkotlin/jvm/functions/Function3;)V
+}
+
+public final class com/mairwunnx/capsa/compose/CapsaScope$Companion {
+	public final fun defaultConfig (Lcom/mairwunnx/capsa/CapsaLogger;)Lcom/mairwunnx/capsa/CapsaConfig;
+	public static synthetic fun defaultConfig$default (Lcom/mairwunnx/capsa/compose/CapsaScope$Companion;Lcom/mairwunnx/capsa/CapsaLogger;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaConfig;
 }
 
 public final class com/mairwunnx/capsa/compose/CollectEffectsKt {
