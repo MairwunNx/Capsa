@@ -50,12 +50,17 @@ public final class com/mairwunnx/capsa/CapsaConfig {
 }
 
 public abstract interface class com/mairwunnx/capsa/CapsaObserver {
+	public static final field Companion Lcom/mairwunnx/capsa/CapsaObserver$Companion;
 	public fun onDecision (Ljava/lang/String;Lcom/mairwunnx/capsa/Fact;Lcom/mairwunnx/capsa/Decision;)V
 	public fun onFact (Lcom/mairwunnx/capsa/Fact;)V
 	public fun onSignalDropped-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Lcom/mairwunnx/capsa/Signal;)V
 	public fun onWorkCancelled-z-6xztE (Ljava/lang/String;Ljava/lang/String;)V
 	public fun onWorkFailed-fuCRvaA (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun onWorkStarted-z-6xztE (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/mairwunnx/capsa/CapsaObserver$Companion {
+	public final fun of ([Lcom/mairwunnx/capsa/CapsaObserver;)Lcom/mairwunnx/capsa/CapsaObserver;
 }
 
 public final class com/mairwunnx/capsa/CapsaObserver$DefaultImpls {

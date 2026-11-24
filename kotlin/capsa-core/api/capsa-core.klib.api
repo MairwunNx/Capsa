@@ -41,6 +41,10 @@ abstract interface com.mairwunnx.capsa/CapsaObserver { // com.mairwunnx.capsa/Ca
     open fun onWorkFailed(kotlin/String, com.mairwunnx.capsa/WorkKey, kotlin/Throwable) // com.mairwunnx.capsa/CapsaObserver.onWorkFailed|onWorkFailed(kotlin.String;com.mairwunnx.capsa.WorkKey;kotlin.Throwable){}[0]
     open fun onWorkStarted(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa/CapsaObserver.onWorkStarted|onWorkStarted(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]
 
+    final object Companion { // com.mairwunnx.capsa/CapsaObserver.Companion|null[0]
+        final fun of(kotlin/Array<out com.mairwunnx.capsa/CapsaObserver>...): com.mairwunnx.capsa/CapsaObserver // com.mairwunnx.capsa/CapsaObserver.Companion.of|of(kotlin.Array<out|com.mairwunnx.capsa.CapsaObserver>...){}[0]
+    }
+
     final object None : com.mairwunnx.capsa/CapsaObserver // com.mairwunnx.capsa/CapsaObserver.None|null[0]
 }
 

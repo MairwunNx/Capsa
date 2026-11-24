@@ -115,6 +115,63 @@ public interface CapsaObserver {
 
     /** Ignores every event of the runtime. */
     public object None : CapsaObserver
+
+    public companion object {
+
+        /**
+         * Returns an observer that passes every event to each of `observers`, in the order given.
+         *
+         * A host already observes the runtime with its journal. Add an observer of your own next to it, so the journal stays:
+         *
+         * ```
+         * val config = CapsaViewModel.defaultConfig()
+         * config.copy(observer = CapsaObserver.of(config.observer, metrics))
+         * ```
+         *
+         * An exception from one observer doesn’t keep the event from the others: each of them gets it,
+         * and then the first exception goes on with the rest suppressed in it.
+         *
+         * @param observers the observers in the order they receive each event
+         * @return [None] for no observers, the observer itself for one, and an observer of all of them otherwise
+         */
+        public fun of(vararg observers: CapsaObserver): CapsaObserver {
+            val all = observers.filter { it !== None }
+            return when (all.size) {
+                0 -> None
+                1 -> all.single()
+                else -> CompositeObserver(all)
+            }
+        }
+    }
+}
+
+/** Passes every event to each observer in turn. One failing observer doesn’t stop the event for the others. */
+private class CompositeObserver(private val observers: List<CapsaObserver>) : CapsaObserver {
+
+    override fun onFact(fact: Fact) = each { it.onFact(fact) }
+
+    override fun onDecision(capability: String, fact: Fact, decision: Decision<*, *>) = each { it.onDecision(capability, fact, decision) }
+
+    override fun onWorkStarted(capability: String, key: WorkKey) = each { it.onWorkStarted(capability, key) }
+
+    override fun onWorkCancelled(capability: String, key: WorkKey) = each { it.onWorkCancelled(capability, key) }
+
+    override fun onWorkFailed(capability: String, key: WorkKey, error: Throwable) = each { it.onWorkFailed(capability, key, error) }
+
+    override fun onSignalDropped(capability: String, key: WorkKey, signal: Signal) = each { it.onSignalDropped(capability, key, signal) }
+
+    private inline fun each(event: (CapsaObserver) -> Unit) {
+        var failure: Throwable? = null
+        for (observer in observers) {
+            try {
+                event(observer)
+            } catch (@Suppress("TooGenericExceptionCaught") error: Throwable) {
+                if (error.isFatal()) throw error
+                failure?.addSuppressed(error) ?: run { failure = error }
+            }
+        }
+        failure?.let { throw it }
+    }
 }
 
 /**
