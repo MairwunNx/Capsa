@@ -18,7 +18,7 @@ The root holds what every implementation shares. Each implementation gets its ow
 
 | Path | What lives there |
 |---|---|
-| `kotlin/` | The Kotlin Multiplatform implementation, its own Gradle build: `capsa-core`, `capsa-host`, `capsa-viewmodel`, `capsa-compose`, `capsa-test`, `capsa-bom`, the benchmarks, and the demo app in `samples/` |
+| `kotlin/` | The Kotlin Multiplatform implementation, its own Gradle build: `capsa-core`, `capsa-host`, `capsa-viewmodel`, `capsa-compose`, `capsa-test`, `capsa-viewmodel-test`, `capsa-detekt`, `capsa-bom`, the benchmarks, and the demo app in `samples/` |
 | `plugins/capsa/` | What users install for their agents: the `capsa` skill and the `capsa-setup`, `capsa-migrate`, `capsa-new`, `capsa-review` commands |
 | `.claude-plugin/` | The marketplace that lists the plugin |
 | `.claude/skills/` | Skills for working on this repository, such as `update-deps`. Users never see them |
