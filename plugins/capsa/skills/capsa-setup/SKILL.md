@@ -52,7 +52,8 @@ Use “Modules and coordinates” in `references/kotlin.md`:
 
 - **Versions:** the Capsa version and its libraries go into the version catalog, or wherever the project keeps versions.
 - **Main code:** `capsa-compose` for screens on `rememberCapsa` or with `CollectEffects`. `capsa-viewmodel` for screens on `CapsaViewModel` or a UI without Compose. `capsa-core` for a module with capabilities only.
-- **Tests:** `capsa-test` in the test source set of the same modules.
+- **Tests:** `capsa-test` in the test source set of the same modules, and `capsa-viewmodel-test` where screens run on `CapsaViewModel`.
+- **Lint:** if the project runs detekt 2, offer `capsa-detekt` as a `detektPlugins` dependency. On detekt 1.x, skip it and say why.
 - **Serialization:** the Kotlin serialization plugin, only if the project will save slices with `installSaved` and doesn’t apply the plugin yet.
 
 Check that the project resolves from `mavenCentral()`, unless Capsa comes from a local build. Don’t add repositories the project doesn’t need.

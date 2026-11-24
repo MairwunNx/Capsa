@@ -16,7 +16,7 @@ Use `harness.runCurrent()` to handle what is due right now, such as queued facts
 
 ### Testing a whole view model
 
-A test of a `CapsaViewModel` on virtual time replaces both dispatchers: `Dispatchers.setMain(dispatcher)` and `CapsaViewModel.setWorkDispatcher(dispatcher)`. Reset both in `@AfterTest` with `Dispatchers.resetMain()` and `CapsaViewModel.resetWorkDispatcher()`, or the next test runs on a dead scheduler. With `StandardTestDispatcher` the runtime starts after the constructor, with `UnconfinedTestDispatcher` it may start earlier.
+A test of a `CapsaViewModel` on virtual time replaces both dispatchers: `Dispatchers.setMain(dispatcher)` and `CapsaViewModel.setWorkDispatcher(dispatcher)`. Reset both in `@AfterTest` with `Dispatchers.resetMain()` and `CapsaViewModel.resetWorkDispatcher()`, or the next test runs on a dead scheduler. `capsaViewModel { … }` of `capsa-viewmodel-test` does both and resets them when the test ends. With `StandardTestDispatcher` the runtime starts after the constructor, with `UnconfinedTestDispatcher` it may start earlier.
 
 ## Reactions and handlers
 
@@ -80,7 +80,7 @@ Nobody calls anything: the runtime counts who collects the screen. A slice, a pr
 
 - **`collectAsState()` without a lifecycle.** The composition stays alive below `STARTED` and keeps collecting, for example while another activity of the app covers the screen, so the streams keep going. The foreground layer catches only the background of the whole app. Use `collectAsStateWithLifecycle()`.
 - **A collector in the view model.** `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting, so the screen stays visible for good. Read `.value` or build projections with `mapState` and `combineState`: they don’t count.
-- **A view model test without UI.** Nobody collects, so `whileVisible` streams never start. Collect the state in `backgroundScope`, or test the capability with `capsaHarness`, where the screen starts visible.
+- **A view model test without UI.** Nobody collects, so `whileVisible` streams never start. Collect the state with `collectAsScreen(…)` of `capsa-viewmodel-test` or in `backgroundScope`, or test the capability with `capsaHarness`, where the screen starts visible.
 
 A short read such as `slice.first()` counts too: the screen turns visible and stays so for the grace, one second by default.
 

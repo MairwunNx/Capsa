@@ -13,6 +13,8 @@ The group is `com.mairwunnx.capsa`. All modules share one version. If the projec
 | `capsa-viewmodel` | `com.mairwunnx.capsa.viewmodel` | `CapsaViewModel`, the host on AndroidX `ViewModel` | `capsa-host`, AndroidX lifecycle |
 | `capsa-compose` | `com.mairwunnx.capsa.compose` | `rememberCapsa` and `CapsaComposable`, the host right in the composition, plus `CollectEffects` and `Slot` | `capsa-host`, Compose runtime and UI |
 | `capsa-test` | `com.mairwunnx.capsa.test` | `capsaHarness`, `replay`, `inCapabilityScope` | `capsa-core`, kotlinx-coroutines-test |
+| `capsa-viewmodel-test` | `com.mairwunnx.capsa.viewmodel.test` | `capsaViewModel`, `collectAsScreen`: a `CapsaViewModel` on the virtual time of a test | `capsa-viewmodel`, kotlinx-coroutines-test |
+| `capsa-detekt` | `com.mairwunnx.capsa.detekt` | Rules for detekt 2: `FactWithoutData`, `DecisionWithPositionalArguments`, `EagerStateInHost`, `AdvanceUntilIdleWithHarness` | detekt 2 loads it as a plugin |
 | `capsa-bom` | | Aligns the versions of the modules above | |
 
 Targets: Android, `iosArm64`, `iosSimulatorArm64`, `macosArm64`, and the JVM. Capsa builds with Kotlin 2.4, where context parameters are stable, so the project needs Kotlin 2.4 or newer.
@@ -54,6 +56,8 @@ capsa-core = { module = "com.mairwunnx.capsa:capsa-core", version.ref = "capsa" 
 capsa-viewmodel = { module = "com.mairwunnx.capsa:capsa-viewmodel", version.ref = "capsa" }
 capsa-compose = { module = "com.mairwunnx.capsa:capsa-compose", version.ref = "capsa" }
 capsa-test = { module = "com.mairwunnx.capsa:capsa-test", version.ref = "capsa" }
+capsa-viewmodel-test = { module = "com.mairwunnx.capsa:capsa-viewmodel-test", version.ref = "capsa" }
+capsa-detekt = { module = "com.mairwunnx.capsa:capsa-detekt", version.ref = "capsa" }
 ```
 
 ```kotlin
@@ -71,8 +75,13 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.capsa.test)
+            implementation(libs.capsa.viewmodel.test) // only for tests of a CapsaViewModel
         }
     }
+}
+
+dependencies {
+    detektPlugins(libs.capsa.detekt) // only if the project runs detekt 2
 }
 ```
 
@@ -214,7 +223,7 @@ class PostViewModel(
 | `handleEffects()` | Protected: handlers that run in the view model |
 | `onEffectFailed(effect, error)` | Protected: override only to turn a failing handler into `signal(...)` |
 | `capsaScope` | Protected: the scope for projections, with Capsa’s error policy |
-| `setWorkDispatcher(d)`, `resetWorkDispatcher()` | Companion: replace `Dispatchers.Default` for works in tests |
+| `setWorkDispatcher(d)`, `resetWorkDispatcher()` | Companion: replace `Dispatchers.Default` for works in tests. `capsaViewModel` of `capsa-viewmodel-test` does it for you |
 
 The runtime starts after the constructor, or earlier on the first `send` or access to `effects`. Works run on `Dispatchers.Default`, decisions on the thread of `viewModelScope`.
 
@@ -311,6 +320,7 @@ object FormSaver : SliceSaver<FormSlice, FormSaved> {
 - `LoggingCapsaObserver` writes the journal: each fact and, indented, what it caused.
 - `CapsaViolationException` carries the `CapsaViolation` and the last 32 events of the runtime.
 - To change one setting of a host, pass its default with a copy: `CapsaViewModel(config = defaultConfig().copy(visibility = CapsaVisibility.Watched(grace = 2.seconds)))`, or `CapsaScope.defaultConfig().copy(…)` to `rememberCapsa`. A `CapsaConfig(…)` built from scratch drops the journal and the work dispatcher of the host, `CapsaViewModel.setWorkDispatcher` of tests included. A host with a logger of its own passes it: `defaultConfig(logger)`.
+- An observer of your own goes next to the journal, not instead of it: `defaultConfig().let { it.copy(observer = CapsaObserver.of(it.observer, metrics)) }`. `CapsaObserver.of` passes every event to each observer in order.
 - `CapsaConfig(maxSignalDepth = 8, onViolation, workContext, observer, visibility)` and `CapsaObserver` configure the runtime when you build a host of your own. `CapsaObserver.onDecision(capability, fact, decision: Decision<*, *>)` sees every decision, bootstraps included, with `Started` as the fact.
 
 ## Screen: `capsa-compose`
@@ -386,7 +396,38 @@ class LikesTest {
 
 A fake clock for a port is the test scheduler: `nowMillis = { testScheduler.currentTime }`.
 
-A test of a `CapsaViewModel` without UI must collect its state, for example `backgroundScope.launch { vm.ui.collect {} }`. Otherwise nobody watches the screen, and `whileVisible` streams never start.
+A test of a `CapsaViewModel` takes `capsa-viewmodel-test`:
+
+```kotlin
+@Test
+fun `the clock ticks while the screen collects the time`() = runTest {
+    val viewModel = capsaViewModel { ClockViewModel() }
+
+    collectAsScreen(viewModel.time)
+    advanceTimeBy(3.seconds)
+    runCurrent()
+
+    assertEquals("00:03", viewModel.time.value)
+}
+```
+
+| API | What it does |
+|---|---|
+| `TestScope.capsaViewModel { … }` | Replaces `Dispatchers.Main` and the work dispatcher with the test scheduler, keeps the app in the foreground, creates the view model. Clears it and resets everything when the test ends, no `@AfterTest` |
+| `TestScope.collectAsScreen(flow)` | Collects the state, a projection, or `effects.flow` as a shown screen does. Without a collector `whileVisible` streams never start. Cancel the job to hide the screen |
+
+## Lint: `capsa-detekt`
+
+For a project on detekt 2, `detektPlugins("com.mairwunnx.capsa:capsa-detekt")` adds the rule set `capsa`. Every rule is on by default, `capsa: { <Rule>: { active: false } }` in the detekt config turns one off. The rules read the code without types, one file at a time.
+
+| Rule | What it reports |
+|---|---|
+| `FactWithoutData` | An intent, a signal, or an effect that isn’t `data class` or `data object`, through the sealed interfaces of the same file |
+| `DecisionWithPositionalArguments` | `Decision(…)` with an argument by position |
+| `EagerStateInHost` | `stateIn` or `shareIn` with `Eagerly` or `Lazily` inside a `CapsaViewModel` or a `CapsaComposable`: the screen stays visible for good |
+| `AdvanceUntilIdleWithHarness` | `advanceUntilIdle()` in a file with `capsaHarness`: it runs nothing |
+
+A project on detekt 1.x can’t load the plugin. Check these points by hand there.
 
 ## Build and test commands
 

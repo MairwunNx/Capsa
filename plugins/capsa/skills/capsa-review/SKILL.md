@@ -109,7 +109,7 @@ These break the visibility of the screen, so `whileVisible` streams run in the b
 - Every new intent, signal, effect, and bootstrap has a test.
 - No `advanceUntilIdle()` to drive the runtime: `runCurrent()` and `advanceTimeBy(…)`.
 - No real `delay` in tests. Ports are fake lambdas, no mock framework for them.
-- A view model test replaces and resets both dispatchers, and collects the state when it tests `whileVisible` streams.
+- A view model test replaces and resets both dispatchers, best through `capsaViewModel { … }` of `capsa-viewmodel-test`, and collects the state with `collectAsScreen` when it tests `whileVisible` streams.
 - `strict = false` only in tests of violations.
 
 ## 3. Report
