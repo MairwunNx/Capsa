@@ -5,7 +5,7 @@
   <a href="https://github.com/MairwunNx/Capsa/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/MairwunNx/Capsa/build.yml?branch=master&label=build"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/MairwunNx/Capsa"></a>
   <img alt="Kotlin 2.4" src="https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white">
-  <img alt="Android | iOS" src="https://img.shields.io/badge/Android%20%7C%20iOS-3DDC84?logo=android&logoColor=white">
+  <img alt="Android | iOS | macOS | JVM" src="https://img.shields.io/badge/Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM-3DDC84?logo=kotlin&logoColor=white">
   <img alt="Compose Multiplatform" src="https://img.shields.io/badge/Compose%20Multiplatform-4285F4?logo=jetpackcompose&logoColor=white">
   <img alt="Languages: English, Russian" src="https://img.shields.io/badge/languages-en%20%7C%20ru-blue">
 </p>
