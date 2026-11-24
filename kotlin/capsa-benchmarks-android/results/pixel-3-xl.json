@@ -1,0 +1,157 @@
+{
+  "machine": {
+    "device": "Pixel 3 XL",
+    "android": "API 35, BP1A.250505.005",
+    "compilation": "speed",
+    "cpuLocked": true
+  },
+  "commit": "98152ef",
+  "date": "2026-11-24",
+  "settings": "androidx.benchmark, median time per operation, release build compiled with speed",
+  "benchmarks": {
+    "CombineStateBenchmark.changeOneSlice": {
+      "mode": "avgt",
+      "score": 7203.0,
+      "error": 857.4,
+      "unit": "ns/op",
+      "allocsPerOp": 23.1
+    },
+    "DecideBenchmark.decide(reactions=1)": {
+      "mode": "avgt",
+      "score": 163.5,
+      "error": 21.7,
+      "unit": "ns/op",
+      "allocsPerOp": 2.0
+    },
+    "DecideBenchmark.decide(reactions=10)": {
+      "mode": "avgt",
+      "score": 163.4,
+      "error": 19.5,
+      "unit": "ns/op",
+      "allocsPerOp": 2.0
+    },
+    "DecideBenchmark.decide(reactions=30)": {
+      "mode": "avgt",
+      "score": 163.6,
+      "error": 17.2,
+      "unit": "ns/op",
+      "allocsPerOp": 2.0
+    },
+    "EffectHandlersBenchmark.handle(handlers=1)": {
+      "mode": "avgt",
+      "score": 82.2,
+      "error": 32.3,
+      "unit": "ns/op",
+      "allocsPerOp": 1.0
+    },
+    "EffectHandlersBenchmark.handle(handlers=10)": {
+      "mode": "avgt",
+      "score": 82.2,
+      "error": 33.0,
+      "unit": "ns/op",
+      "allocsPerOp": 1.0
+    },
+    "EffectHandlersBenchmark.handle(handlers=30)": {
+      "mode": "avgt",
+      "score": 82.0,
+      "error": 32.8,
+      "unit": "ns/op",
+      "allocsPerOp": 1.0
+    },
+    "FactPassBenchmark.passOneFact(capabilities=1)": {
+      "mode": "avgt",
+      "score": 2147.1,
+      "error": 910.2,
+      "unit": "ns/op",
+      "allocsPerOp": 10.1
+    },
+    "FactPassBenchmark.passOneFact(capabilities=10)": {
+      "mode": "avgt",
+      "score": 2169.1,
+      "error": 947.9,
+      "unit": "ns/op",
+      "allocsPerOp": 10.1
+    },
+    "LatestWorkBenchmark.typeOneCharacter": {
+      "mode": "avgt",
+      "score": 78114.9,
+      "error": 22562.7,
+      "unit": "ns/op",
+      "allocsPerOp": 107.3
+    },
+    "StreamBenchmark.tenThousandSignals": {
+      "mode": "avgt",
+      "score": 18590460.2,
+      "error": 2010708.8,
+      "unit": "ns/op",
+      "allocsPerOp": 111250.6
+    },
+    "ViolationReportBenchmark.reportUnhandledFact": {
+      "mode": "avgt",
+      "score": 170800.0,
+      "error": 31638.2,
+      "unit": "ns/op",
+      "allocsPerOp": 722.1
+    }
+  },
+  "macrobenchmarks": {
+    "FrameTimingBenchmark.dashboardRefresh": {
+      "frameCount": {
+        "median": 8.0,
+        "minimum": 8.0,
+        "maximum": 8.0
+      },
+      "frameDurationCpuMs": {
+        "P50": 3.5,
+        "P90": 6.5,
+        "P99": 7.2
+      },
+      "frameOverrunMs": {
+        "P50": -15.7,
+        "P90": -12.7,
+        "P99": -12.0
+      }
+    },
+    "FrameTimingBenchmark.searchFastTyping": {
+      "frameCount": {
+        "median": 62.5,
+        "minimum": 41.0,
+        "maximum": 91.0
+      },
+      "frameDurationCpuMs": {
+        "P50": 3.3,
+        "P90": 5.3,
+        "P99": 6.8
+      },
+      "frameOverrunMs": {
+        "P50": -16.6,
+        "P90": -14.5,
+        "P99": -9.9
+      }
+    },
+    "FrameTimingBenchmark.clockTicks": {
+      "frameCount": {
+        "median": 4.0,
+        "minimum": 4.0,
+        "maximum": 5.0
+      },
+      "frameDurationCpuMs": {
+        "P50": 9.0,
+        "P90": 12.0,
+        "P99": 12.4
+      },
+      "frameOverrunMs": {
+        "P50": -6.0,
+        "P90": -3.4,
+        "P99": -2.7
+      }
+    },
+    "StartupBenchmark.coldStart": {
+      "timeToInitialDisplayMs": {
+        "median": 420.0,
+        "minimum": 406.7,
+        "maximum": 439.8
+      }
+    }
+  }
+}
