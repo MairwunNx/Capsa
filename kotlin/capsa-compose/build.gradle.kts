@@ -16,6 +16,13 @@ val robolectricConfig = tasks.register("robolectricConfig") {
 }
 
 kotlin {
+    android {
+        // Tests on a phone or an emulator: `./gradlew :capsa-compose:connectedAndroidDeviceTest`.
+        withDeviceTest {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+    }
+
     // CompositionTest is an expect class, which Kotlin still marks as Beta.
     compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
 
@@ -47,6 +54,14 @@ kotlin {
                 implementation(libs.robolectric)
             }
             resources.srcDir(robolectricConfig)
+        }
+        // A real composition in a real window on the phone, see SlotOnDeviceTest.
+        getByName("androidDeviceTest").dependencies {
+            implementation(libs.androidx.test.runner)
+            implementation(libs.androidx.test.ext.junit)
+            implementation(libs.compose.ui.test)
+            implementation(libs.compose.ui.test.manifest)
+            implementation(libs.compose.foundation)
         }
     }
 }

@@ -67,6 +67,8 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
+# Declares the activity of the Compose tests on a device. Its constraints move compose-ui, so it stays on the version that compose-ui pulls.
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-compose-runtime-retain" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 # Gradle plugins on the classpath of build-logic
