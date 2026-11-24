@@ -131,7 +131,7 @@ public class CapsaHarness internal constructor(
             facts += fact
         }
 
-        override fun onDecision(capability: String, fact: Fact, decision: Decision<*>) = Unit
+        override fun onDecision(capability: String, fact: Fact, decision: Decision<*, *>) = Unit
 
         override fun onWorkStarted(capability: String, key: WorkKey) {
             workEvents += WorkEvent.Started(capability, key)
@@ -164,7 +164,7 @@ public class CapsaHarness internal constructor(
  * ```
  * @Test fun showsThanks() = runTest {
  *     val harness = capsaHarness(likes)
- *     harness.append(LikeClicked(4))
+ *     harness.append(LikeIntent.Clicked(4))
  *     harness.advanceTimeBy(200.milliseconds)
  *     assertEquals(listOf(ShowThanks(4)), harness.effects)
  * }

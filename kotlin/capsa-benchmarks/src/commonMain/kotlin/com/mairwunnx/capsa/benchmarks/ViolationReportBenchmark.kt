@@ -30,7 +30,7 @@ class ViolationReportBenchmark {
     fun setUp() {
         scope = unconfinedScope()
         val builder = CapsaBuilder()
-        val counter = builder.install(capability("counter", 0) { onIntents(from = 0, count = 1) })
+        val counter = builder.install(capability<Int, BenchIntent, Nothing>(name = "counter", initial = 0) { onIntents(from = 0, count = 1) })
         runtime = builder.build(scope, CapsaConfig(onViolation = { report = it }))
         // Fills the whole history, so every report renders all of its entries.
         repeat(HISTORY) { runtime.append(I0) }

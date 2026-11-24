@@ -46,17 +46,18 @@ public enum class WorkPolicy {
 /**
  * Describes an async work as a key, a start policy, and a flow of signals.
  *
- * The runtime collects a one-shot request and a long subscription the same way, as `Flow<Signal>`.
+ * The runtime collects a one-shot request and a long subscription the same way, as `Flow<O>`.
+ * [O] is the type of the signals of the capability that starts the work: a work answers its owner only.
  * A one-shot request emits one signal, a subscription emits several.
  *
  * The `onError` handler turns an exception into a [Signal] that the work chooses.
  * Coroutine cancellation isn’t an error.
  */
-public class Work internal constructor(
+public class Work<out O : Signal> internal constructor(
     public val key: WorkKey,
     public val policy: WorkPolicy,
-    private val source: () -> Flow<Signal>,
-    private val onError: (Throwable) -> Signal,
+    private val source: () -> Flow<O>,
+    private val onError: (Throwable) -> O,
     public val whileVisible: Boolean = false,
     public val debounce: Duration = Duration.ZERO,
     public val retry: Retry? = null,
@@ -68,10 +69,10 @@ public class Work internal constructor(
      * The runtime collects this flow directly. A test can collect it with fake dependencies
      * without running the whole runtime.
      */
-    public fun signals(): Flow<Signal> = signals(onFailure = {})
+    public fun signals(): Flow<O> = signals(onFailure = {})
 
     /** Like [signals], but reports the exception to the runtime first, for the log and the history. */
-    internal fun signals(onFailure: (Throwable) -> Unit): Flow<Signal> =
+    internal fun signals(onFailure: (Throwable) -> Unit): Flow<O> =
         flow {
             if (debounce.isPositive()) delay(debounce)
             emitAll(source().retrying(retry))
@@ -102,10 +103,11 @@ public class Work internal constructor(
  * [See the animation](https://raw.githubusercontent.com/MairwunNx/Capsa/master/docs/kdoc/debounce.gif)
  *
  * ```
- * on<QueryChanged> { state, fact ->
- *     state.copy(query = fact.text).commit(
- *         work(SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) {
- *             SearchLoaded(ports.search(fact.text))
+ * onIntent<SearchIntent.QueryChanged> { state, intent ->
+ *     Decision(
+ *         state = state.copy(query = intent.text),
+ *         work = work(key = SEARCH, onError = { SearchSignal.Failed }, debounce = 300.milliseconds) {
+ *             SearchSignal.Loaded(ports.search(intent.text))
  *         },
  *     )
  * }
@@ -118,14 +120,14 @@ public class Work internal constructor(
  * @param retry retries on failure. `null` means no retries
  * @param block the `suspend` function of the request
  */
-public fun work(
+public fun <O : Signal> work(
     key: WorkKey,
-    onError: (Throwable) -> Signal,
+    onError: (Throwable) -> O,
     policy: WorkPolicy = WorkPolicy.Latest,
     debounce: Duration = Duration.ZERO,
     retry: Retry? = null,
-    block: suspend () -> Signal,
-): Work = Work(
+    block: suspend () -> O,
+): Work<O> = Work(
     key = key,
     policy = policy,
     source = { flow { emit(block()) } },
@@ -164,14 +166,14 @@ public fun work(
  * @param retry subscribes again on failure. `null` means no retries
  * @param block the factory of the signal flow
  */
-public fun stream(
+public fun <O : Signal> stream(
     key: WorkKey,
-    onError: (Throwable) -> Signal,
+    onError: (Throwable) -> O,
     policy: WorkPolicy = WorkPolicy.Latest,
     whileVisible: Boolean = false,
     retry: Retry? = null,
-    block: () -> Flow<Signal>,
-): Work = Work(
+    block: () -> Flow<O>,
+): Work<O> = Work(
     key = key,
     policy = policy,
     source = block,
@@ -180,7 +182,7 @@ public fun stream(
     retry = retry,
 )
 
-private fun Flow<Signal>.retrying(retry: Retry?): Flow<Signal> =
+private fun <O : Signal> Flow<O>.retrying(retry: Retry?): Flow<O> =
     if (retry == null) {
         this
     } else {

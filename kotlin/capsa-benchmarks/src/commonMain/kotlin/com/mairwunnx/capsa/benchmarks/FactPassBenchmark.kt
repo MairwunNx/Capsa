@@ -36,7 +36,7 @@ class FactPassBenchmark {
         scope = unconfinedScope()
         val builder = CapsaBuilder()
         val states = List(capabilities) { index ->
-            builder.install(capability("capability$index", 0) { onIntents(from = index * REACTIONS, count = REACTIONS) })
+            builder.install(capability<Int, BenchIntent, Nothing>(name = "capability$index", initial = 0) { onIntents(from = index * REACTIONS, count = REACTIONS) })
         }
         runtime = builder.build(scope)
         last = states.last()

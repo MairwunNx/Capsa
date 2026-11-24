@@ -99,13 +99,13 @@ final class <#A: kotlin/Any> com.mairwunnx.capsa.test/Replay { // com.mairwunnx.
     final val steps // com.mairwunnx.capsa.test/Replay.steps|{}steps[0]
         final fun <get-steps>(): kotlin.collections/List<com.mairwunnx.capsa.test/Replay.Step<#A>> // com.mairwunnx.capsa.test/Replay.steps.<get-steps>|<get-steps>(){}[0]
     final val works // com.mairwunnx.capsa.test/Replay.works|{}works[0]
-        final fun <get-works>(): kotlin.collections/List<com.mairwunnx.capsa/Work> // com.mairwunnx.capsa.test/Replay.works.<get-works>|<get-works>(){}[0]
+        final fun <get-works>(): kotlin.collections/List<com.mairwunnx.capsa/Work<com.mairwunnx.capsa/Signal>> // com.mairwunnx.capsa.test/Replay.works.<get-works>|<get-works>(){}[0]
 
     final class <#A1: kotlin/Any> Step { // com.mairwunnx.capsa.test/Replay.Step|null[0]
-        constructor <init>(com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A1>) // com.mairwunnx.capsa.test/Replay.Step.<init>|<init>(com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<1:0>){}[0]
+        constructor <init>(com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<#A1, com.mairwunnx.capsa/Signal>) // com.mairwunnx.capsa.test/Replay.Step.<init>|<init>(com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<1:0,com.mairwunnx.capsa.Signal>){}[0]
 
         final val decision // com.mairwunnx.capsa.test/Replay.Step.decision|{}decision[0]
-            final fun <get-decision>(): com.mairwunnx.capsa/Decision<#A1> // com.mairwunnx.capsa.test/Replay.Step.decision.<get-decision>|<get-decision>(){}[0]
+            final fun <get-decision>(): com.mairwunnx.capsa/Decision<#A1, com.mairwunnx.capsa/Signal> // com.mairwunnx.capsa.test/Replay.Step.decision.<get-decision>|<get-decision>(){}[0]
         final val fact // com.mairwunnx.capsa.test/Replay.Step.fact|{}fact[0]
             final fun <get-fact>(): com.mairwunnx.capsa/Fact // com.mairwunnx.capsa.test/Replay.Step.fact.<get-fact>|<get-fact>(){}[0]
     }

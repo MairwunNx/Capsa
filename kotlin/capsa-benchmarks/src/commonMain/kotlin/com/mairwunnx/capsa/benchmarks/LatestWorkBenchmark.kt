@@ -2,11 +2,11 @@ package com.mairwunnx.capsa.benchmarks
 
 import com.mairwunnx.capsa.CapsaBuilder
 import com.mairwunnx.capsa.CapsaRuntime
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 import com.mairwunnx.capsa.work
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.Scope
@@ -37,12 +37,15 @@ class LatestWorkBenchmark {
         scope = unconfinedScope()
         val builder = CapsaBuilder()
         query = builder.install(
-            capability("search", "") {
-                on<QueryChanged> { _, fact ->
-                    fact.text.commit(work(SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) { SearchLoaded(fact.text) })
+            capability<String, QueryChanged, SearchSignal>(name = "search", initial = "") {
+                onIntent<QueryChanged> { _, intent ->
+                    Decision(
+                        state = intent.text,
+                        work = work(key = SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) { SearchLoaded(intent.text) },
+                    )
                 }
-                on<SearchLoaded> { state, _ -> state.commit() }
-                on<SearchFailed> { state, _ -> state.commit() }
+                onSignal<SearchLoaded> { state, _ -> Decision(state = state) }
+                onSignal<SearchFailed> { state, _ -> Decision(state = state) }
             },
         )
         runtime = builder.build(scope)
@@ -62,9 +65,11 @@ class LatestWorkBenchmark {
 
     private data class QueryChanged(val text: String) : Intent
 
-    private data class SearchLoaded(val query: String) : Signal
+    private sealed interface SearchSignal : Signal
 
-    private data object SearchFailed : Signal
+    private data class SearchLoaded(val query: String) : SearchSignal
+
+    private data object SearchFailed : SearchSignal
 
     private companion object {
         const val KEYSTROKES = 8

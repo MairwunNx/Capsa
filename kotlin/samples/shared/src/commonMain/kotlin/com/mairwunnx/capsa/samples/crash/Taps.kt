@@ -2,18 +2,19 @@ package com.mairwunnx.capsa.samples.crash
 
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.CapabilityScope
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 
 data class TapsSlice(val taps: Int = 0)
 
-data object TapClicked : Intent
-data object BugClicked : Intent
+sealed interface TapsIntent : Intent
+data object TapClicked : TapsIntent
+data object BugClicked : TapsIntent
 
 context(_: CapabilityScope)
-fun taps(): Capability<TapsSlice> = capability("taps", TapsSlice()) {
-    on<TapClicked> { state, _ -> state.copy(taps = state.taps + 1).commit() }
-    // A bug on purpose. The runtime keeps the last good slice, and Capsa.failFast decides between a crash and a line in the log.
-    on<BugClicked> { _, _ -> error("A bug in decide") }
+fun taps(): Capability<TapsSlice> = capability<TapsSlice, TapsIntent, Nothing>(name = "taps", initial = TapsSlice()) {
+    onIntent<TapClicked> { state, _ -> Decision(state = state.copy(taps = state.taps + 1)) }
+    // A bug on purpose. The runtime keeps the last good slice, and Capsa.failFast chooses between a crash and a line in the log.
+    onIntent<BugClicked> { _, _ -> error("A bug in decide") }
 }

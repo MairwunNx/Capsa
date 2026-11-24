@@ -2,19 +2,20 @@ package com.mairwunnx.capsa.samples.counter
 
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.CapabilityScope
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 
 data class CounterSlice(val count: Int = 0)
 
-data object PlusClicked : Intent
-data object MinusClicked : Intent
-data object ResetClicked : Intent
+sealed interface CounterIntent : Intent
+data object PlusClicked : CounterIntent
+data object MinusClicked : CounterIntent
+data object ResetClicked : CounterIntent
 
 context(_: CapabilityScope)
-fun counter(): Capability<CounterSlice> = capability("counter", CounterSlice()) {
-    on<PlusClicked> { state, _ -> state.copy(count = state.count + 1).commit() }
-    on<MinusClicked> { state, _ -> state.copy(count = state.count - 1).commit() }
-    on<ResetClicked> { _, _ -> CounterSlice().commit() }
+fun counter(): Capability<CounterSlice> = capability<CounterSlice, CounterIntent, Nothing>(name = "counter", initial = CounterSlice()) {
+    onIntent<PlusClicked> { state, _ -> Decision(state = state.copy(count = state.count + 1)) }
+    onIntent<MinusClicked> { state, _ -> Decision(state = state.copy(count = state.count - 1)) }
+    onIntent<ResetClicked> { _, _ -> Decision(state = CounterSlice()) }
 }

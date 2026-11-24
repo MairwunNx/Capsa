@@ -16,10 +16,13 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(ExperimentalCoroutinesApi::class)
 class RetryDebounceTest {
 
-    private data class Done(val attempt: Int) : Signal
-    private data class Failed(val message: String?) : Signal
-    private data class QueryChanged(val text: String) : Intent
-    private data class Found(val text: String) : Signal
+    private sealed interface SearchSignal : Signal
+    private data class Done(val attempt: Int) : SearchSignal
+    private data class Failed(val message: String?) : SearchSignal
+    private data class Found(val text: String) : SearchSignal
+
+    private sealed interface SearchIntent : Intent
+    private data class QueryChanged(val text: String) : SearchIntent
 
     private class OfflineException(message: String) : Exception(message)
 
@@ -95,16 +98,17 @@ class RetryDebounceTest {
     @Suppress("IgnoredReturnValue")
     fun debounceWithLatestSendsOnlyTheLastQueryAfterAPause() = runTest {
         val queries = mutableListOf<String>()
-        val search = capability("search", "") {
-            on<QueryChanged> { _, fact ->
-                fact.text.commit(
-                    work(key, onError = { Failed(it.message) }, debounce = 300.milliseconds) {
-                        queries += fact.text
-                        Found(fact.text)
+        val search = capability<String, SearchIntent, SearchSignal>(name = "search", initial = "") {
+            onIntent<QueryChanged> { _, intent ->
+                Decision(
+                    state = intent.text,
+                    work = work(key = key, onError = { Failed(it.message) }, debounce = 300.milliseconds) {
+                        queries += intent.text
+                        Found(intent.text)
                     },
                 )
             }
-            on<Found> { state, _ -> state.commit() }
+            onSignal<Found> { state, _ -> Decision(state = state) }
         }
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
         val builder = CapsaBuilder()

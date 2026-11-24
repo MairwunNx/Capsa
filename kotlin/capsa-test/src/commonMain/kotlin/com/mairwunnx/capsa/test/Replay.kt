@@ -5,6 +5,7 @@ import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Fact
 import com.mairwunnx.capsa.Signal
+import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.Work
 
 /**
@@ -24,7 +25,7 @@ public class Replay<S : Any> internal constructor(
     public val ignored: List<Fact>,
 ) {
     /** Pairs an accepted `fact` with the `decision` it produced. */
-    public class Step<S : Any>(public val fact: Fact, public val decision: Decision<S>)
+    public class Step<S : Any>(public val fact: Fact, public val decision: Decision<S, Signal>)
 
     /** The final state, or [initial] if the capability accepted no facts. */
     public val state: S get() = steps.lastOrNull()?.decision?.state ?: initial
@@ -36,7 +37,7 @@ public class Replay<S : Any> internal constructor(
     public val effects: List<Effect> get() = steps.flatMap { it.decision.effects }
 
     /** The works of all decisions. The replay doesn’t start them. */
-    public val works: List<Work> get() = steps.flatMap { it.decision.works }
+    public val works: List<Work<Signal>> get() = steps.flatMap { it.decision.works }
 
     /** The signals of all decisions. The replay doesn’t handle them again. */
     public val signals: List<Signal> get() = steps.flatMap { it.decision.signals }
@@ -46,10 +47,12 @@ public class Replay<S : Any> internal constructor(
  * Feeds `facts` into the capability one by one and returns a snapshot of every decision.
  *
  * The replay starts from `from` and skips the facts that are not in [Capability.handles].
+ * [Started] runs the bootstrap of the capability, as the runtime does: `replay(Started, OrdersIntent.Retry)`.
+ * A capability without a bootstrap ignores it.
  * To check works, virtual time, and chains of signals, use [capsaHarness].
  *
  * ```
- * val replay = likes.replay(LikeClicked(4))
+ * val replay = likes.replay(LikeIntent.Clicked(4))
  * assertEquals(LikesSlice(highlighted = 4, busy = true), replay.state)
  * ```
  *
@@ -62,11 +65,15 @@ public fun <S : Any> Capability<S>.replay(vararg facts: Fact, from: S = initial(
     val steps = mutableListOf<Replay.Step<S>>()
     val ignored = mutableListOf<Fact>()
     for (fact in facts) {
-        if (handles.none { it.isInstance(fact) }) {
+        val decision = when {
+            fact === Started -> bootstrap(state)
+            handles.any { it.isInstance(fact) } -> decide(state, fact)
+            else -> null
+        }
+        if (decision == null) {
             ignored += fact
             continue
         }
-        val decision = decide(state, fact)
         state = decision.state
         steps += Replay.Step(fact, decision)
     }

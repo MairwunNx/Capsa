@@ -72,7 +72,7 @@ final class com.mairwunnx.capsa/CapsaHostCore { // com.mairwunnx.capsa/CapsaHost
 final class com.mairwunnx.capsa/LoggingCapsaObserver : com.mairwunnx.capsa/CapsaObserver { // com.mairwunnx.capsa/LoggingCapsaObserver|null[0]
     constructor <init>(com.mairwunnx.capsa/CapsaLogger, kotlin/Boolean = ...) // com.mairwunnx.capsa/LoggingCapsaObserver.<init>|<init>(com.mairwunnx.capsa.CapsaLogger;kotlin.Boolean){}[0]
 
-    final fun onDecision(kotlin/String, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<*>) // com.mairwunnx.capsa/LoggingCapsaObserver.onDecision|onDecision(kotlin.String;com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<*>){}[0]
+    final fun onDecision(kotlin/String, com.mairwunnx.capsa/Fact, com.mairwunnx.capsa/Decision<*, *>) // com.mairwunnx.capsa/LoggingCapsaObserver.onDecision|onDecision(kotlin.String;com.mairwunnx.capsa.Fact;com.mairwunnx.capsa.Decision<*,*>){}[0]
     final fun onFact(com.mairwunnx.capsa/Fact) // com.mairwunnx.capsa/LoggingCapsaObserver.onFact|onFact(com.mairwunnx.capsa.Fact){}[0]
     final fun onSignalDropped(kotlin/String, com.mairwunnx.capsa/WorkKey, com.mairwunnx.capsa/Signal) // com.mairwunnx.capsa/LoggingCapsaObserver.onSignalDropped|onSignalDropped(kotlin.String;com.mairwunnx.capsa.WorkKey;com.mairwunnx.capsa.Signal){}[0]
     final fun onWorkCancelled(kotlin/String, com.mairwunnx.capsa/WorkKey) // com.mairwunnx.capsa/LoggingCapsaObserver.onWorkCancelled|onWorkCancelled(kotlin.String;com.mairwunnx.capsa.WorkKey){}[0]

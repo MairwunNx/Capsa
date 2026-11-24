@@ -5,13 +5,12 @@ import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.Capsa
 import com.mairwunnx.capsa.CapsaLogger
 import com.mairwunnx.capsa.CapsaViolationException
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.EffectHandlers
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.SliceSaver
-import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
@@ -42,15 +41,16 @@ import kotlin.test.assertIs
 class CapsaViewModelTest {
 
     private data class Counter(val value: Int = 0, val started: Boolean = false)
-    private data object Increment : Intent
-    private data object Explode : Intent
+    private sealed interface CounterIntent : Intent
+    private data object Increment : CounterIntent
+    private data object Explode : CounterIntent
     private data class Reached(val value: Int) : Effect
 
-    private val counter = capability("counter", Counter()) {
-        on<Started> { state, _ -> state.copy(started = true).commit() }
-        on<Increment> { state, _ ->
+    private val counter = capability<Counter, CounterIntent, Nothing>(name = "counter", initial = Counter()) {
+        bootstrap { state -> Decision(state = state.copy(started = true)) }
+        onIntent<Increment> { state, _ ->
             val next = state.copy(value = state.value + 1)
-            next.commit(effects = if (next.value == 2) listOf(Reached(2)) else emptyList())
+            Decision(state = next, effect = Reached(2).takeIf { next.value == 2 })
         }
     }
 
@@ -258,7 +258,7 @@ class CapsaViewModelTest {
         vm.send(Increment)
 
         val error = assertFailsWith<IllegalStateException> {
-            vm.installPublic(capability("other", Counter()) {})
+            vm.installPublic(capability<Counter, Nothing, Nothing>(name = "other", initial = Counter()) {})
         }
 
         assertContains(error.message.orEmpty(), "install() after the runtime started")
@@ -268,8 +268,8 @@ class CapsaViewModelTest {
     fun aFailingHandlerIsLoggedAndTheNextEffectStillArrives() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val handled = mutableListOf<Effect>()
-        val failing = capability("failing", Counter()) {
-            on<Increment> { state, _ -> state.commit(effects = listOf(Handled(1), Handled(2), Reached(3))) }
+        val failing = capability<Counter, CounterIntent, Nothing>(name = "failing", initial = Counter()) {
+            onIntent<Increment> { state, _ -> Decision(state = state, effects = listOf(Handled(1), Handled(2), Reached(3))) }
         }
         val vm = TestViewModel(
             logger = logger,
@@ -292,8 +292,8 @@ class CapsaViewModelTest {
     fun handledEffectsDoNotReachTheScreen() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val handled = mutableListOf<Effect>()
-        val emitting = capability("emitting", Counter()) {
-            on<Increment> { state, _ -> state.commit(effects = listOf(Handled(1), Reached(2))) }
+        val emitting = capability<Counter, CounterIntent, Nothing>(name = "emitting", initial = Counter()) {
+            onIntent<Increment> { state, _ -> Decision(state = state, effects = listOf(Handled(1), Reached(2))) }
         }
         val vm = TestViewModel(
             logger = logger,
@@ -314,9 +314,9 @@ class CapsaViewModelTest {
     fun inReleaseAFailingDecideIsLoggedAndTheScreenKeepsWorking() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         Capsa.failFast = false
-        val fragile = capability("fragile", Counter()) {
-            on<Explode> { _, _ -> error("bug") }
-            on<Increment> { state, _ -> state.copy(value = state.value + 1).commit() }
+        val fragile = capability<Counter, CounterIntent, Nothing>(name = "fragile", initial = Counter()) {
+            onIntent<Explode> { _, _ -> error("bug") }
+            onIntent<Increment> { state, _ -> Decision(state = state.copy(value = state.value + 1)) }
         }
         val vm = TestViewModel(logger = logger, handle = SavedStateHandle(), capability = fragile, saver = CounterSaver)
 
@@ -370,8 +370,8 @@ class CapsaViewModelTest {
     fun inReleaseAFailingViewModelHandlerGoesToTheLoggerByDefault() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         Capsa.failFast = false
-        val emitting = capability("emitting", Counter()) {
-            on<Increment> { state, _ -> state.commit(Handled(1)) }
+        val emitting = capability<Counter, CounterIntent, Nothing>(name = "emitting", initial = Counter()) {
+            onIntent<Increment> { state, _ -> Decision(state = state, effect = Handled(1)) }
         }
         val vm = DefaultPolicyViewModel(logger, emitting)
 
@@ -408,8 +408,8 @@ class CapsaViewModelTest {
                 errors += error
             }
         }
-        val emitting = capability("emitting", Counter()) {
-            on<Increment> { state, _ -> state.commit(Handled(1)) }
+        val emitting = capability<Counter, CounterIntent, Nothing>(name = "emitting", initial = Counter()) {
+            onIntent<Increment> { state, _ -> Decision(state = state, effect = Handled(1)) }
         }
         val vm = BrokenRecoveryViewModel(picky, emitting)
 
@@ -432,8 +432,8 @@ class CapsaViewModelTest {
                 error("logger is down")
             }
         }
-        val emitting = capability("emitting", Counter()) {
-            on<Increment> { state, _ -> state.commit(Handled(1)) }
+        val emitting = capability<Counter, CounterIntent, Nothing>(name = "emitting", initial = Counter()) {
+            onIntent<Increment> { state, _ -> Decision(state = state, effect = Handled(1)) }
         }
         val vm = BrokenRecoveryViewModel(broken, emitting)
 

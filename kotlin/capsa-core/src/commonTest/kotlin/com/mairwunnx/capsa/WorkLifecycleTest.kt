@@ -20,34 +20,40 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class WorkLifecycleTest {
 
-    private data class Run(val id: Int) : Intent
+    private sealed interface RunnerIntent : Intent
+    private data class Run(val id: Int) : RunnerIntent
+    private data object Stop : RunnerIntent
     private data class Finished(val id: Int) : Signal
-    private data object Stop : Intent
-    private data object Watch : Intent
+
+    private sealed interface TickerIntent : Intent
+    private data object Watch : TickerIntent
+    private data object Foreign : TickerIntent
     private data object Tick : Signal
-    private data object Foreign : Intent
+
     private data object WatchBoth : Intent
 
     private val run = WorkKey("run")
     private val ticks = WorkKey("ticks")
 
-    private val runner = capability("runner", emptyList<Int>()) {
-        on<Run> { state, fact ->
-            state.commit(
-                work(run, onError = { Finished(-1) }) {
+    private val runner = capability<List<Int>, RunnerIntent, Finished>(name = "runner", initial = emptyList()) {
+        onIntent<Run> { state, intent ->
+            Decision(
+                state = state,
+                work = work(key = run, onError = { Finished(-1) }) {
                     delay(100.milliseconds)
-                    Finished(fact.id)
+                    Finished(intent.id)
                 },
             )
         }
-        on<Finished> { state, fact -> (state + fact.id).commit() }
-        on<Stop> { state, _ -> state.commit(cancel = listOf(run)) }
+        onSignal<Finished> { state, finished -> Decision(state = state + finished.id) }
+        onIntent<Stop> { state, _ -> Decision(state = state, cancel = run) }
     }
 
-    private val ticker = capability("ticker", 0) {
-        on<Watch> { state, _ ->
-            state.commit(
-                stream(ticks, onError = { Tick }, whileVisible = true) {
+    private val ticker = capability<Int, TickerIntent, Tick>(name = "ticker", initial = 0) {
+        onIntent<Watch> { state, _ ->
+            Decision(
+                state = state,
+                work = stream(key = ticks, onError = { Tick }, whileVisible = true) {
                     flow {
                         while (true) {
                             delay(100.milliseconds)
@@ -57,13 +63,13 @@ class WorkLifecycleTest {
                 },
             )
         }
-        on<Tick> { state, _ -> (state + 1).commit() }
-        on<Foreign> { _, _ -> throw CancellationException("not ours") }
+        onSignal<Tick> { state, _ -> Decision(state = state + 1) }
+        onIntent<Foreign> { _, _ -> throw CancellationException("not ours") }
     }
 
-    private val twinTickers = capability("twins", 0) {
-        on<WatchBoth> { state, _ ->
-            val ticker = stream(ticks, onError = { Tick }, policy = WorkPolicy.Parallel, whileVisible = true) {
+    private val twinTickers = capability<Int, WatchBoth, Tick>(name = "twins", initial = 0) {
+        onIntent<WatchBoth> { state, _ ->
+            val ticker = stream(key = ticks, onError = { Tick }, policy = WorkPolicy.Parallel, whileVisible = true) {
                 flow {
                     while (true) {
                         delay(100.milliseconds)
@@ -71,9 +77,9 @@ class WorkLifecycleTest {
                     }
                 }
             }
-            state.commit(works = listOf(ticker, ticker))
+            Decision(state = state, works = listOf(ticker, ticker))
         }
-        on<Tick> { state, _ -> (state + 1).commit() }
+        onSignal<Tick> { state, _ -> Decision(state = state + 1) }
     }
 
     private class Harness<S : Any>(

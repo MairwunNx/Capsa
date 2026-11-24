@@ -2,14 +2,13 @@ package com.mairwunnx.capsa.viewmodel
 
 import com.mairwunnx.capsa.AppForeground
 import com.mairwunnx.capsa.Capsa
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 import com.mairwunnx.capsa.mapState
-import com.mairwunnx.capsa.stream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -44,21 +43,22 @@ class ViewModelVisibilityTest {
     private data object Tick : Signal
     private data object Ping : Intent
 
-    /** Keeps a `whileVisible` stream from [Started] and writes down when it starts and stops. */
+    /** Keeps a `whileVisible` stream from the bootstrap, run on [Started], and writes down when it starts and stops. */
     private class ScreenViewModel(log: MutableList<String>) : CapsaViewModel(RecordingLogger()) {
         val ticks: StateFlow<Int> = install(
-            capability("ticker", 0) {
-                on<Started> { state, _ ->
-                    state.commit(
-                        stream(TICKS, onError = { Tick }, whileVisible = true) {
-                            flow<Signal> { awaitCancellation() }
+            capability<Int, Ping, Tick>(name = "ticker", initial = 0) {
+                bootstrap { state ->
+                    Decision(
+                        state = state,
+                        work = stream(key = TICKS, onError = { Tick }, whileVisible = true) {
+                            flow<Tick> { awaitCancellation() }
                                 .onStart { log += "start" }
                                 .onCompletion { log += "stop" }
                         },
                     )
                 }
-                on<Tick> { state, _ -> (state + 1).commit() }
-                on<Ping> { state, _ -> state.commit() }
+                onSignal<Tick> { state, _ -> Decision(state = state + 1) }
+                onIntent<Ping> { state, _ -> Decision(state = state) }
             },
         )
 

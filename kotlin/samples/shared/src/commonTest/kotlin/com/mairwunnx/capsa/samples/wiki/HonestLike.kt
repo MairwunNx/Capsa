@@ -4,21 +4,24 @@
 package com.mairwunnx.capsa.samples.wiki
 
 import com.mairwunnx.capsa.CapabilityScope
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
-import com.mairwunnx.capsa.work
 
 data class Like(val liked: Boolean = false, val likes: Int = 0)
 data class LikeSlice(val shown: Like = Like(), val confirmed: Like = Like())
 
-data object LikeClicked : Intent
-data class LikeSettled(val like: Like) : Signal // what the server holds now
-data object LikeFailed : Signal
-data object LikeUnknown : Signal
+sealed interface LikeIntent : Intent
+data object LikeClicked : LikeIntent
+
+sealed interface LikeSignal : Signal
+data class LikeSettled(val like: Like) : LikeSignal // what the server holds now
+data object LikeFailed : LikeSignal
+data object LikeUnknown : LikeSignal
+
 data object ShowLikeError : Effect
 
 fun interface LikeApi {
@@ -31,21 +34,19 @@ fun interface LikeReader {
 private val SAVE = WorkKey("save")
 
 context(_: CapabilityScope)
-fun likes(api: LikeApi, reader: LikeReader) = capability("likes", LikeSlice()) {
-    on<LikeClicked> { state, _ ->
+fun likes(api: LikeApi, reader: LikeReader) = capability<LikeSlice, LikeIntent, LikeSignal>(name = "likes", initial = LikeSlice()) {
+    val works = object {
+        fun save(liked: Boolean) = work(key = SAVE, onError = { LikeFailed }) { LikeSettled(api.setLiked(liked)) }
+        fun read() = work(key = SAVE, onError = { LikeUnknown }) { LikeSettled(reader.current()) }
+    }
+
+    onIntent<LikeClicked> { state, _ ->
         val liked = !state.shown.liked
         val shown = Like(liked, state.shown.likes + if (liked) 1 else -1)
-        state.copy(shown = shown).commit(
-            work(SAVE, onError = { LikeFailed }) { LikeSettled(api.setLiked(liked)) },
-        )
+        Decision(state = state.copy(shown = shown), work = works.save(liked))
     }
-    on<LikeSettled> { _, fact -> LikeSlice(shown = fact.like, confirmed = fact.like).commit() }
-    on<LikeFailed> { state, _ ->
-        // A cancelled request may have reached the server, so ask it instead of guessing.
-        state.copy(shown = state.confirmed).commit(
-            effects = listOf(ShowLikeError),
-            works = listOf(work(SAVE, onError = { LikeUnknown }) { LikeSettled(reader.current()) }),
-        )
-    }
-    on<LikeUnknown> { state, _ -> state.commit() }
+    onSignal<LikeSettled> { _, settled -> Decision(state = LikeSlice(shown = settled.like, confirmed = settled.like)) }
+    // A cancelled request may have reached the server, so ask it instead of guessing.
+    onSignal<LikeFailed> { state, _ -> Decision(state = state.copy(shown = state.confirmed), effect = ShowLikeError, work = works.read()) }
+    onSignal<LikeUnknown> { state, _ -> Decision(state = state) }
 }

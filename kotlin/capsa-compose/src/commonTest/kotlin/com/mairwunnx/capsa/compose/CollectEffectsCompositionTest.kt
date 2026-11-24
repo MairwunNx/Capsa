@@ -12,15 +12,13 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.mairwunnx.capsa.Capsa
 import com.mairwunnx.capsa.CapsaLogger
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
-import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 import com.mairwunnx.capsa.effectHandlers
-import com.mairwunnx.capsa.stream
 import com.mairwunnx.capsa.viewmodel.CapsaViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,17 +60,18 @@ class CollectEffectsCompositionTest : CompositionTest() {
     /** Turns `Open(id)` into `Navigate(id)` and keeps a `whileVisible` stream that writes down when it starts and stops. */
     private class ScreenViewModel(logger: CapsaLogger, subscriptions: MutableList<String>) : CapsaViewModel(logger) {
         val screen: StateFlow<Unit> = install(
-            capability("screen", Unit) {
-                on<Started> { state, _ ->
-                    state.commit(
-                        stream(TICKS, onError = { Ticked }, whileVisible = true) {
-                            flow<Signal> { awaitCancellation() }
+            capability<Unit, Open, Ticked>(name = "screen", initial = Unit) {
+                bootstrap { state ->
+                    Decision(
+                        state = state,
+                        work = stream(key = TICKS, onError = { Ticked }, whileVisible = true) {
+                            flow<Ticked> { awaitCancellation() }
                                 .onStart { subscriptions += "start" }
                                 .onCompletion { subscriptions += "stop" }
                         },
                     )
                 }
-                on<Open> { state, fact -> state.commit(Navigate(fact.id)) }
+                onIntent<Open> { state, open -> Decision(state = state, effect = Navigate(open.id)) }
             },
         )
     }

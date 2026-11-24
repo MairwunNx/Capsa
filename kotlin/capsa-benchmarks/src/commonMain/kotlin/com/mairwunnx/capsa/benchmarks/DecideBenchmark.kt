@@ -3,6 +3,7 @@ package com.mairwunnx.capsa.benchmarks
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Fact
+import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.capability
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.Param
@@ -22,10 +23,10 @@ class DecideBenchmark {
 
     @Setup
     fun setUp() {
-        capability = capability("decide", 0) { onIntents(from = 0, count = reactions) }
+        capability = capability<Int, BenchIntent, Nothing>(name = "decide", initial = 0) { onIntents(from = 0, count = reactions) }
         fact = intents[reactions - 1]
     }
 
     @Benchmark
-    fun decide(): Decision<Int> = capability.decide(0, fact)
+    fun decide(): Decision<Int, Signal> = capability.decide(0, fact)
 }

@@ -22,16 +22,17 @@ class LoggingCapsaObserverTest {
 
     @Test
     fun decisionWithoutEffectsAndSignalsIsASingleStateLine() {
-        assertEquals(listOf("  counter: state Count(value=1)"), formatDecision("counter", Count(1).commit()))
+        assertEquals(listOf("  counter: state Count(value=1)"), formatDecision("counter", Decision<Count, Signal>(state = Count(1))))
     }
 
     @Test
     fun everyEffectAndSignalGetsItsOwnLineAndWorksAreLeftToTheWorkLines() {
-        val decision = Count(0).commit(
+        val decision = Decision(
+            state = Count(0),
             effects = listOf(Close, Open),
-            works = listOf(work(load, onError = { Done }) { Done }),
-            cancel = listOf(load),
-            signals = listOf(Done),
+            work = work(key = load, onError = { Done }) { Done },
+            cancel = load,
+            signal = Done,
         )
 
         assertEquals(

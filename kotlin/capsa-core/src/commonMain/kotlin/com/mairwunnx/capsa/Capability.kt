@@ -1,7 +1,9 @@
 package com.mairwunnx.capsa
 
+import kotlinx.coroutines.flow.Flow
 import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * Restricts the creation of capabilities to the right scope.
@@ -36,8 +38,24 @@ public interface Capability<S : Any> {
      */
     public val handles: Set<KClass<out Fact>>
 
+    /**
+     * Returns the classes of intents the capability owns, a part of [handles].
+     *
+     * An intent has one owner on a screen: the runtime refuses a second capability that handles the same intent class,
+     * its supertype, or its subtype. A neighbour that needs to know about the user’s action listens to the owner’s signal.
+     */
+    public val intents: Set<KClass<out Intent>> get() = emptySet()
+
     /** Creates the state before the first fact. A restored state takes priority over the initial one. */
     public fun initial(): S
+
+    /**
+     * Builds the first [Decision] of the capability while the runtime handles [Started], before any other fact.
+     *
+     * The runtime passes the initial or the restored state. Works don’t survive a restore, so this is the place
+     * to start the initial load and the subscriptions again. Returns `null` when the capability has nothing to start.
+     */
+    public fun bootstrap(state: S): Decision<S, Signal>? = null
 
     /**
      * Builds a [Decision] for a `fact` from [handles].
@@ -46,23 +64,33 @@ public interface Capability<S : Any> {
      * [Decision.works] and [Decision.effects] describe the outside work. If the function throws,
      * the runtime reports [CapsaViolation.DecideFailed] and keeps the previous state.
      */
-    public fun decide(state: S, fact: Fact): Decision<S>
+    public fun decide(state: S, fact: Fact): Decision<S, Signal>
 }
 
 /**
- * Builds a [Capability] from `on<X> { ... }` reactions.
+ * Builds a [Capability] from a bootstrap and reactions to intents and signals.
  *
- * The name comes from `name`, and the [Capability.handles] set comes from the registered reactions.
+ * The type arguments name what the capability owns: its slice [S], its intents [I], and its signals [O].
+ * State them explicitly. A reaction handles only the capability’s own intents, and its decision sends only
+ * the capability’s own signals and starts works that answer with them, so the compiler checks the ownership.
+ * A capability without intents or without signals of its own uses `Nothing`.
  *
  * ```
  * context(_: CapabilityScope)
- * fun likes() = capability("likes", LikesSlice()) {
- *     on<LikeClicked> { state, _ -> state.copy(count = state.count + 1).commit() }
+ * fun likes(ports: LikePorts) = capability<LikeSlice, LikeIntent, LikeSignal>(name = "likes", initial = LikeSlice()) {
+ *     val works = object {
+ *         fun save(liked: Boolean) = work(key = SAVE, onError = { LikeSignal.Failed }) { LikeSignal.Saved(ports.setLiked(liked)) }
+ *     }
+ *
+ *     onIntent<LikeIntent.Clicked> { state, _ ->
+ *         Decision(state = state.copy(liked = !state.liked), work = works.save(!state.liked))
+ *     }
+ *     onSignal<LikeSignal.Saved> { state, saved -> Decision(state = state.copy(likes = saved.likes)) }
+ *     onSignal<LikeSignal.Failed> { state, _ -> Decision(state = state.copy(liked = !state.liked), effect = LikeEffect.ShowError) }
  * }
  * ```
  *
- * The state type is inferred from `initial`. For a sealed state, state it explicitly, otherwise the type narrows
- * to the initial subtype: `capability<DownloadSlice>("download", DownloadSlice.Idle) { ... }`.
+ * The block runs once, when the capability is built. Keep it declarative: works, keys, and reactions.
  *
  * A reaction to a supertype, such as a sealed interface of facts, accepts all of its subtypes.
  * Reactions don’t overlap: a supertype and its subtype in one capability fail the build, otherwise the result
@@ -73,68 +101,146 @@ public interface Capability<S : Any> {
  *
  * @param name the name of the capability, unique on the screen
  * @param initial the initial state
- * @param build the block that lists the reactions with [CapabilityBuilder.on]
+ * @param build the block that declares the bootstrap and the reactions
  * @throws IllegalArgumentException if the block registers two reactions to the same fact class
- * or to a supertype and its subtype
+ * or to a supertype and its subtype, a reaction to [Started], or a second bootstrap
  */
-public fun <S : Any> capability(
+public fun <S : Any, I : Intent, O : Signal> capability(
     name: String,
     initial: S,
-    build: CapabilityBuilder<S>.() -> Unit,
+    build: CapabilityBuilder<S, I, O>.() -> Unit,
 ): Capability<S> {
-    val builder = CapabilityBuilder<S>().apply(build)
-    return ReactiveCapability(name, initial, builder.reactions.toList())
+    val builder = CapabilityBuilder<S, I, O>().apply(build)
+    return ReactiveCapability(name, initial, builder.bootstrap, builder.reactions.toList())
 }
 
-/** Registers reactions to facts inside the [capability] block. */
-public class CapabilityBuilder<S : Any> internal constructor() {
+/**
+ * Declares the bootstrap and the reactions inside the [capability] block.
+ *
+ * [S] is the slice, [I] the intents the capability owns, and [O] the signals it owns.
+ */
+public class CapabilityBuilder<S : Any, I : Intent, O : Signal> internal constructor() {
+
+    internal var bootstrap: ((S) -> Decision<S, O>)? = null
+        private set
 
     internal val reactions: MutableList<Reaction<S>> = mutableListOf()
 
     /**
-     * Registers a reaction to facts of type [F] and its subtypes.
+     * Declares the first decision of the capability: the initial load, the subscriptions, the first effects.
      *
-     * @param react a pure function from the state and the fact to a [Decision], which returns its result through [commit]
+     * The runtime runs it once, before any other fact, with the initial or the restored slice. Every bootstrap
+     * of the screen runs in the order of installation, then the signals they send, and only then the next fact.
+     * The works it starts run on their own and block nothing. A screen rotation doesn’t run it again,
+     * a restore after the process died does.
+     *
+     * ```
+     * bootstrap { state -> Decision(state = state, work = works.observeOrders()) }
+     * ```
+     *
+     * @param react a pure function from the initial or the restored slice to a [Decision]
+     * @throws IllegalArgumentException on a second bootstrap in the same capability
+     */
+    public fun bootstrap(react: (state: S) -> Decision<S, O>) {
+        require(bootstrap == null) { "The bootstrap is already declared. Keep one and start everything in it" }
+        bootstrap = react
+    }
+
+    /**
+     * Registers a reaction to the capability’s own intents of type [F] and its subtypes.
+     *
+     * Only the UI sends intents, and each intent has one owner on the screen.
+     *
+     * @param react a pure function from the state and the intent to a [Decision]
      * @throws IllegalArgumentException if a reaction to [F], its supertype, or its subtype is already registered
      */
-    public inline fun <reified F : Fact> on(noinline react: (state: S, fact: F) -> Decision<S>) {
-        addReaction(F::class, react)
+    public inline fun <reified F : I> onIntent(noinline react: (state: S, intent: F) -> Decision<S, O>) {
+        addReaction(F::class, intent = true, react)
     }
+
+    /**
+     * Registers a reaction to signals of type [F] and its subtypes.
+     *
+     * A signal comes from anywhere but the UI: the answer of the capability’s own work, a neighbour’s signal,
+     * or the host. The type of a neighbour’s signal comes from the neighbour’s package, so the import shows the link.
+     *
+     * @param react a pure function from the state and the signal to a [Decision]
+     * @throws IllegalArgumentException if a reaction to [F], its supertype, or its subtype is already registered,
+     * or if [F] is [Started]: declare a [bootstrap] instead
+     */
+    public inline fun <reified F : Signal> onSignal(noinline react: (state: S, signal: F) -> Decision<S, O>) {
+        addReaction(F::class, intent = false, react)
+    }
+
+    /**
+     * Creates a one-shot work that answers with this capability’s signals [O], like the top-level [com.mairwunnx.capsa.work].
+     *
+     * Inside the [capability] block the signal type is already known, so Kotlin doesn’t have to infer it from `onError`
+     * and `block`, which fails when they return different subtypes through a builder such as `flow { }`.
+     */
+    @Suppress("LongParameterList")
+    public fun work(
+        key: WorkKey,
+        onError: (Throwable) -> O,
+        policy: WorkPolicy = WorkPolicy.Latest,
+        debounce: Duration = Duration.ZERO,
+        retry: Retry? = null,
+        block: suspend () -> O,
+    ): Work<O> = com.mairwunnx.capsa.work(key = key, onError = onError, policy = policy, debounce = debounce, retry = retry, block = block)
+
+    /** Creates a subscription that answers with this capability’s signals [O], like the top-level [com.mairwunnx.capsa.stream]. */
+    @Suppress("LongParameterList")
+    public fun stream(
+        key: WorkKey,
+        onError: (Throwable) -> O,
+        policy: WorkPolicy = WorkPolicy.Latest,
+        whileVisible: Boolean = false,
+        retry: Retry? = null,
+        block: () -> Flow<O>,
+    ): Work<O> = com.mairwunnx.capsa.stream(key = key, onError = onError, policy = policy, whileVisible = whileVisible, retry = retry, block = block)
 
     @PublishedApi
     @Suppress("UNCHECKED_CAST")
-    internal fun <F : Fact> addReaction(type: KClass<F>, react: (S, F) -> Decision<S>) {
+    internal fun <F : Fact> addReaction(type: KClass<F>, intent: Boolean, react: (S, F) -> Decision<S, O>) {
+        require(type != Started::class) { "A reaction to Started: declare bootstrap { state -> ... } instead" }
         require(reactions.none { it.type == type }) { "A reaction to ${type.simpleName} is already registered" }
         val overlap = reactions.firstOrNull { it.type.overlaps(type) }
         require(overlap == null) {
             "Reactions to ${overlap?.type?.simpleName} and ${type.simpleName} overlap: one type inherits the other. " +
                 "Keep one reaction and sort out the subtypes inside it with when"
         }
-        reactions += Reaction(type, react as (S, Fact) -> Decision<S>)
+        reactions += Reaction(type, intent, react as (S, Fact) -> Decision<S, Signal>)
     }
 }
 
 internal class Reaction<S : Any>(
     val type: KClass<out Fact>,
-    val react: (S, Fact) -> Decision<S>,
+    val intent: Boolean,
+    val react: (S, Fact) -> Decision<S, Signal>,
 )
 
 private class ReactiveCapability<S : Any>(
     override val name: String,
     private val initial: S,
+    private val bootstrap: ((S) -> Decision<S, Signal>)?,
     private val reactions: List<Reaction<S>>,
 ) : Capability<S> {
 
     override val handles: Set<KClass<out Fact>> = reactions.map { it.type }.toSet()
 
+    @Suppress("UNCHECKED_CAST")
+    override val intents: Set<KClass<out Intent>> = reactions.filter { it.intent }.map { it.type as KClass<out Intent> }.toSet()
+
     override fun initial(): S = initial
+
+    override fun bootstrap(state: S): Decision<S, Signal>? = bootstrap?.invoke(state)
 
     // The reaction for each class of fact, filled on the first fact of that class. The map is immutable and replaced whole,
     // so a capability shared between threads at worst searches for the same class twice.
     @Volatile
     private var reactionsByClass: Map<KClass<out Fact>, Reaction<S>?> = emptyMap()
 
-    override fun decide(state: S, fact: Fact): Decision<S> {
+    override fun decide(state: S, fact: Fact): Decision<S, Signal> {
         val type = fact::class
         val known = reactionsByClass
         val reaction = known[type] ?: if (type in known) null else findReaction(fact).also { reactionsByClass = known + (type to it) }

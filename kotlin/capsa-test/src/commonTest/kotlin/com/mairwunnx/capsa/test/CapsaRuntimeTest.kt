@@ -4,6 +4,7 @@ import com.mairwunnx.capsa.CapsaBuilder
 import com.mairwunnx.capsa.CapsaConfig
 import com.mairwunnx.capsa.CapsaViolation
 import com.mairwunnx.capsa.CapsaViolationException
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
@@ -12,7 +13,6 @@ import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.WorkPolicy
 import com.mairwunnx.capsa.capability
 import com.mairwunnx.capsa.combineState
-import com.mairwunnx.capsa.commit
 import com.mairwunnx.capsa.mapState
 import com.mairwunnx.capsa.stream
 import com.mairwunnx.capsa.work
@@ -45,29 +45,30 @@ class CapsaRuntimeTest {
 
     private data class LikesSlice(val highlighted: Int = 0, val busy: Boolean = false)
     private data class LikeClicked(val likes: Int) : Intent
-    private data class HighlightShown(val likes: Int) : Signal
-    private data class LikesFailed(val error: Throwable) : Signal
+    private sealed interface LikesSignal : Signal
+    private data class HighlightShown(val likes: Int) : LikesSignal
+    private data class LikesFailed(val error: Throwable) : LikesSignal
     private data class ShowThanks(val likes: Int) : Effect
 
     private val highlight = WorkKey("highlight")
 
-    private val likes = capability("likes", LikesSlice()) {
-        on<LikeClicked> { state, fact ->
-            if (state.busy) {
-                state.commit()
-            } else {
-                state.copy(highlighted = fact.likes, busy = true).commit(
-                    works = listOf(
-                        work(highlight, onError = ::LikesFailed, policy = WorkPolicy.KeepExisting) {
-                            delay(200.milliseconds)
-                            HighlightShown(fact.likes)
-                        },
-                    ),
-                )
+    private val likes = capability<LikesSlice, LikeClicked, LikesSignal>(name = "likes", initial = LikesSlice()) {
+        val works = object {
+            fun highlight(likes: Int) = work(key = highlight, onError = ::LikesFailed, policy = WorkPolicy.KeepExisting) {
+                delay(200.milliseconds)
+                HighlightShown(likes)
             }
         }
-        on<HighlightShown> { _, fact -> LikesSlice().commit(effects = listOf(ShowThanks(fact.likes))) }
-        on<LikesFailed> { _, _ -> LikesSlice().commit() }
+
+        onIntent<LikeClicked> { state, intent ->
+            if (state.busy) {
+                Decision(state = state)
+            } else {
+                Decision(state = state.copy(highlighted = intent.likes, busy = true), work = works.highlight(intent.likes))
+            }
+        }
+        onSignal<HighlightShown> { _, shown -> Decision(state = LikesSlice(), effect = ShowThanks(shown.likes)) }
+        onSignal<LikesFailed> { _, _ -> Decision(state = LikesSlice()) }
     }
 
     @Test
@@ -101,21 +102,23 @@ class CapsaRuntimeTest {
 
     // --- Work policies ----------------------------------------------------------------------------
 
-    private data class Run(val id: Int) : Intent
-    private data class Finished(val id: Int) : Signal
+    private sealed interface RunIntent : Intent
+    private data class Run(val id: Int) : RunIntent
+    private data object Boom : RunIntent
+    private sealed interface RunSignal : Signal
+    private data class Finished(val id: Int) : RunSignal
 
-    private fun runner(policy: WorkPolicy) = capability("runner", emptyList<Int>()) {
-        on<Run> { state, fact ->
-            state.commit(
-                works = listOf(
-                    work(WorkKey("run"), onError = ::LikesFailed, policy = policy) {
-                        delay(100.milliseconds)
-                        Finished(fact.id)
-                    },
-                ),
+    private fun runner(policy: WorkPolicy) = capability<List<Int>, RunIntent, RunSignal>(name = "runner", initial = emptyList()) {
+        onIntent<Run> { state, run ->
+            Decision(
+                state = state,
+                work = work(key = WorkKey("run"), onError = { Finished(-1) }, policy = policy) {
+                    delay(100.milliseconds)
+                    Finished(run.id)
+                },
             )
         }
-        on<Finished> { state, fact -> (state + fact.id).commit() }
+        onSignal<Finished> { state, finished -> Decision(state = state + finished.id) }
     }
 
     @Test
@@ -159,31 +162,17 @@ class CapsaRuntimeTest {
 
     @Test
     fun sameWorkKeyInTwoCapabilitiesDoesNotCollide() = runTest {
-        val first = capability("first", 0) {
-            on<Started> { s, _ ->
-                s.commit(
-                    works = listOf(
-                        work(WorkKey("load"), ::LikesFailed) {
-                            delay(50.milliseconds)
-                            Finished(1)
-                        },
-                    ),
-                )
-            }
-            on<Finished> { _, f -> f.id.commit() }
+        fun load(id: Int) = work(key = WorkKey("load"), onError = { Finished(-1) }) {
+            delay(50.milliseconds)
+            Finished(id)
         }
-        val second = capability("second", 0) {
-            on<Started> { s, _ ->
-                s.commit(
-                    works = listOf(
-                        work(WorkKey("load"), ::LikesFailed) {
-                            delay(50.milliseconds)
-                            Finished(2)
-                        },
-                    ),
-                )
-            }
-            on<Finished> { _, f -> (f.id * 10).commit() }
+        val first = capability<Int, Nothing, RunSignal>(name = "first", initial = 0) {
+            bootstrap { s -> Decision(state = s, work = load(1)) }
+            onSignal<Finished> { _, f -> Decision(state = f.id) }
+        }
+        val second = capability<Int, Nothing, RunSignal>(name = "second", initial = 0) {
+            bootstrap { s -> Decision(state = s, work = load(2)) }
+            onSignal<Finished> { _, f -> Decision(state = f.id * 10) }
         }
         val harness = capsaHarness(first, second)
 
@@ -196,31 +185,34 @@ class CapsaRuntimeTest {
 
     // --- Streams, cancellation, and errors --------------------------------------------------------
 
-    private data class Tick(val n: Int) : Signal
-    private data object StopTicks : Intent
-    private data object FailNow : Intent
+    private sealed interface TickerIntent : Intent
+    private data object StopTicks : TickerIntent
+    private data object FailNow : TickerIntent
+    private sealed interface TickerSignal : Signal
+    private data class Tick(val n: Int) : TickerSignal
+    private data class TickerFailed(val error: Throwable) : TickerSignal
 
     private val ticks = WorkKey("ticks")
 
-    private val ticker = capability("ticker", emptyList<Int>()) {
-        on<Started> { state, _ ->
-            state.commit(
-                works = listOf(
-                    stream(ticks, onError = ::LikesFailed) {
-                        flow {
-                            repeat(10) {
-                                delay(10.milliseconds)
-                                emit(Tick(it))
-                            }
-                        }
-                    },
-                ),
-            )
+    private val ticker = capability<List<Int>, TickerIntent, TickerSignal>(name = "ticker", initial = emptyList()) {
+        val works = object {
+            fun ticks() = stream(key = ticks, onError = ::TickerFailed) {
+                flow {
+                    repeat(10) {
+                        delay(10.milliseconds)
+                        emit(Tick(it))
+                    }
+                }
+            }
+
+            fun boom() = work(key = WorkKey("boom"), onError = ::TickerFailed) { error("boom") }
         }
-        on<Tick> { state, fact -> (state + fact.n).commit() }
-        on<StopTicks> { state, _ -> state.commit(cancel = listOf(ticks)) }
-        on<FailNow> { state, _ -> state.commit(works = listOf(work(WorkKey("boom"), ::LikesFailed) { error("boom") })) }
-        on<LikesFailed> { state, _ -> (state + -1).commit() }
+
+        bootstrap { state -> Decision(state = state, work = works.ticks()) }
+        onSignal<Tick> { state, tick -> Decision(state = state + tick.n) }
+        onIntent<StopTicks> { state, _ -> Decision(state = state, cancel = ticks) }
+        onIntent<FailNow> { state, _ -> Decision(state = state, work = works.boom()) }
+        onSignal<TickerFailed> { state, _ -> Decision(state = state + -1) }
     }
 
     @Test
@@ -230,6 +222,7 @@ class CapsaRuntimeTest {
         harness.advanceTimeBy(35.milliseconds)
 
         assertEquals(listOf(0, 1, 2), harness.stateOf(ticker))
+        assertEquals(Started, harness.facts.first())
     }
 
     @Test
@@ -251,14 +244,13 @@ class CapsaRuntimeTest {
         harness.advanceTimeBy(5.milliseconds)
 
         assertEquals(listOf(-1), harness.stateOf(ticker))
-        assertIs<LikesFailed>(harness.facts.last { it is LikesFailed })
+        assertIs<TickerFailed>(harness.facts.last { it is TickerFailed })
         harness.assertNoViolations()
     }
 
     // --- Contract violations ----------------------------------------------------------------------
 
     private data object Unhandled : Intent
-    private data object Boom : Intent
     private data object Loop : Signal
 
     @Test
@@ -273,9 +265,9 @@ class CapsaRuntimeTest {
 
     @Test
     fun exceptionInDecideIsReportedAndTheRuntimeKeepsWorking() = runTest {
-        val fragile = capability("fragile", 0) {
-            on<Boom> { _, _ -> error("bug") }
-            on<Run> { s, f -> (s + f.id).commit() }
+        val fragile = capability<Int, RunIntent, Nothing>(name = "fragile", initial = 0) {
+            onIntent<Boom> { _, _ -> error("bug") }
+            onIntent<Run> { s, f -> Decision(state = s + f.id) }
         }
         val harness = capsaHarness(fragile, strict = false)
 
@@ -289,9 +281,9 @@ class CapsaRuntimeTest {
 
     @Test
     fun throwingOnViolationGoesToTheScopeHandlerAndTheRuntimeKeepsWorking() = runTest {
-        val fragile = capability("fragile", 0) {
-            on<Boom> { _, _ -> error("bug") }
-            on<Run> { s, f -> (s + f.id).commit() }
+        val fragile = capability<Int, RunIntent, Nothing>(name = "fragile", initial = 0) {
+            onIntent<Boom> { _, _ -> error("bug") }
+            onIntent<Run> { s, f -> Decision(state = s + f.id) }
         }
         val errors = mutableListOf<Throwable>()
         val scope = CoroutineScope(
@@ -312,8 +304,8 @@ class CapsaRuntimeTest {
 
     @Test
     fun signalCycleIsCutAtMaxSignalDepth() = runTest {
-        val looping = capability("looping", 0) {
-            on<Loop> { s, _ -> (s + 1).commit(signals = listOf(Loop)) }
+        val looping = capability<Int, Nothing, Loop>(name = "looping", initial = 0) {
+            onSignal<Loop> { s, _ -> Decision(state = s + 1, signal = Loop) }
         }
         val harness = capsaHarness(looping, maxSignalDepth = 3, strict = false)
 
@@ -377,6 +369,33 @@ class CapsaRuntimeTest {
     }
 
     @Test
+    fun replayOfStartedRunsTheBootstrap() {
+        val replay = ticker.replay(Started, StopTicks)
+
+        assertEquals(listOf(Started, StopTicks), replay.steps.map { it.fact })
+        assertEquals(listOf(ticks), replay.works.map { it.key })
+        assertEquals(listOf(ticks), replay.steps.last().decision.cancels)
+        assertTrue(replay.ignored.isEmpty())
+    }
+
+    @Test
+    fun replayOfStartedStartsFromTheGivenState() {
+        val replay = ticker.replay(Started, from = listOf(7))
+
+        assertEquals(listOf(7), replay.state)
+        assertEquals(listOf(ticks), replay.works.map { it.key })
+    }
+
+    @Test
+    fun capabilityWithoutBootstrapIgnoresStartedInReplay() {
+        val replay = likes.replay(Started, LikeClicked(4))
+
+        assertEquals(listOf(Started), replay.ignored)
+        assertEquals(listOf<Any>(LikeClicked(4)), replay.steps.map { it.fact })
+        assertEquals(LikesSlice(highlighted = 4, busy = true), replay.state)
+    }
+
+    @Test
     fun workRunsInATestWithFakeDependencies() = runTest {
         val replay = likes.replay(LikeClicked(4))
 
@@ -414,17 +433,18 @@ class CapsaRuntimeTest {
 
     @Test
     fun harnessRecordsFailedWorksAndDroppedSignals() = runTest {
-        val flaky = capability("flaky", 0) {
-            on<Run> { s, f ->
-                s.commit(
-                    work(WorkKey("run"), onError = { Finished(-1) }) {
+        val flaky = capability<Int, RunIntent, RunSignal>(name = "flaky", initial = 0) {
+            onIntent<Run> { s, f ->
+                Decision(
+                    state = s,
+                    work = work(key = WorkKey("run"), onError = { Finished(-1) }) {
                         delay(100.milliseconds)
                         if (f.id < 0) error("offline")
                         Finished(f.id)
                     },
                 )
             }
-            on<Finished> { s, f -> (s + f.id).commit() }
+            onSignal<Finished> { s, f -> Decision(state = s + f.id) }
         }
         val harness = capsaHarness(flaky)
 

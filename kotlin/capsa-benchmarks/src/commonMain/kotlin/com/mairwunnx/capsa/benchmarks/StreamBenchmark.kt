@@ -1,12 +1,10 @@
 package com.mairwunnx.capsa.benchmarks
 
 import com.mairwunnx.capsa.CapsaBuilder
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Signal
-import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
-import com.mairwunnx.capsa.stream
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.Scope
 import kotlinx.benchmark.State
@@ -30,12 +28,12 @@ class StreamBenchmark {
         val scope = CoroutineScope(coroutineContext + Job(coroutineContext[Job]))
         val builder = CapsaBuilder()
         val received = builder.install(
-            capability("ticks", 0) {
-                on<Started> { state, _ ->
-                    state.commit(stream(TICKS, onError = { TicksFailed }) { flow { repeat(SIGNALS) { emit(Tick) } } })
+            capability<Int, Nothing, TickSignal>(name = "ticks", initial = 0) {
+                bootstrap { state ->
+                    Decision(state = state, work = stream(key = TICKS, onError = { TicksFailed }) { flow { repeat(SIGNALS) { emit(Tick) } } })
                 }
-                on<Tick> { state, _ -> (state + 1).commit() }
-                on<TicksFailed> { state, _ -> state.commit() }
+                onSignal<Tick> { state, _ -> Decision(state = state + 1) }
+                onSignal<TicksFailed> { state, _ -> Decision(state = state) }
             },
         )
         builder.build(scope)
@@ -44,9 +42,11 @@ class StreamBenchmark {
         count
     }
 
-    private data object Tick : Signal
+    private sealed interface TickSignal : Signal
 
-    private data object TicksFailed : Signal
+    private data object Tick : TickSignal
+
+    private data object TicksFailed : TickSignal
 
     private companion object {
         const val SIGNALS = 10_000

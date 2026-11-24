@@ -33,24 +33,27 @@ import kotlin.time.Duration.Companion.seconds
  */
 class VisibilityTest {
 
-    private data object Tick : Signal
+    private sealed interface TickerSignal : Signal
 
-    private data object Done : Signal
+    private data object Tick : TickerSignal
+
+    private data object Done : TickerSignal
 
     private val ticks = WorkKey("ticks")
 
-    /** Starts a `whileVisible` stream on [Started] and writes down when the stream starts and stops. */
-    private fun ticker(log: MutableList<String>) = capability("ticker", 0) {
-        on<Started> { state, _ ->
-            state.commit(
-                stream(ticks, onError = { Tick }, whileVisible = true) {
-                    flow<Signal> { awaitCancellation() }
+    /** Starts a `whileVisible` stream in the bootstrap and writes down when the stream starts and stops. */
+    private fun ticker(log: MutableList<String>) = capability<Int, Nothing, TickerSignal>(name = "ticker", initial = 0) {
+        bootstrap { state ->
+            Decision(
+                state = state,
+                work = stream(key = ticks, onError = { Tick }, whileVisible = true) {
+                    flow<TickerSignal> { awaitCancellation() }
                         .onStart { log += "start" }
                         .onCompletion { log += "stop" }
                 },
             )
         }
-        on<Tick> { state, _ -> (state + 1).commit() }
+        onSignal<Tick> { state, _ -> Decision(state = state + 1) }
     }
 
     private class Screen(val runtime: CapsaRuntime, val slice: StateFlow<Int>, val builder: CapsaBuilder, val scope: CoroutineScope)
@@ -293,11 +296,12 @@ class VisibilityTest {
     fun aStreamThatEndedBeforeTheHideDoesNotRestart() = runTest {
         val log = mutableListOf<String>()
         lateinit var runtime: CapsaRuntime
-        val once = capability("once", 0) {
-            on<Started> { state, _ ->
-                state.commit(
-                    stream(ticks, onError = { Tick }, whileVisible = true) {
-                        flow<Signal> {
+        val once = capability<Int, Nothing, TickerSignal>(name = "once", initial = 0) {
+            bootstrap { state ->
+                Decision(
+                    state = state,
+                    work = stream(key = ticks, onError = { Tick }, whileVisible = true) {
+                        flow<TickerSignal> {
                             log += "start"
                             // The hide lands in the queue after the stream ends but before its WorkDone,
                             // like a host thread hiding the screen while a work on another thread finishes.
@@ -306,7 +310,7 @@ class VisibilityTest {
                     },
                 )
             }
-            on<Tick> { state, _ -> state.commit() }
+            onSignal<Tick> { state, _ -> Decision(state = state) }
         }
         val builder = CapsaBuilder()
 
@@ -324,21 +328,21 @@ class VisibilityTest {
     @Test
     fun aHideKeepsAPlainWorkThatSharesAKeyWithAStream() = runTest {
         val log = mutableListOf<String>()
-        val mixed = capability("mixed", 0) {
-            on<Started> { state, _ ->
-                val plain = work(ticks, onError = { Done }, policy = WorkPolicy.Parallel) {
+        val mixed = capability<Int, Nothing, TickerSignal>(name = "mixed", initial = 0) {
+            bootstrap { state ->
+                val plain = work(key = ticks, onError = { Done }, policy = WorkPolicy.Parallel) {
                     delay(2.seconds)
                     Done
                 }
-                val ticker = stream(ticks, onError = { Tick }, policy = WorkPolicy.Parallel, whileVisible = true) {
-                    flow<Signal> { awaitCancellation() }
+                val ticker = stream(key = ticks, onError = { Tick }, policy = WorkPolicy.Parallel, whileVisible = true) {
+                    flow<TickerSignal> { awaitCancellation() }
                         .onStart { log += "start" }
                         .onCompletion { log += "stop" }
                 }
-                state.commit(works = listOf(plain, ticker))
+                Decision(state = state, works = listOf(plain, ticker))
             }
-            on<Done> { state, _ -> (state + 1).commit() }
-            on<Tick> { state, _ -> state.commit() }
+            onSignal<Done> { state, _ -> Decision(state = state + 1) }
+            onSignal<Tick> { state, _ -> Decision(state = state) }
         }
         val builder = CapsaBuilder()
         val slice = builder.install(mixed)

@@ -22,9 +22,11 @@ public interface Signal : Fact
 public interface Effect
 
 /**
- * Triggers the initial reactions of the capabilities once the runtime is built.
+ * Marks the start of the runtime, the first fact it handles.
  *
- * The runtime sends [Started] exactly once. The host doesn’t repeat the start on a screen rotation
+ * A capability doesn’t react to [Started] directly: it declares a [CapabilityBuilder.bootstrap], and the runtime runs
+ * every bootstrap while it handles [Started]. The fact stays public so that observers, logs, and `replay` can name it.
+ * The runtime sends it exactly once. The host doesn’t repeat the start on a screen rotation
  * or when the screen enters the composition again.
  */
 public data object Started : Signal

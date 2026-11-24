@@ -1,10 +1,9 @@
 package com.mairwunnx.capsa.viewmodel
 
 import com.mairwunnx.capsa.CapsaLogger
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Intent
-import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -20,9 +19,9 @@ class NoMainDispatcherTest {
 
     private class CounterViewModel : CapsaViewModel(CapsaLogger { _, _, _ -> }) {
         val counter: StateFlow<Counter> = install(
-            capability("counter", Counter()) {
-                on<Started> { state, _ -> state.copy(started = true).commit() }
-                on<Increment> { state, _ -> state.copy(value = state.value + 1).commit() }
+            capability<Counter, Increment, Nothing>(name = "counter", initial = Counter()) {
+                bootstrap { state -> Decision(state = state.copy(started = true)) }
+                onIntent<Increment> { state, _ -> Decision(state = state.copy(value = state.value + 1)) }
             },
         )
     }

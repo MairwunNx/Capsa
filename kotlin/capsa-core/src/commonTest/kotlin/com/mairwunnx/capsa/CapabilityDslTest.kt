@@ -6,24 +6,44 @@ import kotlinx.coroutines.cancel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CapabilityDslTest {
 
     private data class Count(val value: Int = 0)
-    private data class Plus(val by: Int) : Intent
-    private data object Reset : Intent
+
+    private sealed interface CounterIntent : Intent
+    private data class Plus(val by: Int) : CounterIntent
+    private data object Reset : CounterIntent
     private data object Unknown : Intent
+
+    private sealed interface CounterSignal : Signal
+    private data object Loaded : CounterSignal
+    private data object Changed : CounterSignal
+    private data object Saved : CounterSignal
+
     private data class Done(val value: Int) : Effect
 
-    private val counter = capability("counter", Count()) {
-        on<Plus> { state, fact -> state.copy(value = state.value + fact.by).commit() }
-        on<Reset> { state, _ -> Count().commit(effects = listOf(Done(state.value))) }
+    private val counter = capability<Count, CounterIntent, Nothing>(name = "counter", initial = Count()) {
+        onIntent<Plus> { state, intent -> Decision(state = state.copy(value = state.value + intent.by)) }
+        onIntent<Reset> { state, _ -> Decision(state = Count(), effect = Done(state.value)) }
     }
 
     @Test
-    fun handlesIsDerivedFromReactions() {
+    fun handlesAndIntentsAreDerivedFromReactions() {
         assertEquals(setOf(Plus::class, Reset::class), counter.handles)
+        assertEquals(setOf(Plus::class, Reset::class), counter.intents)
+    }
+
+    @Test
+    fun signalReactionsAreHandledButAreNotIntents() {
+        val loader = capability<Count, Nothing, CounterSignal>(name = "loader", initial = Count()) {
+            onSignal<Loaded> { state, _ -> Decision(state = state) }
+        }
+
+        assertEquals(setOf(Loaded::class), loader.handles)
+        assertTrue(loader.intents.isEmpty())
     }
 
     @Test
@@ -50,17 +70,17 @@ class CapabilityDslTest {
     @Test
     fun duplicateReactionIsRejectedAtBuildTime() {
         assertFailsWith<IllegalArgumentException> {
-            capability("dup", Count()) {
-                on<Plus> { state, _ -> state.commit() }
-                on<Plus> { state, _ -> state.commit() }
+            capability<Count, CounterIntent, Nothing>(name = "dup", initial = Count()) {
+                onIntent<Plus> { state, _ -> Decision(state = state) }
+                onIntent<Plus> { state, _ -> Decision(state = state) }
             }
         }
     }
 
     @Test
     fun reactionOnASupertypeCatchesItsSubtypes() {
-        val anyIntent = capability("any", Count()) {
-            on<Intent> { state, _ -> state.copy(value = state.value + 1).commit() }
+        val anyIntent = capability<Count, Intent, Nothing>(name = "any", initial = Count()) {
+            onIntent<Intent> { state, _ -> Decision(state = state.copy(value = state.value + 1)) }
         }
 
         assertEquals(Count(1), anyIntent.decide(Count(), Plus(10)).state)
@@ -68,44 +88,125 @@ class CapabilityDslTest {
     }
 
     @Test
-    fun commitKeepsCancelAndWorksInTheDecision() {
-        val key = WorkKey("load")
-        val decision = Count().commit(
-            works = listOf(work(key, onError = { Started }) { Started }),
-            cancel = listOf(WorkKey("old")),
-        )
-
-        assertEquals(listOf(key), decision.works.map { it.key })
-        assertEquals(listOf(WorkKey("old")), decision.cancels)
-    }
-
-    @Test
     fun reactionsOnASupertypeAndItsSubtypeAreRejected() {
-        val supertypeFirst: CapabilityBuilder<Count>.() -> Unit = {
-            on<Intent> { state, _ -> state.commit() }
-            on<Plus> { state, _ -> state.commit() }
+        val supertypeFirst: CapabilityBuilder<Count, Intent, Nothing>.() -> Unit = {
+            onIntent<Intent> { state, _ -> Decision(state = state) }
+            onIntent<Plus> { state, _ -> Decision(state = state) }
         }
-        val subtypeFirst: CapabilityBuilder<Count>.() -> Unit = {
-            on<Plus> { state, _ -> state.commit() }
-            on<Intent> { state, _ -> state.commit() }
+        val subtypeFirst: CapabilityBuilder<Count, Intent, Nothing>.() -> Unit = {
+            onIntent<Plus> { state, _ -> Decision(state = state) }
+            onIntent<Intent> { state, _ -> Decision(state = state) }
         }
         for (build in listOf(supertypeFirst, subtypeFirst)) {
             if (Intent::class.overlaps(Plus::class)) {
-                assertFailsWith<IllegalArgumentException> { capability("overlap", Count(), build) }
+                assertFailsWith<IllegalArgumentException> { capability(name = "overlap", initial = Count(), build = build) }
             } else {
                 // Kotlin/Native can’t compare classes, so the overlap fails when the fact arrives.
-                assertFailsWith<IllegalStateException> { capability("overlap", Count(), build).decide(Count(), Plus(1)) }
+                assertFailsWith<IllegalStateException> { capability(name = "overlap", initial = Count(), build = build).decide(Count(), Plus(1)) }
             }
         }
     }
 
     @Test
-    fun singleWorkEffectAndSignalOverloadsFillTheirLists() {
-        val key = WorkKey("load")
+    fun decisionWithOnlyAStateCarriesNothingElse() {
+        val decision = Decision<Count, CounterSignal>(state = Count(1))
 
-        assertEquals(listOf(key), Count().commit(work(key, onError = { Started }) { Started }).works.map { it.key })
-        assertEquals(listOf<Effect>(Done(1)), Count().commit(Done(1)).effects)
-        assertEquals(listOf<Signal>(Started), Count().commit(Started).signals)
+        assertEquals(Count(1), decision.state)
+        assertTrue(decision.effects.isEmpty())
+        assertTrue(decision.works.isEmpty())
+        assertTrue(decision.cancels.isEmpty())
+        assertTrue(decision.signals.isEmpty())
+    }
+
+    @Test
+    fun decisionSkipsNullSingleItems() {
+        val decision = Decision<Count, CounterSignal>(
+            state = Count(),
+            effect = null,
+            effects = listOf(Done(1)),
+            work = null,
+            works = listOf(work(key = WorkKey("load"), onError = { Loaded }) { Loaded }),
+            cancel = null,
+            cancels = listOf(WorkKey("old")),
+            signal = null,
+            signals = listOf(Changed),
+        )
+
+        assertEquals(listOf<Effect>(Done(1)), decision.effects)
+        assertEquals(listOf(WorkKey("load")), decision.works.map { it.key })
+        assertEquals(listOf(WorkKey("old")), decision.cancels)
+        assertEquals(listOf<Signal>(Changed), decision.signals)
+    }
+
+    @Test
+    fun decisionFillsEveryKindFromItsSingleItem() {
+        val decision = Decision<Count, CounterSignal>(
+            state = Count(),
+            effect = Done(1),
+            work = work(key = WorkKey("load"), onError = { Loaded }) { Loaded },
+            cancel = WorkKey("old"),
+            signal = Changed,
+        )
+
+        assertEquals(listOf<Effect>(Done(1)), decision.effects)
+        assertEquals(listOf(WorkKey("load")), decision.works.map { it.key })
+        assertEquals(listOf(WorkKey("old")), decision.cancels)
+        assertEquals(listOf<Signal>(Changed), decision.signals)
+    }
+
+    @Test
+    fun decisionPutsTheSingleItemBeforeTheList() {
+        val decision = Decision<Count, CounterSignal>(
+            state = Count(),
+            effect = Done(1),
+            effects = listOf(Done(2), Done(3)),
+            work = work(key = WorkKey("first"), onError = { Loaded }) { Loaded },
+            works = listOf(work(key = WorkKey("second"), onError = { Saved }) { Saved }),
+            cancel = WorkKey("a"),
+            cancels = listOf(WorkKey("b"), WorkKey("c")),
+            signal = Changed,
+            signals = listOf(Saved, Loaded),
+        )
+
+        assertEquals(listOf<Effect>(Done(1), Done(2), Done(3)), decision.effects)
+        assertEquals(listOf(WorkKey("first"), WorkKey("second")), decision.works.map { it.key })
+        assertEquals(listOf(WorkKey("a"), WorkKey("b"), WorkKey("c")), decision.cancels)
+        assertEquals(listOf<Signal>(Changed, Saved, Loaded), decision.signals)
+    }
+
+    @Test
+    fun bootstrapIsNullWithoutADeclarationAndDecidesWithOne() {
+        val plain = capability<Count, CounterIntent, Nothing>(name = "plain", initial = Count()) {
+            onIntent<Plus> { state, _ -> Decision(state = state) }
+        }
+        val loading = capability<Count, Nothing, CounterSignal>(name = "loading", initial = Count()) {
+            bootstrap { state -> Decision(state = state.copy(value = state.value + 1), signal = Loaded) }
+        }
+
+        assertNull(plain.bootstrap(Count()))
+        val decision = loading.bootstrap(Count(4))
+        assertEquals(Count(5), decision?.state)
+        assertEquals(listOf<Signal>(Loaded), decision?.signals)
+        assertTrue(loading.handles.isEmpty())
+    }
+
+    @Test
+    fun secondBootstrapIsRejectedAtBuildTime() {
+        assertFailsWith<IllegalArgumentException> {
+            capability<Count, Nothing, Nothing>(name = "twice", initial = Count()) {
+                bootstrap { state -> Decision(state = state) }
+                bootstrap { state -> Decision(state = state) }
+            }
+        }
+    }
+
+    @Test
+    fun reactionToStartedIsRejectedAtBuildTime() {
+        assertFailsWith<IllegalArgumentException> {
+            capability<Count, Nothing, Nothing>(name = "started", initial = Count()) {
+                onSignal<Started> { state, _ -> Decision(state = state) }
+            }
+        }
     }
 
     private interface Liked : Intent
@@ -114,9 +215,9 @@ class CapabilityDslTest {
 
     @Test
     fun factThatMatchesTwoUnrelatedReactionsIsRejectedInDecide() {
-        val social = capability("social", 0) {
-            on<Liked> { s, _ -> (s + 1).commit() }
-            on<Shared> { s, _ -> (s + 10).commit() }
+        val social = capability<Int, Intent, Nothing>(name = "social", initial = 0) {
+            onIntent<Liked> { s, _ -> Decision(state = s + 1) }
+            onIntent<Shared> { s, _ -> Decision(state = s + 10) }
         }
 
         val error = assertFailsWith<IllegalStateException> { social.decide(0, LikedAndShared) }
@@ -127,10 +228,10 @@ class CapabilityDslTest {
 
     @Test
     fun theRememberedReactionGivesTheSameAnswerOnEveryFactOfAClass() {
-        val social = capability("social", 0) {
-            on<Liked> { s, _ -> (s + 1).commit() }
-            on<Shared> { s, _ -> (s + 10).commit() }
-            on<Plus> { s, fact -> (s + fact.by).commit() }
+        val social = capability<Int, Intent, Nothing>(name = "social", initial = 0) {
+            onIntent<Liked> { s, _ -> Decision(state = s + 1) }
+            onIntent<Shared> { s, _ -> Decision(state = s + 10) }
+            onIntent<Plus> { s, intent -> Decision(state = s + intent.by) }
         }
 
         repeat(2) {
@@ -146,10 +247,10 @@ class CapabilityDslTest {
     fun builderRejectsInstallAndASecondBuildAfterBuild() {
         val scope = CoroutineScope(Job())
         val builder = CapsaBuilder()
-        builder.install(capability("first", 0) {})
+        builder.install(capability<Int, Nothing, Nothing>(name = "first", initial = 0) {})
         builder.build(scope)
 
-        assertFailsWith<IllegalStateException> { builder.install(capability("late", 0) {}) }
+        assertFailsWith<IllegalStateException> { builder.install(capability<Int, Nothing, Nothing>(name = "late", initial = 0) {}) }
         assertFailsWith<IllegalStateException> { builder.build(scope) }
         scope.cancel()
     }

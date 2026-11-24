@@ -40,6 +40,10 @@ private fun <T> Load<T>.text(loaded: (T) -> String) = when (this) {
 class DashboardViewModel(weatherPorts: WeatherPorts, tasksPorts: TasksPorts) : CapsaViewModel() {
     private val weather = install(weather(weatherPorts))
     private val tasks = install(tasks(tasksPorts))
+
+    // The refresh button has no slice to show, only an owner that tells both tiles.
+    @Suppress("UnusedPrivateProperty")
+    private val refresh = install(dashboardRefresh())
     val ui: StateFlow<DashboardUi> = combineState(capsaScope, weather, tasks) { weather, tasks -> dashboardUi(weather, tasks) }
 }
 

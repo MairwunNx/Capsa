@@ -18,17 +18,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mairwunnx.capsa.Capsa
 import com.mairwunnx.capsa.CapsaConfig
 import com.mairwunnx.capsa.CapsaLogger
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.EffectHandlers
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.SliceSaver
-import com.mairwunnx.capsa.Started
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
 import com.mairwunnx.capsa.effectHandlers
-import com.mairwunnx.capsa.stream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,8 +59,9 @@ import kotlin.test.assertSame
 @OptIn(ExperimentalCoroutinesApi::class)
 class RememberCapsaTest : CompositionTest() {
 
-    private data object Increment : Intent
-    private data object Ping : Intent
+    private sealed interface CountIntent : Intent
+    private data object Increment : CountIntent
+    private data object Ping : CountIntent
     private data object Pong : Effect
     private data object Tracked : Effect
     private data object Failed : Signal
@@ -363,7 +362,7 @@ class RememberCapsaTest : CompositionTest() {
         val error = assertFailsWith<IllegalStateException> {
             compose {
                 rememberCapsa(logger = logger, config = config) {
-                    install(capability("extra", 0) {})
+                    install(capability<Int, Nothing, Nothing>(name = "extra", initial = 0) {})
                     Counter(this, log, tracked)
                 }
             }
@@ -543,7 +542,8 @@ class RememberCapsaTest : CompositionTest() {
         val journal = mutableListOf<String>()
         val scope = CoroutineScope(backgroundScope.coroutineContext + StandardTestDispatcher(testScheduler))
         val capsaScope = CapsaScope(scope, CapsaLogger { level, _, message -> if (level == CapsaLogger.Level.Debug) journal += message() })
-        val handle = capsaScope.expose(capsaScope.install(capability("plain", 0) { on<Increment> { state, _ -> (state + 1).commit() } }))
+        val plain = capability<Int, Increment, Nothing>(name = "plain", initial = 0) { onIntent<Increment> { state, _ -> Decision(state = state + 1) } }
+        val handle = capsaScope.expose(capsaScope.install(plain))
 
         handle.send(Increment)
         testScheduler.runCurrent()
@@ -561,7 +561,7 @@ class RememberCapsaTest : CompositionTest() {
         val error = assertFailsWith<IllegalStateException> {
             compose {
                 rememberCapsa(logger = logger, config = config) {
-                    Counter(this, log, tracked).also { install(capability("extra", 0) {}) }
+                    Counter(this, log, tracked).also { install(capability<Int, Nothing, Nothing>(name = "extra", initial = 0) {}) }
                 }
             }
         }
@@ -590,21 +590,22 @@ class RememberCapsaTest : CompositionTest() {
         val WORK = WorkKey("work")
         val VISIBLE = WorkKey("visible")
 
-        fun counting(log: MutableList<String>) = capability("count", 0) {
-            on<Started> { state, _ ->
-                state.commit(
+        fun counting(log: MutableList<String>) = capability<Int, CountIntent, Failed>(name = "count", initial = 0) {
+            bootstrap { state ->
+                Decision(
+                    state = state,
                     works = listOf(
-                        stream(WORK, onError = { Failed }) { recorded(log, "work") },
-                        stream(VISIBLE, onError = { Failed }, whileVisible = true) { recorded(log, "visible") },
+                        stream(key = WORK, onError = { Failed }) { recorded(log, "work") },
+                        stream(key = VISIBLE, onError = { Failed }, whileVisible = true) { recorded(log, "visible") },
                     ),
                 )
             }
-            on<Increment> { state, _ -> (state + 1).commit() }
-            on<Ping> { state, _ -> state.commit(effects = listOf(Pong, Tracked)) }
-            on<Failed> { _, _ -> FAILED.commit() }
+            onIntent<Increment> { state, _ -> Decision(state = state + 1) }
+            onIntent<Ping> { state, _ -> Decision(state = state, effects = listOf(Pong, Tracked)) }
+            onSignal<Failed> { _, _ -> Decision(state = FAILED) }
         }
 
-        fun recorded(log: MutableList<String>, name: String) = flow<Signal> { awaitCancellation() }
+        fun recorded(log: MutableList<String>, name: String) = flow<Failed> { awaitCancellation() }
             .onStart { log += "$name start" }
             .onCompletion { log += "$name stop" }
     }

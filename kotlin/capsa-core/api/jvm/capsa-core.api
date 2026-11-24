@@ -1,12 +1,24 @@
 public abstract interface class com/mairwunnx/capsa/Capability {
+	public fun bootstrap (Ljava/lang/Object;)Lcom/mairwunnx/capsa/Decision;
 	public abstract fun decide (Ljava/lang/Object;Lcom/mairwunnx/capsa/Fact;)Lcom/mairwunnx/capsa/Decision;
 	public abstract fun getHandles ()Ljava/util/Set;
+	public fun getIntents ()Ljava/util/Set;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun initial ()Ljava/lang/Object;
 }
 
+public final class com/mairwunnx/capsa/Capability$DefaultImpls {
+	public static fun bootstrap (Lcom/mairwunnx/capsa/Capability;Ljava/lang/Object;)Lcom/mairwunnx/capsa/Decision;
+	public static fun getIntents (Lcom/mairwunnx/capsa/Capability;)Ljava/util/Set;
+}
+
 public final class com/mairwunnx/capsa/CapabilityBuilder {
-	public final fun addReaction (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function2;)V
+	public final fun addReaction (Lkotlin/reflect/KClass;ZLkotlin/jvm/functions/Function2;)V
+	public final fun bootstrap (Lkotlin/jvm/functions/Function1;)V
+	public final fun stream-MEMQ7Oc (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;ZLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function0;)Lcom/mairwunnx/capsa/Work;
+	public static synthetic fun stream-MEMQ7Oc$default (Lcom/mairwunnx/capsa/CapabilityBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;ZLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Work;
+	public final fun work-jHoQyg0 (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;JLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function1;)Lcom/mairwunnx/capsa/Work;
+	public static synthetic fun work-jHoQyg0$default (Lcom/mairwunnx/capsa/CapabilityBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lcom/mairwunnx/capsa/WorkPolicy;JLcom/mairwunnx/capsa/Retry;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Work;
 }
 
 public final class com/mairwunnx/capsa/CapabilityKt {
@@ -162,11 +174,8 @@ public final class com/mairwunnx/capsa/Decision {
 }
 
 public final class com/mairwunnx/capsa/DecisionKt {
-	public static final fun commit (Ljava/lang/Object;Lcom/mairwunnx/capsa/Effect;)Lcom/mairwunnx/capsa/Decision;
-	public static final fun commit (Ljava/lang/Object;Lcom/mairwunnx/capsa/Signal;)Lcom/mairwunnx/capsa/Decision;
-	public static final fun commit (Ljava/lang/Object;Lcom/mairwunnx/capsa/Work;)Lcom/mairwunnx/capsa/Decision;
-	public static final fun commit (Ljava/lang/Object;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lcom/mairwunnx/capsa/Decision;
-	public static synthetic fun commit$default (Ljava/lang/Object;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Decision;
+	public static final fun Decision-RA62lDg (Ljava/lang/Object;Lcom/mairwunnx/capsa/Effect;Ljava/util/List;Lcom/mairwunnx/capsa/Work;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lcom/mairwunnx/capsa/Signal;Ljava/util/List;)Lcom/mairwunnx/capsa/Decision;
+	public static synthetic fun Decision-RA62lDg$default (Ljava/lang/Object;Lcom/mairwunnx/capsa/Effect;Ljava/util/List;Lcom/mairwunnx/capsa/Work;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lcom/mairwunnx/capsa/Signal;Ljava/util/List;ILjava/lang/Object;)Lcom/mairwunnx/capsa/Decision;
 }
 
 public abstract interface class com/mairwunnx/capsa/Effect {

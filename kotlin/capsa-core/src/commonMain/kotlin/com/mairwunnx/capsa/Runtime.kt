@@ -31,11 +31,17 @@ internal class CapabilityHolder<S : Any>(
 
     val name: String get() = capability.name
 
+    val intents: Set<KClass<out Intent>> get() = capability.intents
+
     fun accepts(fact: Fact): Boolean = capability.handles.any { it.isInstance(fact) }
 
     /** Applies `fact` and writes the new state without locks. Call it only from the fact-processing coroutine. */
-    fun decide(fact: Fact): Decision<S> =
+    fun decide(fact: Fact): Decision<S, Signal> =
         capability.decide(_state.value, fact).also { _state.value = it.state }
+
+    /** Runs the bootstrap of the capability and writes its state. Returns `null` when the capability declares none. */
+    fun bootstrap(): Decision<S, Signal>? =
+        capability.bootstrap(_state.value)?.also { _state.value = it.state }
 }
 
 /** Gathers the capabilities of a screen and creates a shared [CapsaRuntime] for them. */
@@ -55,7 +61,8 @@ public class CapsaBuilder {
      * @param restored the state after process restoration, or `null`
      * @return a read-only flow of the state, for building projections. Its collectors make the screen visible,
      * see [CapsaVisibility.Watched]
-     * @throws IllegalArgumentException if the builder already holds a capability with this name
+     * @throws IllegalArgumentException if the builder already holds a capability with this name, or one that handles
+     * the same intents: an intent has one owner on the screen
      * @throws IllegalStateException if the runtime is already built: such a capability would never receive facts
      */
     public fun <S : Any> install(capability: Capability<S>, restored: S? = null): StateFlow<S> {
@@ -63,13 +70,25 @@ public class CapsaBuilder {
         require(holders.none { it.name == capability.name }) {
             "Capability '${capability.name}' is already installed"
         }
+        checkSingleOwner(capability)
         val holder = CapabilityHolder(capability, restored)
         holders += holder
         return WatchedStateFlow(holder.state, watchers)
     }
 
+    /** An intent has one owner: a second capability that handles it, its supertype, or its subtype fails the install. */
+    private fun checkSingleOwner(capability: Capability<*>) {
+        for (intent in capability.intents) {
+            val owner = holders.firstOrNull { holder -> holder.intents.any { it == intent || it.overlaps(intent) } } ?: continue
+            throw IllegalArgumentException(
+                "Capabilities '${owner.name}' and '${capability.name}' both handle ${intent.simpleName}. An intent has one owner: " +
+                    "keep the reaction in one capability and let it send a signal to the other",
+            )
+        }
+    }
+
     /**
-     * Creates the runtime, queues [Started], and starts processing facts.
+     * Creates the runtime, queues [Started], and starts processing facts. Handling [Started] runs every bootstrap.
      *
      * The runtime lives while `scope` is active. The end of the scope closes the queues of facts and effects.
      *
@@ -123,7 +142,7 @@ public class CapsaRuntime internal constructor(
     private val jobs = mutableMapOf<Pair<String, WorkKey>, MutableList<Launch>>()
 
     /** Works with `whileVisible` that wait for the screen to come back. Accessed only from the fact-processing coroutine. */
-    private val paused = mutableListOf<Pair<String, Work>>()
+    private val paused = mutableListOf<Pair<String, Work<*>>>()
 
     /** Whether the works with `whileVisible` run. Accessed only from the fact-processing coroutine, like the fields below. */
     private var visible = config.visibility is CapsaVisibility.Host
@@ -231,7 +250,8 @@ public class CapsaRuntime internal constructor(
     /** Processes `root` and the chain of signals it produces, in queue order. */
     private fun process(root: Fact) {
         val queue = ArrayDeque<Pair<Fact, Int>>()
-        queue.add(root to 0)
+        // Started is handled apart from the other facts, so the hot path in handle() stays as small as the JIT likes it.
+        if (root === Started) bootstrap(queue) else queue.add(root to 0)
 
         while (queue.isNotEmpty()) {
             val (fact, depth) = queue.removeFirst()
@@ -255,12 +275,12 @@ public class CapsaRuntime internal constructor(
         val handlers = handlersByClass.getOrPut(fact::class) { holders.filter { it.accepts(fact) } }
         history.add(CapsaHistory.FactHandled(fact, handlers))
         if (handlers.isEmpty()) {
-            if (fact !is Started) report(CapsaViolation.UnhandledFact(fact))
+            report(CapsaViolation.UnhandledFact(fact))
             return
         }
 
         for (holder in handlers) {
-            val decision = decideOrNull(holder, fact) ?: continue
+            val decision = decideFact(holder, fact) ?: continue
             notify { onDecision(holder.name, fact, decision) }
 
             decision.effects.forEach { outbox.trySend(it) }
@@ -270,7 +290,24 @@ public class CapsaRuntime internal constructor(
         }
     }
 
-    private fun decideOrNull(holder: CapabilityHolder<*>, fact: Fact): Decision<*>? =
+    /** Runs the bootstraps in the order of installation. A screen where no capability declares one isn’t a violation. */
+    private fun bootstrap(queue: ArrayDeque<Pair<Fact, Int>>) {
+        notify { onFact(Started) }
+        val decisions = holders.mapNotNull { holder -> decideOrNull(holder, Started) { holder.bootstrap() }?.let { holder to it } }
+        history.add(CapsaHistory.FactHandled(Started, decisions.map { it.first }))
+        decisions.forEach { (holder, decision) -> apply(holder, Started, decision, depth = 0, queue) }
+    }
+
+    private fun apply(holder: CapabilityHolder<*>, fact: Fact, decision: Decision<*, Signal>, depth: Int, queue: ArrayDeque<Pair<Fact, Int>>) {
+        notify { onDecision(holder.name, fact, decision) }
+
+        decision.effects.forEach { outbox.trySend(it) }
+        decision.cancels.forEach { cancelWork(holder.name, it) }
+        decision.works.forEach { startWork(holder.name, it) }
+        decision.signals.forEach { queue.add(it to depth + 1) }
+    }
+
+    private fun decideFact(holder: CapabilityHolder<*>, fact: Fact): Decision<*, Signal>? =
         try {
             holder.decide(fact)
         } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
@@ -279,7 +316,16 @@ public class CapsaRuntime internal constructor(
             null
         }
 
-    private fun startWork(owner: String, work: Work) {
+    private inline fun decideOrNull(holder: CapabilityHolder<*>, fact: Fact, decide: () -> Decision<*, Signal>?): Decision<*, Signal>? =
+        try {
+            decide()
+        } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+            e.rethrowIfFatal(scope)
+            report(CapsaViolation.DecideFailed(holder.name, fact, e))
+            null
+        }
+
+    private fun startWork(owner: String, work: Work<*>) {
         val running = jobs[owner to work.key].orEmpty()
         val pausedSame = paused.any { it.first == owner && it.second.key == work.key }
 
@@ -430,7 +476,7 @@ public class CapsaRuntime internal constructor(
     }
 
     /** One run of a work. The [revoked] flag changes only on the fact-processing coroutine. */
-    private class Launch(val owner: String, val work: Work) {
+    private class Launch(val owner: String, val work: Work<*>) {
         lateinit var job: Job
         var revoked = false
     }

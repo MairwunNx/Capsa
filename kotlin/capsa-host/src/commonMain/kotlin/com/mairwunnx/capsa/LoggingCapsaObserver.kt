@@ -41,7 +41,7 @@ public class LoggingCapsaObserver(
         log { formatFact(fact) }
     }
 
-    override fun onDecision(capability: String, fact: Fact, decision: Decision<*>) {
+    override fun onDecision(capability: String, fact: Fact, decision: Decision<*, *>) {
         log { formatDecision(capability, decision).joinToString(separator = "\n") }
     }
 
@@ -75,7 +75,7 @@ internal fun formatFact(fact: Fact): String {
     return "$kind $fact"
 }
 
-internal fun formatDecision(capability: String, decision: Decision<*>): List<String> = buildList {
+internal fun formatDecision(capability: String, decision: Decision<*, *>): List<String> = buildList {
     add("  $capability: state ${decision.state}")
     decision.effects.forEach { add("  $capability: send effect $it") }
     decision.signals.forEach { add("  $capability: emit signal $it") }

@@ -2,14 +2,13 @@ package com.mairwunnx.capsa.samples.profile
 
 import com.mairwunnx.capsa.Capability
 import com.mairwunnx.capsa.CapabilityScope
+import com.mairwunnx.capsa.Decision
 import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 import com.mairwunnx.capsa.WorkKey
 import com.mairwunnx.capsa.WorkPolicy
 import com.mairwunnx.capsa.capability
-import com.mairwunnx.capsa.commit
-import com.mairwunnx.capsa.work
 
 data class ProfileSlice(
     val name: String = "",
@@ -20,11 +19,15 @@ data class ProfileSlice(
 
 enum class ProfileError { EmptyName, BadEmail, SendFailed }
 
-data class NameChanged(val text: String) : Intent
-data class EmailChanged(val text: String) : Intent
-data object SaveClicked : Intent
-data object ProfileSent : Signal
-data object ProfileFailed : Signal
+sealed interface ProfileIntent : Intent
+data class NameChanged(val text: String) : ProfileIntent
+data class EmailChanged(val text: String) : ProfileIntent
+data object SaveClicked : ProfileIntent
+
+sealed interface ProfileSignal : Signal
+data object ProfileSent : ProfileSignal
+data object ProfileFailed : ProfileSignal
+
 data object ShowProfileSaved : Effect
 
 class ProfilePorts(val send: suspend (name: String, email: String) -> Unit)
@@ -32,23 +35,26 @@ class ProfilePorts(val send: suspend (name: String, email: String) -> Unit)
 private val SEND = WorkKey("send")
 
 context(_: CapabilityScope)
-fun profileForm(ports: ProfilePorts): Capability<ProfileSlice> = capability("profile", ProfileSlice()) {
-    on<NameChanged> { state, fact -> state.copy(name = fact.text, error = null).commit() }
-    on<EmailChanged> { state, fact -> state.copy(email = fact.text, error = null).commit() }
-    on<SaveClicked> { state, _ ->
-        when {
-            state.sending -> state.commit()
-            state.name.isBlank() -> state.copy(error = ProfileError.EmptyName).commit()
-            '@' !in state.email -> state.copy(error = ProfileError.BadEmail).commit()
+fun profileForm(ports: ProfilePorts): Capability<ProfileSlice> =
+    capability<ProfileSlice, ProfileIntent, ProfileSignal>(name = "profile", initial = ProfileSlice()) {
+        val works = object {
             // KeepExisting ignores a second tap while the request runs.
-            else -> state.copy(sending = true).commit(
-                work(SEND, onError = { ProfileFailed }, policy = WorkPolicy.KeepExisting) {
-                    ports.send(state.name, state.email)
-                    ProfileSent
-                },
-            )
+            fun send(name: String, email: String) = work(key = SEND, onError = { ProfileFailed }, policy = WorkPolicy.KeepExisting) {
+                ports.send(name, email)
+                ProfileSent
+            }
         }
+
+        onIntent<NameChanged> { state, changed -> Decision(state = state.copy(name = changed.text, error = null)) }
+        onIntent<EmailChanged> { state, changed -> Decision(state = state.copy(email = changed.text, error = null)) }
+        onIntent<SaveClicked> { state, _ ->
+            when {
+                state.sending -> Decision(state = state)
+                state.name.isBlank() -> Decision(state = state.copy(error = ProfileError.EmptyName))
+                '@' !in state.email -> Decision(state = state.copy(error = ProfileError.BadEmail))
+                else -> Decision(state = state.copy(sending = true), work = works.send(state.name, state.email))
+            }
+        }
+        onSignal<ProfileSent> { state, _ -> Decision(state = state.copy(sending = false), effect = ShowProfileSaved) }
+        onSignal<ProfileFailed> { state, _ -> Decision(state = state.copy(sending = false, error = ProfileError.SendFailed)) }
     }
-    on<ProfileSent> { state, _ -> state.copy(sending = false).commit(ShowProfileSaved) }
-    on<ProfileFailed> { state, _ -> state.copy(sending = false, error = ProfileError.SendFailed).commit() }
-}

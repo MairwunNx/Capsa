@@ -17,17 +17,20 @@ import kotlin.test.assertTrue
 
 class ViolationReportTest {
 
-    private data class Tick(val n: Int) : Signal
-    private data object Boom : Intent
-    private data object Orphan : Intent
-    private data object Load : Intent
-    private data class Loaded(val ok: Boolean) : Signal
+    private sealed interface CounterSignal : Signal
+    private data class Tick(val n: Int) : CounterSignal
+    private data class Loaded(val ok: Boolean) : CounterSignal
 
-    private val counter = capability("counter", 0) {
-        on<Tick> { s, f -> (s + f.n).commit() }
-        on<Boom> { _, _ -> error("bug") }
-        on<Load> { s, _ -> s.commit(work(WorkKey("load"), onError = { Loaded(false) }) { error("offline") }) }
-        on<Loaded> { s, _ -> s.commit() }
+    private sealed interface CounterIntent : Intent
+    private data object Boom : CounterIntent
+    private data object Load : CounterIntent
+    private data object Orphan : Intent
+
+    private val counter = capability<Int, CounterIntent, CounterSignal>(name = "counter", initial = 0) {
+        onSignal<Tick> { s, tick -> Decision(state = s + tick.n) }
+        onIntent<Boom> { _, _ -> error("bug") }
+        onIntent<Load> { s, _ -> Decision(state = s, work = work(key = WorkKey("load"), onError = { Loaded(false) }) { error("offline") }) }
+        onSignal<Loaded> { s, _ -> Decision(state = s) }
     }
 
     private class Harness(

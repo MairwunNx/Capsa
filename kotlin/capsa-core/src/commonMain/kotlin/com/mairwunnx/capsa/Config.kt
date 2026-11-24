@@ -6,7 +6,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 /** Describes a broken contract of Capsa. [CapsaConfig.onViolation] decides how to handle it. */
 public sealed interface CapsaViolation {
 
-    /** No capability accepted `fact`. The service fact [Started] is not a violation. */
+    /** No capability accepted `fact`. [Started] is never one: a screen may have no bootstrap at all. */
     public data class UnhandledFact(public val fact: Fact) : CapsaViolation
 
     /** A chain of [Decision.signals] went deeper than [CapsaConfig.maxSignalDepth], usually because of a cycle between capabilities. */
@@ -91,7 +91,7 @@ public interface CapsaObserver {
     public fun onFact(fact: Fact) {}
 
     /** Reports that `capability` returned `decision` for `fact`. */
-    public fun onDecision(capability: String, fact: Fact, decision: Decision<*>) {}
+    public fun onDecision(capability: String, fact: Fact, decision: Decision<*, *>) {}
 
     /** Reports the start of `key` for `capability`. The [WorkPolicy.KeepExisting] policy can suppress the event. */
     public fun onWorkStarted(capability: String, key: WorkKey) {}

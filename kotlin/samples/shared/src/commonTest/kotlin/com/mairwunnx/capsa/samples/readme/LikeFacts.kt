@@ -6,7 +6,11 @@ import com.mairwunnx.capsa.Effect
 import com.mairwunnx.capsa.Intent
 import com.mairwunnx.capsa.Signal
 
-data object LikeClicked : Intent
-data class LikeSaved(val likes: Int) : Signal
-data object LikeFailed : Signal
+sealed interface LikeIntent : Intent
+data object LikeClicked : LikeIntent
+
+sealed interface LikeSignal : Signal
+data class LikeSaved(val likes: Int) : LikeSignal
+data object LikeFailed : LikeSignal
+
 data object ShowLikeError : Effect
