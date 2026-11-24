@@ -40,6 +40,8 @@ public final class com/mairwunnx/capsa/CapsaConfig {
 	public fun <init> ()V
 	public fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/CapsaVisibility;)V
 	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/CapsaVisibility;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/CapsaVisibility;)Lcom/mairwunnx/capsa/CapsaConfig;
+	public static synthetic fun copy$default (Lcom/mairwunnx/capsa/CapsaConfig;ILkotlin/jvm/functions/Function1;Lkotlin/coroutines/CoroutineContext;Lcom/mairwunnx/capsa/CapsaObserver;Lcom/mairwunnx/capsa/CapsaVisibility;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaConfig;
 	public final fun getMaxSignalDepth ()I
 	public final fun getObserver ()Lcom/mairwunnx/capsa/CapsaObserver;
 	public final fun getOnViolation ()Lkotlin/jvm/functions/Function1;

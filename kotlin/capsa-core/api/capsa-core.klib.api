@@ -225,6 +225,8 @@ final class com.mairwunnx.capsa/CapsaConfig { // com.mairwunnx.capsa/CapsaConfig
         final fun <get-visibility>(): com.mairwunnx.capsa/CapsaVisibility // com.mairwunnx.capsa/CapsaConfig.visibility.<get-visibility>|<get-visibility>(){}[0]
     final val workContext // com.mairwunnx.capsa/CapsaConfig.workContext|{}workContext[0]
         final fun <get-workContext>(): kotlin.coroutines/CoroutineContext // com.mairwunnx.capsa/CapsaConfig.workContext.<get-workContext>|<get-workContext>(){}[0]
+
+    final fun copy(kotlin/Int = ..., kotlin/Function1<com.mairwunnx.capsa/CapsaViolationException, kotlin/Unit> = ..., kotlin.coroutines/CoroutineContext = ..., com.mairwunnx.capsa/CapsaObserver = ..., com.mairwunnx.capsa/CapsaVisibility = ...): com.mairwunnx.capsa/CapsaConfig // com.mairwunnx.capsa/CapsaConfig.copy|copy(kotlin.Int;kotlin.Function1<com.mairwunnx.capsa.CapsaViolationException,kotlin.Unit>;kotlin.coroutines.CoroutineContext;com.mairwunnx.capsa.CapsaObserver;com.mairwunnx.capsa.CapsaVisibility){}[0]
 }
 
 final class com.mairwunnx.capsa/CapsaRuntime { // com.mairwunnx.capsa/CapsaRuntime|null[0]

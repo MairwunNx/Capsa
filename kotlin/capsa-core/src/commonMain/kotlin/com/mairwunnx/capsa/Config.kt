@@ -135,4 +135,29 @@ public class CapsaConfig(
     public val workContext: CoroutineContext = EmptyCoroutineContext,
     public val observer: CapsaObserver = CapsaObserver.None,
     public val visibility: CapsaVisibility = CapsaVisibility.Watched(),
-)
+) {
+
+    /**
+     * Returns a config with the given settings changed and the rest taken from this one.
+     *
+     * A host has a default config of its own, with its work dispatcher and the runtime journal. Change one setting
+     * on top of it, so the rest stays:
+     *
+     * ```
+     * class ClockViewModel : CapsaViewModel(config = defaultConfig().copy(visibility = CapsaVisibility.Watched(grace = 2.seconds)))
+     * ```
+     */
+    public fun copy(
+        maxSignalDepth: Int = this.maxSignalDepth,
+        onViolation: (CapsaViolationException) -> Unit = this.onViolation,
+        workContext: CoroutineContext = this.workContext,
+        observer: CapsaObserver = this.observer,
+        visibility: CapsaVisibility = this.visibility,
+    ): CapsaConfig = CapsaConfig(
+        maxSignalDepth = maxSignalDepth,
+        onViolation = onViolation,
+        workContext = workContext,
+        observer = observer,
+        visibility = visibility,
+    )
+}
