@@ -23,7 +23,7 @@ Capsa developers try a change on a real project before a release. Publish the bu
 cd kotlin && ./gradlew publishToMavenLocal -PcapsaVersion=0.99.0-local
 ```
 
-Then ask your agent for that version, for example: “Add Capsa to this project with my local build 0.99.0-local: follow https://raw.githubusercontent.com/MairwunNx/Capsa/master/SETUP.md”. The skill adds `mavenLocal()` for the Capsa group only and reminds you to remove it before your release.
+Then ask your agent for that version, for example: “Add Capsa to this project with my local build 0.99.0-local: follow <https://raw.githubusercontent.com/MairwunNx/Capsa/master/SETUP.md>”. The skill adds `mavenLocal()` for the Capsa group only and reminds you to remove it before your release.
 
 ## Without an agent
 
