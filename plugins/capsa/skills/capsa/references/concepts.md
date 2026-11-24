@@ -80,7 +80,7 @@ A projection is a pure function from one or more slices to a UI model. It format
 
 ### Host
 
-The host is the entry point of the screen. It installs capabilities, builds projections, sends intents and outside signals into the runtime, and performs effects. It holds no product decisions. Capsa ships two hosts: one on AndroidX `ViewModel` for Android, iOS, and the JVM, and one right in the Compose composition, `rememberCapsa`, for every platform of Compose Multiplatform. SKILL.md says how to choose.
+The host is the entry point of the screen. It installs capabilities, builds projections, sends intents and outside signals into the runtime, and performs effects. It holds no product decisions. Capsa ships two hosts: one on AndroidX `ViewModel` for Android, iOS, macOS, and the JVM, and one right in the Compose composition, `rememberCapsa`, for every platform of Compose Multiplatform. SKILL.md says how to choose.
 
 ### Runtime
 

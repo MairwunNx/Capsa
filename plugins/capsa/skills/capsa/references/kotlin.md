@@ -191,7 +191,7 @@ val likeUi: StateFlow<LikeUi> = like.mapState(capsaScope) { it.toUi() }
 
 ## Host: `CapsaViewModel`
 
-`CapsaViewModel` hosts a screen on the multiplatform AndroidX `ViewModel`, on Android, iOS, and the JVM. It is the `CapabilityScope`, so the capability functions are called inside it.
+`CapsaViewModel` hosts a screen on the multiplatform AndroidX `ViewModel`, on Android, iOS, macOS, and the JVM. It is the `CapabilityScope`, so the capability functions are called inside it.
 
 ```kotlin
 class PostViewModel(
