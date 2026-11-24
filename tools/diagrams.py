@@ -247,7 +247,7 @@ def bar(d, x0, x1, y, kind, h=14):
 
 
 FLOW_DESC = ("1: the UI calls send with an intent, and the runtime queues it with the other facts. 2: the runtime calls decide "
-             "of a capability with its slice and the fact. 3: decide returns commit with the new slice, works, and effects. "
+             "of a capability with its slice and the fact. 3: decide returns a Decision with the new slice, works, and effects. "
              "4: the runtime starts a work or a stream, and it answers with a signal. 5: the runtime stores the new slice, "
              "mapState or combineState turns it into a UI model, and the UI collects it. 6: effects go to handleEffects of "
              "the host first, the rest goes to CollectEffects of the screen. The host is a CapsaViewModel or rememberCapsa.")
@@ -271,7 +271,7 @@ def flow(theme):
 
     d.path([(204, 232), (364, 232)])                                   # 1 send
     d.path([(470, 200), (470, 70), (738, 70)], dashed=True)            # 2 decide
-    d.path([(740, 104), (560, 104), (560, 198)], dashed=True)          # 3 commit
+    d.path([(740, 104), (560, 104), (560, 198)], dashed=True)          # 3 decision
     d.path([(646, 222), (738, 222)], dashed=True)                      # 4 start
     d.path([(740, 250), (648, 250)], dashed=True)                      # Signal
     d.path([(506, 264), (506, 320)])                                   # 5 new slice
@@ -281,7 +281,7 @@ def flow(theme):
 
     d.step(222, 212, 1, "send(intent)")
     d.step(490, 52, 2, "decide(slice, fact)")
-    d.step(580, 140, 3, "commit(work, effect)")
+    d.step(580, 140, 3, "Decision(work, effect)")
     d.step(694, 186, 4, "start")
     d.text(690, 276, "Signal", 14)
     d.step(526, 296, 5, "new slice")

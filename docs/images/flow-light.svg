@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img">
 <title>How a fact flows through a Capsa screen</title>
-<desc>1: the UI calls send with an intent, and the runtime queues it with the other facts. 2: the runtime calls decide of a capability with its slice and the fact. 3: decide returns commit with the new slice, works, and effects. 4: the runtime starts a work or a stream, and it answers with a signal. 5: the runtime stores the new slice, mapState or combineState turns it into a UI model, and the UI collects it. 6: effects go to handleEffects of the host first, the rest goes to CollectEffects of the screen. The host is a CapsaViewModel or rememberCapsa.</desc>
+<desc>1: the UI calls send with an intent, and the runtime queues it with the other facts. 2: the runtime calls decide of a capability with its slice and the fact. 3: decide returns a Decision with the new slice, works, and effects. 4: the runtime starts a work or a stream, and it answers with a signal. 5: the runtime stores the new slice, mapState or combineState turns it into a UI model, and the UI collects it. 6: effects go to handleEffects of the host first, the rest goes to CollectEffects of the screen. The host is a CapsaViewModel or rememberCapsa.</desc>
 <defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#818b98"/></marker></defs>
 <rect width="1060" height="580" rx="12" fill="#ffffff"/>
 <rect x="330" y="150" width="350" height="404" rx="14" fill="#bc4c00" fill-opacity="0.04" stroke="#bc4c00" stroke-width="1.5" stroke-opacity="0.7" stroke-dasharray="6 5"/>
@@ -44,7 +44,7 @@
 <text x="509" y="57" font-size="14" fill="#1f2328">decide(slice, fact)</text>
 <circle cx="580" cy="140" r="11" fill="#4f46e5"/>
 <text x="580" y="144.5" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle">3</text>
-<text x="599" y="145" font-size="14" fill="#1f2328">commit(work, effect)</text>
+<text x="599" y="145" font-size="14" fill="#1f2328">Decision(work, effect)</text>
 <circle cx="694" cy="186" r="11" fill="#4f46e5"/>
 <text x="694" y="190.5" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle">4</text>
 <text x="713" y="191" font-size="14" fill="#1f2328">start</text>
