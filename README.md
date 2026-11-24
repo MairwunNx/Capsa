@@ -40,7 +40,8 @@ The UI sends an intent, a capability decides what it means for its slice, and th
 - ⏱️ **Debounce and retry in one argument.** `debounce = 300.milliseconds` waits for a pause in typing, and `Retry(times = 3, delay = 1.seconds)` repeats a failed call.
 - 🚪 **Side effects leave through one door.** Navigation, snackbars, and analytics leave the logic as effects, and only the host performs them.
 - 🛟 **Debug crashes, release lives on.** A broken contract crashes a debug build at once. A release build logs it with the last 32 events of the runtime, and the screen keeps going.
-- 🧪 **Tests without Android and iOS.** `capsa-test` runs the real runtime on virtual time in plain `commonTest`: you send facts and check slices and effects.
+- 🧪 **Tests without Android and iOS.** `capsa-test` runs the real runtime on virtual time in plain `commonTest`: you send facts and check slices and effects. `capsa-viewmodel-test` does the same for a whole view model.
+- 🔍 **Mistakes caught before review.** `capsa-detekt` adds rules for detekt 2: a fact without `data`, a decision without argument names, a host that keeps the screen visible for good.
 - 📱 **Android and iOS from one codebase.** Compose Multiplatform screens run on Android, iOS, macOS, and the desktop, hosted right in the composition or in a `ViewModel`.
 - 🤖 **Your agent knows Capsa.** Skills for Claude Code, OpenCode, Codex, Gemini CLI, and Cursor add Capsa to a project, move a screen to it, write new capabilities, and review code against the rules.
 
