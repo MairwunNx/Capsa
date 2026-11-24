@@ -1,0 +1,10 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.mairwunnx.capsa:capsa-viewmodel-test>
+final fun (kotlinx.coroutines.test/TestScope).com.mairwunnx.capsa.viewmodel.test/collectAsScreen(kotlinx.coroutines.flow/Flow<*>): kotlinx.coroutines/Job // com.mairwunnx.capsa.viewmodel.test/collectAsScreen|collectAsScreen@kotlinx.coroutines.test.TestScope(kotlinx.coroutines.flow.Flow<*>){}[0]
+final fun <#A: com.mairwunnx.capsa.viewmodel/CapsaViewModel> (kotlinx.coroutines.test/TestScope).com.mairwunnx.capsa.viewmodel.test/capsaViewModel(kotlin/Function0<#A>): #A // com.mairwunnx.capsa.viewmodel.test/capsaViewModel|capsaViewModel@kotlinx.coroutines.test.TestScope(kotlin.Function0<0:0>){0§<com.mairwunnx.capsa.viewmodel.CapsaViewModel>}[0]

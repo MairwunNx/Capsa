@@ -1,0 +1,5 @@
+public final class com/mairwunnx/capsa/viewmodel/test/CapsaViewModelTestKt {
+	public static final fun capsaViewModel (Lkotlinx/coroutines/test/TestScope;Lkotlin/jvm/functions/Function0;)Lcom/mairwunnx/capsa/viewmodel/CapsaViewModel;
+	public static final fun collectAsScreen (Lkotlinx/coroutines/test/TestScope;Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/Job;
+}
+

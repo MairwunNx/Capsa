@@ -29,6 +29,7 @@ include(
     ":capsa-viewmodel",
     ":capsa-compose",
     ":capsa-test",
+    ":capsa-viewmodel-test",
     ":capsa-bom",
     ":capsa-benchmarks",
     ":samples:shared",
