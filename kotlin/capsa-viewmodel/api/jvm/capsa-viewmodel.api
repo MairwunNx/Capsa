@@ -15,6 +15,8 @@ public abstract class com/mairwunnx/capsa/viewmodel/CapsaViewModel : androidx/li
 }
 
 public final class com/mairwunnx/capsa/viewmodel/CapsaViewModel$Companion {
+	public final fun defaultConfig (Lcom/mairwunnx/capsa/CapsaLogger;)Lcom/mairwunnx/capsa/CapsaConfig;
+	public static synthetic fun defaultConfig$default (Lcom/mairwunnx/capsa/viewmodel/CapsaViewModel$Companion;Lcom/mairwunnx/capsa/CapsaLogger;ILjava/lang/Object;)Lcom/mairwunnx/capsa/CapsaConfig;
 	public final fun resetWorkDispatcher ()V
 	public final fun setWorkDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 }

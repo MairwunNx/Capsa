@@ -82,7 +82,8 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * @param logger the logger for failing effect handlers and the runtime journal
  * @param savedStateHandle the store of snapshots for [installSaved], or `null` if the screen saves nothing
- * @param config the runtime settings
+ * @param config the runtime settings, [defaultConfig] unless you pass your own. To change one setting,
+ * pass `defaultConfig(logger).copy(…)`: a config built from scratch drops the work dispatcher and the journal
  */
 @Suppress("AbstractClassCanBeConcreteClass") // A screen extends it, nobody creates it as is.
 public abstract class CapsaViewModel(
@@ -212,7 +213,20 @@ public abstract class CapsaViewModel(
             workDispatcher.value = Dispatchers.Default
         }
 
-        private fun defaultConfig(logger: CapsaLogger) = CapsaConfig(
+        /**
+         * Returns the config a view model takes by default: works on the work dispatcher, `Dispatchers.Default` unless
+         * a test replaced it with [setWorkDispatcher], and the runtime journal in `logger` through [LoggingCapsaObserver].
+         *
+         * Change one setting on top of it with [CapsaConfig.copy], and the rest stays. A view model with a logger
+         * of its own passes the same logger here:
+         *
+         * ```
+         * class ClockViewModel : CapsaViewModel(config = defaultConfig().copy(visibility = CapsaVisibility.Watched(grace = 2.seconds)))
+         * ```
+         *
+         * @param logger the logger that receives the runtime journal
+         */
+        public fun defaultConfig(logger: CapsaLogger = CapsaLogger.Default): CapsaConfig = CapsaConfig(
             workContext = workDispatcher.value,
             observer = LoggingCapsaObserver(logger),
         )

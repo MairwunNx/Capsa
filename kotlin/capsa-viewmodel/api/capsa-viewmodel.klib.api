@@ -24,6 +24,7 @@ abstract class com.mairwunnx.capsa.viewmodel/CapsaViewModel : androidx.lifecycle
     open suspend fun onEffectFailed(com.mairwunnx.capsa/Effect, kotlin/Exception) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.onEffectFailed|onEffectFailed(com.mairwunnx.capsa.Effect;kotlin.Exception){}[0]
 
     final object Companion { // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion|null[0]
+        final fun defaultConfig(com.mairwunnx.capsa/CapsaLogger = ...): com.mairwunnx.capsa/CapsaConfig // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion.defaultConfig|defaultConfig(com.mairwunnx.capsa.CapsaLogger){}[0]
         final fun resetWorkDispatcher() // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion.resetWorkDispatcher|resetWorkDispatcher(){}[0]
         final fun setWorkDispatcher(kotlinx.coroutines/CoroutineDispatcher) // com.mairwunnx.capsa.viewmodel/CapsaViewModel.Companion.setWorkDispatcher|setWorkDispatcher(kotlinx.coroutines.CoroutineDispatcher){}[0]
     }
