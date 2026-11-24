@@ -23,7 +23,7 @@ The root holds what every implementation shares. Each implementation gets its ow
 | `.claude-plugin/` | The marketplace that lists the plugin |
 | `.claude/skills/` | Skills for working on this repository, such as `update-deps`. Users never see them |
 | `docs/` | Pictures for the README and the wiki: `images/` (SVG in light and dark), `media/` (WebP in git, mp4 in LFS), `kdoc/`, `social/` |
-| `tools/` | Helper scripts: diagrams, skill install, benchmark comparison |
+| `tools/` | Helper scripts: diagrams, the “Watch the video” buttons, skill install, benchmark comparison |
 | `.github/workflows/` | `build.yml` on every push, `release.yml`, `autopilot.yml` |
 
 Later implementations stand next to `kotlin/` and don’t change the root:
