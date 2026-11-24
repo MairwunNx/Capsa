@@ -274,7 +274,7 @@ LikeContent(ui, onIntent = like::send)
 - A rotation keeps the runtime: `retain` holds it through a configuration change on Android, and the works keep running. iOS, macOS, and the desktop don’t recreate the composition.
 - `installSaved` goes to `LocalSaveableStateRegistry`, the store of `rememberSaveable`. Without a registry the capability works and nothing is saved.
 - When the screen leaves the composition for good, the runtime and its works stop. A screen on the back stack keeps its runtime only if the navigation wraps the content of each entry in a `RetainedValuesStore`, as a `NavEntryDecorator` over `RetainedValuesStoreRegistry` does in Navigation 3. Otherwise the works stop, and the saved slices come back on return. A `CapsaViewModel` lives as long as its `ViewModelStore`.
-- In a test, decisions run on `Dispatchers.Main.immediate`, so set `Dispatchers.setMain(dispatcher)`. Works take `config = CapsaConfig(workContext = dispatcher)`.
+- In a test, decisions run on `Dispatchers.Main.immediate`, so set `Dispatchers.setMain(dispatcher)`. Works take `config = CapsaScope.defaultConfig().copy(workContext = dispatcher)`.
 
 ## Every host
 
@@ -310,6 +310,7 @@ object FormSaver : SliceSaver<FormSlice, FormSaved> {
 - `CapsaLogger` is a `fun interface` with a lazy message. `CapsaLogger.Default` writes to Logcat, `NSLog`, or `System.err` with the tag `Capsa`: errors always, the runtime journal only while `failFast` is on. Pass your own logger to send errors to a crash reporter.
 - `LoggingCapsaObserver` writes the journal: each fact and, indented, what it caused.
 - `CapsaViolationException` carries the `CapsaViolation` and the last 32 events of the runtime.
+- To change one setting of a host, pass its default with a copy: `CapsaViewModel(config = defaultConfig().copy(visibility = CapsaVisibility.Watched(grace = 2.seconds)))`, or `CapsaScope.defaultConfig().copy(…)` to `rememberCapsa`. A `CapsaConfig(…)` built from scratch drops the journal and the work dispatcher of the host, `CapsaViewModel.setWorkDispatcher` of tests included. A host with a logger of its own passes it: `defaultConfig(logger)`.
 - `CapsaConfig(maxSignalDepth = 8, onViolation, workContext, observer, visibility)` and `CapsaObserver` configure the runtime when you build a host of your own. `CapsaObserver.onDecision(capability, fact, decision: Decision<*, *>)` sees every decision, bootstraps included, with `Started` as the fact.
 
 ## Screen: `capsa-compose`
