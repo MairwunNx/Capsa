@@ -21,10 +21,12 @@ The root holds what every implementation shares. Each implementation gets its ow
 | `kotlin/` | The Kotlin Multiplatform implementation, its own Gradle build: `capsa-core`, `capsa-host`, `capsa-viewmodel`, `capsa-compose`, `capsa-test`, `capsa-viewmodel-test`, `capsa-detekt`, `capsa-bom`, the benchmarks (`capsa-benchmarks`, `capsa-benchmarks-android`), and the demo app with its macrobenchmarks in `samples/` |
 | `plugins/capsa/` | What users install for their agents: the `capsa` skill and the `capsa-setup`, `capsa-migrate`, `capsa-new`, `capsa-review` commands |
 | `.claude-plugin/` | The marketplace that lists the plugin |
+| `SETUP.md` | What an agent does to add Capsa to a project. The starter prompt of the README points to its raw URL |
+| `ctxray/`, `ctxray.config.ts`, `ctxray.lock` | The ctxray tests of the skills, the projects they run on, and the pinned harness builds |
 | `.claude/skills/` | Skills for working on this repository, such as `update-deps`. Users never see them |
 | `docs/` | Pictures for the README and the wiki: `images/` (SVG in light and dark), `media/` (WebP in git, mp4 in LFS), `kdoc/`, `social/` |
 | `tools/` | Helper scripts: diagrams, the “Watch the video” buttons, skill install, benchmark comparison, benchmarks on a phone, the baseline profile |
-| `.github/workflows/` | `build.yml` on every push, `release.yml`, `autopilot.yml` |
+| `.github/workflows/` | `build.yml` on every push, `ctxray.yml` on pushes to the skills, `release.yml`, `autopilot.yml` |
 
 Later implementations stand next to `kotlin/` and don’t change the root:
 
@@ -45,6 +47,7 @@ cd kotlin && ./gradlew build
 
 - **Public API.** `build` also compares the public API with the dumps in each module’s `api/` folder. After you change the API on purpose, run `./gradlew apiDump` and commit the new dumps with the change.
 - **Xcode.** Kotlin/Native needs the full Xcode, not only the Command Line Tools, to link tests such as `macosArm64Test`. If `xcodebuild -version` fails, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`. `iosSimulatorArm64Test` also needs the iOS simulator runtime: `xcodebuild -downloadPlatform iOS`. CI skips the simulator tests (it sets `CI`) and relies on `macosArm64Test`.
+- **Skills.** ctxray checks the skills of `plugins/capsa` on five agent harnesses: `npx @mairwunnx/ctxray test --layer L1-L5`. `ctxray.yml` runs L1–L5 on every push to the skills and L6–L7 on Claude Code with the answers recorded in `ctxray/__cassettes__`. A run by hand in Actions asks the real model when the repository holds `CTXRAY_CLAUDE_CODE_OAUTH_TOKEN` or `CTXRAY_ANTHROPIC_API_KEY`. After you change the skills on purpose, commit the fresh answers from its artifact to `ctxray/__cassettes__`.
 
 ## Hard rules
 
