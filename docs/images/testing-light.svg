@@ -3,8 +3,8 @@
 <desc>A test appends facts to capsaHarness, a real runtime on virtual time, and moves the clock with runCurrent and advanceTimeBy. It reads the slice of a capability with stateOf, the effects with takeEffects, the works with workEvents: Started, Cancelled, Failed, Dropped, and the violations. replay feeds facts straight into decide and starts no works.</desc>
 <defs><marker id="m0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#818b98"/></marker></defs>
 <rect width="960" height="470" rx="12" fill="#ffffff"/>
-<text x="20" y="36" font-size="15" fill="#1f2328" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">capsaHarness(search, results)</text>
-<text x="311.88" y="36" font-size="13" fill="#59636e">a real runtime on virtual time in a runTest</text>
+<text x="20" y="36" font-size="15" fill="#1f2328" font-weight="700" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">capsaHarness(search)</text>
+<text x="224.4" y="36" font-size="13" fill="#59636e">a real runtime on virtual time in a runTest</text>
 <rect x="20" y="70" width="250" height="64" rx="10" fill="#4f46e5" fill-opacity="0.08" stroke="#4f46e5" stroke-width="1.5" stroke-opacity="0.7"/>
 <text x="145" y="99" font-size="15" fill="#1f2328" font-weight="700" text-anchor="middle">append(fact)</text>
 <text x="145" y="119" font-size="13" fill="#59636e" text-anchor="middle">queues an intent or a signal</text>

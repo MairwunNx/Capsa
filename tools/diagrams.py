@@ -616,7 +616,7 @@ def testing(theme):
                 "with workEvents: Started, Cancelled, Failed, Dropped, and the violations. replay feeds facts straight into "
                 "decide and starts no works.")
     t = d.t
-    heading(d, 20, 36, "capsaHarness(search, results)", "a real runtime on virtual time in a runTest", mono_title=True)
+    heading(d, 20, 36, "capsaHarness(search)", "a real runtime on virtual time in a runTest", mono_title=True)
     ins = [("runtime", "append(fact)", "queues an intent or a signal"),
            (None, "runCurrent()", "runs what is due now"),
            (None, "advanceTimeBy(d)", "moves the virtual clock")]
