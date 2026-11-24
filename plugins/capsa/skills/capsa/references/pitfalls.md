@@ -24,14 +24,26 @@ A test of a `CapsaViewModel` on virtual time replaces both dispatchers: `Dispatc
 
 Reactions in one capability must not overlap. Capsa catches two kinds of overlap at different times:
 
-- A reaction to a supertype and one to its subtype (`on<SearchFact>` and `on<QueryChanged>` where `QueryChanged : SearchFact`) fail when the capability is built, on the JVM and Android. Kotlin/Native can’t compare classes, so there the build only catches two reactions to the same class.
-- A fact that implements two unrelated interfaces with a reaction each (`data object Reset : SearchFact, FilterFact`) passes the build everywhere. It fails in `decide` the moment it arrives, as `DecideFailed`, and the slice stays as it was.
+- A reaction to a supertype and one to its subtype (`onSignal<SearchSignal>` and `onSignal<ResultsLoaded>` where `ResultsLoaded : SearchSignal`) fail when the capability is built, on the JVM and Android. Kotlin/Native can’t compare classes, so there the build only catches two reactions to the same class.
+- A fact that implements two unrelated interfaces with a reaction each (`data object Reset : SearchSignal, FilterSignal`) passes the build everywhere. It fails in `decide` the moment it arrives, as `DecideFailed`, and the slice stays as it was.
 
 Give each fact one place in the hierarchy, or handle the supertype once and sort out subtypes with `when`. Effect handlers follow the same rules: an effect that matches two handlers throws when it arrives.
 
-### A sealed slice narrows to its first subtype
+### An intent with two owners
 
-`capability("download", DownloadSlice.Idle) { … }` infers the slice type as `DownloadSlice.Idle`, and no reaction can move to `Running`. State the type: `capability<DownloadSlice>("download", DownloadSlice.Idle) { … }`.
+Two capabilities with `onIntent` for the same intent class, or for a supertype and its subtype, fail at `install` with `IllegalArgumentException`. The old habit of letting every capability take its part of a click doesn’t work anymore. Keep the reaction in the capability that owns the scenario, and let it send its own signal that the others handle with `onSignal`. The same holds in tests: install the owner and the neighbour, not two owners.
+
+### Missing type arguments
+
+`capability<S, I, O>` needs all three type arguments. Leave them out, and Kotlin either can’t infer them or infers the wrong ones: a sealed slice narrows to the initial subtype, such as `DownloadSlice.Idle`, and no reaction can move to `Running`. State them: `capability<DownloadSlice, DownloadIntent, DownloadSignal>(name = "download", initial = DownloadSlice.Idle) { … }`.
+
+### A neighbour’s signal in a decision
+
+`signal = HeaderRefreshed` in the like capability doesn’t compile when `HeaderRefreshed` belongs to the header: a capability sends only its own signals. Don’t widen `O` to `Signal` to get around it. Send a signal of your own, and let the header react to it.
+
+### A reaction to `Started`
+
+`onSignal<Started>` throws when the capability is built, and so does a second `bootstrap`. Put the initial load and the subscriptions into one `bootstrap`.
 
 ### A fact without a readable `toString()`
 
@@ -39,11 +51,15 @@ A plain `class` or `object` prints as `a.b@1f2e` in a release crash report. In a
 
 ### A signal nobody handles
 
-A signal from `commit` that no capability handles is an `UnhandledFact` violation. When you add a signal for a neighbour, add the neighbour’s reaction in the same change.
+A signal from a decision that no capability handles is an `UnhandledFact` violation. When you add a signal for a neighbour, add the neighbour’s reaction in the same change.
 
 ### A chain of signals that loops
 
-A capability that answers a signal with a signal that leads back to it loops. The runtime stops the chain at depth 8 with `SignalCycle`. Break the loop: one of the reactions must end with a plain `commit()`.
+A capability that answers a signal with a signal that leads back to it loops. The runtime stops the chain at depth 8 with `SignalCycle`. Break the loop: one of the reactions must return a decision without a signal.
+
+### A signal to yourself
+
+A capability that sends a signal only to handle it itself takes an extra pass of the pipeline and brings the chain closer to `SignalCycle`. Change the slice in the same reaction. Forwarding the answer of a work as a new signal is the same mistake: the answer already reaches every capability that handles it.
 
 ## Works
 
@@ -102,9 +118,11 @@ A `CancellationException` thrown while the runtime’s scope is alive, for examp
 
 A handler isn’t `suspend`, and the next effect waits until it returns. For async work in a handler, launch a coroutine there, or better, describe the work in the capability.
 
-### `Started` comes once
+### The bootstrap runs once
 
-A rotation, a return from the back stack, or a new composition doesn’t send `Started` again. Refresh on return through an intent from the UI or a `whileVisible` stream, not through `on<Started>`.
+A rotation, a return from the back stack, or a new composition doesn’t run the `bootstrap` again. Refresh on return through an intent from the UI or a `whileVisible` stream, not through the bootstrap.
+
+A restore after the process died does run it, with the restored slice. A bootstrap that always starts the full load throws away what the slice already holds. Check the slice: `work = works.load().takeIf { state.items is Load.Loading }`.
 
 ### A `rememberCapsa` screen that loses its runtime on the back stack
 

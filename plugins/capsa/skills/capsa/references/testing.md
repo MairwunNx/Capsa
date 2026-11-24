@@ -7,6 +7,7 @@ This file holds the principles. The names of the test tools for each platform li
 | What | How |
 |---|---|
 | A reaction without works | Feed facts straight into `decide`, one by one. No coroutines, no runtime. Check the slice, the effects, and how the works and signals are described |
+| A bootstrap | Replay `Started`, which runs the bootstrap, from the initial and from a restored slice. Check which works it starts |
 | A capability with works, timers, retries, debounce | Run the real runtime on virtual time with fake ports. Check the slice, the effects, and the work events |
 | A chain of signals between capabilities | The same runtime with every capability of the chain installed |
 | A projection | A plain function test, often a table of cases |
@@ -17,6 +18,7 @@ This file holds the principles. The names of the test tools for each platform li
 ## Principles
 
 - **Every intent has a test without the UI.** A capability is a pure function, so a test sends facts and checks the slice. No emulator, no mock framework.
+- **A neighbour learns through the owner’s signal.** To test that a click reaches a neighbour, install the owner and the neighbour together and send the intent. Two capabilities never react to one intent, even in a test.
 - **Every effect is checked where it leaves the capability**, not in its handler.
 - **Ports are lambdas.** A fake port is a lambda in the test: `search = { query -> listOf(item(query)) }`, `save = { error("offline") }`.
 - **Time is virtual.** Timeouts, debounce, retries, order of loading, and timers move the test clock explicitly. A real `delay` in a test is a bug.

@@ -1,6 +1,6 @@
 ---
 name: capsa-migrate
-description: Move an existing screen, or a part of it, to Capsa – capabilities, slices, ports, wiring, projections, and a host – without changing its behaviour. Use when the user asks to migrate, port, or rewrite a screen on Capsa or Capability Slice Architecture.
+description: Move an existing screen, or a part of it, to Capsa – capabilities, slices, ports, wiring, projections, and a host – without changing its behaviour. Also moves Capsa code from the old API (commit, on<Fact>, on<Started>) to the current one. Use when the user asks to migrate, port, or rewrite a screen on Capsa or Capability Slice Architecture, or to update Capsa code to the new API.
 argument-hint: "<screen, what to move, how deep, which host, whether to touch the layout>"
 ---
 
@@ -19,6 +19,8 @@ If the line above shows no request, or the placeholder as it is, take the reques
 3. Load the `capsa` skill and read its `SKILL.md`, then the platform file: `references/kotlin.md` for Kotlin. If the skill isn’t installed, tell the user that this command needs it and stop.
 
 ## 1. Read the request
+
+First tell which migration this is. Code that already imports `com.mairwunnx.capsa` and calls `commit(`, `on<…>` inside `capability(…) { }`, or `on<Started>` is on the old Capsa API: follow “Moving from the old Capsa API” below instead of steps 1 to 4. Everything else is a screen on another architecture.
 
 Write out, and show the user briefly:
 
@@ -44,15 +46,18 @@ Read the view model, its mappers, the UI of the screen, and everything they call
 
 | What to look for | Becomes in Capsa |
 |---|---|
-| UI events: clicks, the screen shown, pull to refresh | `Intent` |
-| Flows and use cases the view model reads | `Signal` from a work through a port |
+| UI events: clicks, the screen shown, pull to refresh | `Intent` of the capability that owns the scenario, under its sealed intent interface |
+| One UI event that changes several parts of the screen | An intent of one owner. The owner sends its own signal, and the other capabilities react to it |
+| Flows and use cases the view model reads | `Signal` from a work through a port, under the capability’s sealed signal interface |
 | Navigation, analytics, dialogs, snackbars, toasts | `Effect` |
 | State fields that only this logic changes | A slice |
 | Rules in mappers, `remember`, and the view model: formatting, columns, conditions to show something | A projection or `decide` |
 | `combine` of several flows | `combineState` in a projector, or separate slices |
 | Resources, platform context, or the router used by the logic | A port, an effect, or the projector |
-| Loading in the view model’s `init` | A reaction to `Started` with a `work` or a `stream` |
-| `try`/`catch`, `runCatching`, error handling of a load | `onError` of the work → a signal → a field of the slice (`Load.Failed`) |
+| Loading in the view model’s `init` | The `bootstrap` of the capability with a `work` or a `stream`. It runs again with the restored slice after process death |
+| `try`/`catch`, `runCatching`, error handling of a load | `onError` of the work → a signal of the capability → a field of the slice (`Load.Failed`) |
+| A private method that several handlers call to load or save | A work in `val works = object { … }` at the top of the capability block |
+| A state update the view model posts to itself, such as `_events.emit` handled in the same class | A change of the slice in the same reaction, not a signal |
 | Timers, `delay`, debounce, manual jobs and their cancelling | A `stream` or a `work` with a `WorkKey` and a policy, `debounce`, `cancel`. A timer gets `whileVisible = true`. A search that keeps the old results until the user stops typing: the recipe “Search: loading starts after a pause” in `references/recipes.md` of the `capsa` skill |
 | Manual retries of a request | `retry = Retry(…)` of the work |
 | A check that an answer is still current, such as comparing request ids | Nothing: `cancel` and `Latest` drop stale answers |
@@ -68,7 +73,7 @@ Show the plan before any code when there are more than three capabilities or the
 
 The plan holds:
 
-- A table of capabilities: name, slice, what it owns, which intents and signals it handles, which effects it sends.
+- A table of capabilities: name, slice, the intents it owns, the signals it owns, the signals of neighbours it handles, which effects it sends, and what its `bootstrap` starts.
 - The packages `<screen>/{business/{capabilities,wiring},presentation}`, as `references/rules.md` describes them.
 - Ports and wiring: which use cases they wrap. Where a port joins several sources, a new use case goes into the domain layer.
 - How the new screen gets switched on.
@@ -79,7 +84,7 @@ The plan holds:
 Run the checks that fit after every step. Fix an error in the code you changed before the next step. If the environment or a known problem of the project blocks a check, write down why, and go on only where the result doesn’t depend on it.
 
 1. **Capsa in the module.** If the module lacks it, add the artifacts from `references/kotlin.md` the same way the project adds other libraries, with the Capsa version the project already uses. A project without Capsa at all needs `capsa-setup` first: tell the user and stop.
-2. **The pure layer:** facts, slice, capability, ports, and the analytics effects. Write tests for each capability at once, with the test tools from `references/kotlin.md`.
+2. **The pure layer:** facts, slice, capability, ports, and the analytics effects. Each capability is `capability<Slice, Intents, Signals>(name = …, initial = …)`, its reactions return `Decision(state = …, …)` with named arguments, and its works sit inside its block. Write tests for each capability at once, with the test tools from `references/kotlin.md`.
 3. **A use case in the domain layer**, if a port needs to join several sources. Test it on its own.
 4. **The wiring:** `<Name>PortsWire`, which builds the ports from the project’s real implementations. It only translates types and calls.
 5. **Projections** and the projector. The projector gets `capsaScope` of the host, not the scope of the view model. Test projections as plain functions.
@@ -110,8 +115,35 @@ Answer in this order, briefly:
 5. What isn’t checked.
 6. How to switch the new screen on.
 
+## Moving from the old Capsa API
+
+The old API built a capability with `capability(name, initial) { on<Fact> { … } }` and returned `state.commit(…)`. The current one names what the capability owns and builds decisions with `Decision(…)`. The behaviour of the screen stays: only the declarations change. Effect handlers (`effectHandlers { on<E> { … } }`, `handleEffects`) don’t change, `on<E>` stays right there.
+
+1. **The version.** The project needs a Capsa release with `onIntent`, `onSignal`, and `bootstrap`. If it pins an older one, ask the user before you update it.
+2. **Sealed facts.** For each capability, add `sealed interface <Name>Intent : Intent` and `sealed interface <Name>Signal : Signal` to its facts file. Keep the names and the packages of the facts, only change their parent: `data object LikeClicked : LikeIntent`.
+3. **Ownership.** Find intents that several capabilities react to. Keep the reaction in the capability that owns the scenario, and give it a signal of its own that the others handle. Find decisions that send a neighbour’s signal: the signal moves to the capability that sends it, or the sender gets a signal of its own. Both are build or install errors now, so none may stay.
+4. **The rewrite**, one capability at a time:
+
+| Old API | Current API |
+|---|---|
+| `capability("likes", LikeSlice()) { … }` | `capability<LikeSlice, LikeIntent, LikeSignal>(name = "likes", initial = LikeSlice()) { … }`. `Nothing` for no intents or no signals |
+| `on<Started> { state, _ -> state.commit(load()) }` | `bootstrap { state -> Decision(state = state, work = works.load()) }`. At most one per capability |
+| `on<LikeClicked> { state, fact -> … }` | `onIntent<LikeClicked> { state, clicked -> … }` for the capability’s own intents |
+| `on<LikeSaved> { state, fact -> … }` | `onSignal<LikeSaved> { state, saved -> … }` for any signal |
+| `state.commit()` | `Decision(state = state)` |
+| `state.copy(…).commit(effect)`, `commit(work)`, `commit(signal)` | `Decision(state = state.copy(…), effect = …)`, `work = …`, `signal = …` |
+| `commit(effects = …, works = …, cancel = listOf(K), signals = …)` | `Decision(state = …, effects = …, works = …, cancel = K, signals = …)`. Several keys go to `cancels` |
+| `private fun load() = work(LOAD, …)` outside the block | `val works = object { fun load() = work(key = LOAD, …) }` inside the block, typed to the capability’s signals |
+| `Flow<Signal>` of a stream helper | `Flow<LikeSignal>` |
+| `Decision<S>`, `Work`, `onDecision(…, decision: Decision<*>)` | `Decision<S, O>`, `Work<O>`, `onDecision(…, decision: Decision<*, *>)` |
+
+5. **Signals you no longer need.** Drop a signal a capability sent only to itself: change the slice in the same reaction. Drop a signal that only forwards the answer of a work: neighbours listen to the answer itself. A signal that asks the host to act becomes an effect. Each such change keeps the behaviour, so check it with the existing tests.
+6. **Tests.** `replay(Started, …)` runs the bootstrap, and the harness still lists `Started` among the handled facts. A test where two capabilities reacted to one intent installs the owner and the neighbour and checks the neighbour through the owner’s signal. Keep what each test checked.
+7. **Check and report** as in steps 5 and 6 above. Under “What I found”, list each place where ownership forced a new signal.
+
 ## Example requests
 
 - `/capsa-migrate the search screen in :feature:search, depth A, CapsaViewModel, keep the layout`
 - `/capsa-migrate the product details screen: move loading and the like into capabilities, leave the rest, don’t touch the composables`
 - `/capsa-migrate the recommendations block on the home screen, fully, with the layout, on rememberCapsa with a class`
+- `/capsa-migrate move :feature:search from commit and on<Started> to the new API`

@@ -8,9 +8,9 @@ Capsa is the Kotlin implementation of Capability Slice Architecture (CSA). This 
 
 A fact is something that happened. It lives for one pass of the pipeline: the memory of the screen lives in slices.
 
-- **Intent** comes from the UI: a click, a typed character, an item shown on screen, a measured size. Only the UI creates intents.
-- **Signal** comes from everything else: the answer of a work, a decision of a neighbour capability, the result of another screen, a lifecycle event.
-- **Started** is a signal the runtime sends exactly once, before any other fact. A rotation or a recomposition doesn’t send it again.
+- **Intent** comes from the UI: a click, a typed character, an item shown on screen, a measured size. Only the UI creates intents. Each intent has one owner: one capability on the screen reacts to it.
+- **Signal** comes from everything else: the answer of a work, a decision of a neighbour capability, the result of another screen, a lifecycle event. A capability sends only the signals it owns, and any capability may listen to them.
+- **Started** marks the start of the runtime, the first fact it handles. No capability reacts to it: the runtime runs the bootstraps while it handles `Started`. A rotation or a recomposition doesn’t send it again.
 
 Facts are immutable values with a readable `toString()`: the runtime history and crash reports print them.
 
@@ -24,11 +24,22 @@ A field that only the UI needs belongs in the projection, not in the slice.
 
 A capability is a pure function `(Slice, Fact) -> Decision` with a name and an initial slice. It declares which fact classes it handles, one reaction per class, and the runtime never delivers the rest.
 
+A capability owns three things, and its type names them: its slice, its intents, and its signals. It reacts to its own intents and to any signal, and it sends only its own signals. So an intent has one owner on the screen. When a neighbour needs to know about the user’s action, the owner sends a signal of its own.
+
 A capability is the unit of a user scenario. It doesn’t know the UI, the host, or other capabilities. What it needs from the world comes through ports, what it wants done goes out as works and effects.
+
+### Bootstrap
+
+The bootstrap is the first decision of a capability: the initial load, the subscriptions, the first effects. A capability has at most one.
+
+- The runtime runs it once, while it handles `Started`, before any other fact. A rotation doesn’t run it again.
+- It gets the initial slice, or the restored one after the process died. Works don’t survive a restore, so the bootstrap starts them again.
+- The bootstraps of a screen run in install order, then the signals they send, then the next fact.
+- It doesn’t wait for its works: they run on their own, and their answers arrive as signals later.
 
 ### Decision
 
-A decision is what a capability returns for a fact:
+A decision is what a capability returns for a fact or from its bootstrap:
 
 - the new slice
 - works to start
@@ -36,9 +47,13 @@ A decision is what a capability returns for a fact:
 - effects for the host
 - signals for the runtime to handle right after the current fact.
 
+A single item and a list of each kind are separate arguments, and a missing single item means “nothing”. Name every argument, so a reader sees what the decision does.
+
+A signal is news for the neighbours. A capability changes its own slice in the same decision, without a signal to itself. The answer of a work is already a signal, so nobody forwards it. What the host must do leaves as an effect.
+
 ### Work
 
-A work is an async job described as data: a key, a policy, a source, and an error handler.
+A work is an async job described as data: a key, a policy, a source, and an error handler. It answers with the signals of the capability that starts it, its answers and its error alike.
 
 - **work** runs a suspending block and turns its result into one signal. The block may make several calls or only wait.
 - **stream** subscribes to a flow and turns each value into a signal.
@@ -84,7 +99,7 @@ host ◀── effect ◀──────────────────�
 ```
 
 1. A fact enters the queue from the UI, a work, or the host.
-2. The runtime takes the next fact and passes it to every capability that handles its class, in install order.
+2. The runtime takes the next fact and passes it to every capability that handles its class, in install order. For `Started` it runs every bootstrap instead.
 3. Each capability returns a decision. The runtime stores the slice, puts the effects into the outbox for the host, cancels the listed works, and starts the new ones.
 4. Signals from the decision get handled right after, with a depth one greater, before the next fact from the queue. A chain deeper than the limit (8 by default) is a cycle, and the runtime breaks it.
 5. A work emits a signal into the queue. If its run was revoked meanwhile, the runtime drops the signal.
@@ -101,7 +116,7 @@ host ◀── effect ◀──────────────────�
 
   The runtime keeps the previous slice and goes on. The report carries the last 32 events of the runtime.
 - **Fail fast in debug, crash-free in release.** A violation, a failing projection, a broken snapshot, or a failing effect handler crashes a debug build at once and goes to the logger in a release build.
-- **Build errors** stay fatal everywhere: a duplicate capability name, overlapping reactions, installing a capability after the runtime started.
+- **Build errors** stay fatal everywhere: a duplicate capability name, overlapping reactions, a reaction to `Started` or a second bootstrap, two capabilities that own one intent, installing a capability after the runtime started.
 
 ## Screens and their runtimes
 

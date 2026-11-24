@@ -2,7 +2,7 @@
 
 Each recipe shows a capability for a common scenario. The examples are in Kotlin, the only platform Capsa has today. The ideas carry over to any implementation of CSA. Imports, hosts, and tests are in `kotlin.md`.
 
-Every capability here is a function with the context parameter `CapabilityScope`, so only a host or a test can create it.
+Every capability here is a function with the context parameter `CapabilityScope`, so only a host or a test can create it. It states its slice, its intents, and its signals, and declares its works inside its block.
 
 ## Search: debounce, stale answers, loading state
 
@@ -11,27 +11,32 @@ The user types, the request leaves after a pause, and a new character cancels th
 ```kotlin
 data class SearchSlice(val query: String = "", val results: Load<List<Item>> = Load.Loaded(emptyList()))
 
-data class QueryChanged(val text: String) : Intent
-data class ResultsLoaded(val items: List<Item>) : Signal
-data object SearchFailed : Signal
+sealed interface SearchIntent : Intent
+data class QueryChanged(val text: String) : SearchIntent
+
+sealed interface SearchSignal : Signal
+data class ResultsLoaded(val items: List<Item>) : SearchSignal
+data object SearchFailed : SearchSignal
 
 class SearchPorts(val search: suspend (query: String) -> List<Item>)
 
 private val SEARCH = WorkKey("search")
 
 context(_: CapabilityScope)
-fun search(ports: SearchPorts): Capability<SearchSlice> = capability("search", SearchSlice()) {
-    on<QueryChanged> { state, fact ->
-        if (fact.text.isBlank()) {
-            state.copy(query = fact.text, results = Load.Loaded(emptyList())).commit(cancel = listOf(SEARCH))
+fun search(ports: SearchPorts) = capability<SearchSlice, SearchIntent, SearchSignal>(name = "search", initial = SearchSlice()) {
+    val works = object {
+        fun request(query: String) = work(key = SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) { ResultsLoaded(ports.search(query)) }
+    }
+
+    onIntent<QueryChanged> { state, changed ->
+        if (changed.text.isBlank()) {
+            Decision(state = state.copy(query = changed.text, results = Load.Loaded(emptyList())), cancel = SEARCH)
         } else {
-            state.copy(query = fact.text, results = Load.Loading).commit(
-                work(SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) { ResultsLoaded(ports.search(fact.text)) },
-            )
+            Decision(state = state.copy(query = changed.text, results = Load.Loading), work = works.request(changed.text))
         }
     }
-    on<ResultsLoaded> { state, fact -> state.copy(results = Load.Loaded(fact.items)).commit() }
-    on<SearchFailed> { state, _ -> state.copy(results = Load.Failed).commit() }
+    onSignal<ResultsLoaded> { state, loaded -> Decision(state = state.copy(results = Load.Loaded(loaded.items))) }
+    onSignal<SearchFailed> { state, _ -> Decision(state = state.copy(results = Load.Failed)) }
 }
 ```
 
@@ -45,10 +50,13 @@ The recipe above shows `Loading` with the first character. Some screens keep the
 ```kotlin
 data class SearchSlice(val query: String = "", val results: Load<List<Item>> = Load.Loaded(emptyList()))
 
-data class QueryChanged(val text: String) : Intent
-data class QueryPaused(val query: String) : Signal
-data class ResultsLoaded(val items: List<Item>) : Signal
-data object SearchFailed : Signal
+sealed interface SearchIntent : Intent
+data class QueryChanged(val text: String) : SearchIntent
+
+sealed interface SearchSignal : Signal
+data class QueryPaused(val query: String) : SearchSignal
+data class ResultsLoaded(val items: List<Item>) : SearchSignal
+data object SearchFailed : SearchSignal
 
 class SearchPorts(val search: suspend (query: String) -> List<Item>)
 
@@ -56,23 +64,22 @@ private val PAUSE = WorkKey("pause")
 private val SEARCH = WorkKey("search")
 
 context(_: CapabilityScope)
-fun search(ports: SearchPorts): Capability<SearchSlice> = capability("search", SearchSlice()) {
-    on<QueryChanged> { state, fact ->
-        if (fact.text.isBlank()) {
-            state.copy(query = fact.text, results = Load.Loaded(emptyList())).commit(cancel = listOf(PAUSE, SEARCH))
+fun search(ports: SearchPorts) = capability<SearchSlice, SearchIntent, SearchSignal>(name = "search", initial = SearchSlice()) {
+    val works = object {
+        fun pause(query: String) = work(key = PAUSE, onError = { SearchFailed }, debounce = 300.milliseconds) { QueryPaused(query) }
+        fun request(query: String) = work(key = SEARCH, onError = { SearchFailed }) { ResultsLoaded(ports.search(query)) }
+    }
+
+    onIntent<QueryChanged> { state, changed ->
+        if (changed.text.isBlank()) {
+            Decision(state = state.copy(query = changed.text, results = Load.Loaded(emptyList())), cancels = listOf(PAUSE, SEARCH))
         } else {
-            state.copy(query = fact.text).commit(
-                work(PAUSE, onError = { SearchFailed }, debounce = 300.milliseconds) { QueryPaused(fact.text) },
-            )
+            Decision(state = state.copy(query = changed.text), work = works.pause(changed.text))
         }
     }
-    on<QueryPaused> { state, fact ->
-        state.copy(results = Load.Loading).commit(
-            work(SEARCH, onError = { SearchFailed }) { ResultsLoaded(ports.search(fact.query)) },
-        )
-    }
-    on<ResultsLoaded> { state, fact -> state.copy(results = Load.Loaded(fact.items)).commit() }
-    on<SearchFailed> { state, _ -> state.copy(results = Load.Failed).commit() }
+    onSignal<QueryPaused> { state, paused -> Decision(state = state.copy(results = Load.Loading), work = works.request(paused.query)) }
+    onSignal<ResultsLoaded> { state, loaded -> Decision(state = state.copy(results = Load.Loaded(loaded.items))) }
+    onSignal<SearchFailed> { state, _ -> Decision(state = state.copy(results = Load.Failed)) }
 }
 ```
 
@@ -87,9 +94,13 @@ The heart turns red at once, the request goes in the background, and a failure r
 ```kotlin
 data class LikeSlice(val liked: Boolean = false, val likes: Int = 0)
 
-data object LikeClicked : Intent
-data class LikeSaved(val likes: Int) : Signal
-data object LikeFailed : Signal
+sealed interface LikeIntent : Intent
+data object LikeClicked : LikeIntent
+
+sealed interface LikeSignal : Signal
+data class LikeSaved(val likes: Int) : LikeSignal
+data object LikeFailed : LikeSignal
+
 data object ShowLikeError : Effect
 
 class LikePorts(val setLiked: suspend (liked: Boolean) -> Int)
@@ -97,16 +108,18 @@ class LikePorts(val setLiked: suspend (liked: Boolean) -> Int)
 private val SAVE = WorkKey("save")
 
 context(_: CapabilityScope)
-fun likes(ports: LikePorts): Capability<LikeSlice> = capability("likes", LikeSlice()) {
-    on<LikeClicked> { state, _ ->
-        val liked = !state.liked
-        state.copy(liked = liked, likes = state.likes + if (liked) 1 else -1).commit(
-            work(SAVE, onError = { LikeFailed }) { LikeSaved(ports.setLiked(liked)) },
-        )
+fun likes(ports: LikePorts) = capability<LikeSlice, LikeIntent, LikeSignal>(name = "likes", initial = LikeSlice()) {
+    val works = object {
+        fun save(liked: Boolean) = work(key = SAVE, onError = { LikeFailed }) { LikeSaved(ports.setLiked(liked)) }
     }
-    on<LikeSaved> { state, fact -> state.copy(likes = fact.likes).commit() }
-    on<LikeFailed> { state, _ ->
-        state.copy(liked = !state.liked, likes = state.likes + if (state.liked) -1 else 1).commit(ShowLikeError)
+
+    onIntent<LikeClicked> { state, _ ->
+        val liked = !state.liked
+        Decision(state = state.copy(liked = liked, likes = state.likes + if (liked) 1 else -1), work = works.save(liked))
+    }
+    onSignal<LikeSaved> { state, saved -> Decision(state = state.copy(likes = saved.likes)) }
+    onSignal<LikeFailed> { state, _ ->
+        Decision(state = state.copy(liked = !state.liked, likes = state.likes + if (state.liked) -1 else 1), effect = ShowLikeError)
     }
 }
 ```
@@ -126,9 +139,11 @@ An offer ends at a deadline. The countdown ticks only while the user sees the sc
 ```kotlin
 data class OfferSlice(val left: Load<Duration> = Load.Loading)
 
-data class DeadlineLoaded(val deadlineMillis: Long) : Signal
-data class Ticked(val left: Duration) : Signal
-data object OfferFailed : Signal
+sealed interface OfferSignal : Signal
+data class DeadlineLoaded(val deadlineMillis: Long) : OfferSignal
+data class Ticked(val left: Duration) : OfferSignal
+data object OfferFailed : OfferSignal
+
 data object OfferExpired : Effect
 
 class OfferPorts(
@@ -140,23 +155,25 @@ private val LOAD = WorkKey("load")
 private val TICK = WorkKey("tick")
 
 context(_: CapabilityScope)
-fun offer(ports: OfferPorts): Capability<OfferSlice> = capability("offer", OfferSlice()) {
-    on<Started> { state, _ ->
-        state.commit(work(LOAD, onError = { OfferFailed }, policy = WorkPolicy.KeepExisting) { DeadlineLoaded(ports.deadlineMillis()) })
+fun offer(ports: OfferPorts) = capability<OfferSlice, Nothing, OfferSignal>(name = "offer", initial = OfferSlice()) {
+    val works = object {
+        fun load() = work(key = LOAD, onError = { OfferFailed }, policy = WorkPolicy.KeepExisting) { DeadlineLoaded(ports.deadlineMillis()) }
+        fun tick(deadlineMillis: Long) = stream(key = TICK, onError = { OfferFailed }, whileVisible = true) { ticks(deadlineMillis, ports.nowMillis) }
     }
-    on<DeadlineLoaded> { state, fact ->
-        state.commit(stream(TICK, onError = { OfferFailed }, whileVisible = true) { ticks(fact.deadlineMillis, ports.nowMillis) })
-    }
-    on<Ticked> { state, fact ->
-        val next = state.copy(left = Load.Loaded(fact.left))
+
+    bootstrap { state -> Decision(state = state, work = works.load()) }
+
+    onSignal<DeadlineLoaded> { state, loaded -> Decision(state = state, work = works.tick(loaded.deadlineMillis)) }
+    onSignal<Ticked> { state, ticked ->
+        val next = state.copy(left = Load.Loaded(ticked.left))
         // Zero may arrive more than once: the slice tells whether the offer expires right now.
-        if (fact.left == Duration.ZERO && state.left != next.left) next.commit(OfferExpired) else next.commit()
+        Decision(state = next, effect = OfferExpired.takeIf { ticked.left == Duration.ZERO && state.left != next.left })
     }
-    on<OfferFailed> { state, _ -> state.copy(left = Load.Failed).commit() }
+    onSignal<OfferFailed> { state, _ -> Decision(state = state.copy(left = Load.Failed)) }
 }
 
 // Counts from the deadline, not from the moment of subscription: after a pause the first tick shows the real time left.
-private fun ticks(deadlineMillis: Long, nowMillis: () -> Long): Flow<Signal> = flow {
+private fun ticks(deadlineMillis: Long, nowMillis: () -> Long): Flow<OfferSignal> = flow {
     while (true) {
         val left = (deadlineMillis - nowMillis()).coerceAtLeast(0).milliseconds
         emit(Ticked(left))
@@ -176,23 +193,30 @@ private fun ticks(deadlineMillis: Long, nowMillis: () -> Long): Flow<Signal> = f
 ```kotlin
 data class RoundSlice(val left: Duration = 60.seconds)
 
-data object Beat : Signal
-data object RoundFailed : Signal
+sealed interface RoundSignal : Signal
+data object Beat : RoundSignal
+data object RoundFailed : RoundSignal
+
 data object RoundOver : Effect
 
 private val TICK = WorkKey("tick")
 
 context(_: CapabilityScope)
-fun round(): Capability<RoundSlice> = capability("round", RoundSlice()) {
-    on<Started> { state, _ -> state.commit(stream(TICK, onError = { RoundFailed }, whileVisible = true) { beats() }) }
-    on<Beat> { state, _ ->
-        val left = (state.left - 1.seconds).coerceAtLeast(Duration.ZERO)
-        if (left == Duration.ZERO) state.copy(left = left).commit(effects = listOf(RoundOver), cancel = listOf(TICK)) else state.copy(left = left).commit()
+fun round() = capability<RoundSlice, Nothing, RoundSignal>(name = "round", initial = RoundSlice()) {
+    // A restored round that already ended starts no beats.
+    bootstrap { state ->
+        Decision(state = state, work = stream(key = TICK, onError = { RoundFailed }, whileVisible = true) { beats() }.takeIf { state.left > Duration.ZERO })
     }
-    on<RoundFailed> { state, _ -> state.commit() }
+
+    onSignal<Beat> { state, _ ->
+        val left = (state.left - 1.seconds).coerceAtLeast(Duration.ZERO)
+        val over = left == Duration.ZERO
+        Decision(state = state.copy(left = left), effect = RoundOver.takeIf { over }, cancel = TICK.takeIf { over })
+    }
+    onSignal<RoundFailed> { state, _ -> Decision(state = state) }
 }
 
-private fun beats(): Flow<Signal> = flow {
+private fun beats(): Flow<RoundSignal> = flow {
     while (true) {
         delay(1.seconds)
         emit(Beat)
@@ -215,11 +239,15 @@ data class FormSlice(
 
 enum class FormError { EmptyName, BadEmail, SendFailed }
 
-data class NameChanged(val text: String) : Intent
-data class EmailChanged(val text: String) : Intent
-data object SubmitClicked : Intent
-data object FormSent : Signal
-data object FormFailed : Signal
+sealed interface FormIntent : Intent
+data class NameChanged(val text: String) : FormIntent
+data class EmailChanged(val text: String) : FormIntent
+data object SubmitClicked : FormIntent
+
+sealed interface FormSignal : Signal
+data object FormSent : FormSignal
+data object FormFailed : FormSignal
+
 data object CloseForm : Effect
 
 class FormPorts(val send: suspend (name: String, email: String) -> Unit)
@@ -227,24 +255,26 @@ class FormPorts(val send: suspend (name: String, email: String) -> Unit)
 private val SEND = WorkKey("send")
 
 context(_: CapabilityScope)
-fun form(ports: FormPorts): Capability<FormSlice> = capability("form", FormSlice()) {
-    on<NameChanged> { state, fact -> state.copy(name = fact.text, error = null).commit() }
-    on<EmailChanged> { state, fact -> state.copy(email = fact.text, error = null).commit() }
-    on<SubmitClicked> { state, _ ->
-        when {
-            state.sending -> state.commit()
-            state.name.isBlank() -> state.copy(error = FormError.EmptyName).commit()
-            '@' !in state.email -> state.copy(error = FormError.BadEmail).commit()
-            else -> state.copy(sending = true).commit(
-                work(SEND, onError = { FormFailed }, policy = WorkPolicy.KeepExisting) {
-                    ports.send(state.name, state.email)
-                    FormSent
-                },
-            )
+fun form(ports: FormPorts) = capability<FormSlice, FormIntent, FormSignal>(name = "form", initial = FormSlice()) {
+    val works = object {
+        fun send(name: String, email: String) = work(key = SEND, onError = { FormFailed }, policy = WorkPolicy.KeepExisting) {
+            ports.send(name, email)
+            FormSent
         }
     }
-    on<FormSent> { state, _ -> state.copy(sending = false).commit(CloseForm) }
-    on<FormFailed> { state, _ -> state.copy(sending = false, error = FormError.SendFailed).commit() }
+
+    onIntent<NameChanged> { state, changed -> Decision(state = state.copy(name = changed.text, error = null)) }
+    onIntent<EmailChanged> { state, changed -> Decision(state = state.copy(email = changed.text, error = null)) }
+    onIntent<SubmitClicked> { state, _ ->
+        when {
+            state.sending -> Decision(state = state)
+            state.name.isBlank() -> Decision(state = state.copy(error = FormError.EmptyName))
+            '@' !in state.email -> Decision(state = state.copy(error = FormError.BadEmail))
+            else -> Decision(state = state.copy(sending = true), work = works.send(state.name, state.email))
+        }
+    }
+    onSignal<FormSent> { state, _ -> Decision(state = state.copy(sending = false), effect = CloseForm) }
+    onSignal<FormFailed> { state, _ -> Decision(state = state.copy(sending = false, error = FormError.SendFailed)) }
 }
 ```
 
@@ -257,17 +287,24 @@ fun form(ports: FormPorts): Capability<FormSlice> = capability("form", FormSlice
 The header of a post shows the number of likes, and the like button owns that number. The like capability doesn’t know the header: it publishes a signal, and any capability that cares listens.
 
 ```kotlin
-// In LikeFacts.kt: a signal other capabilities may listen to.
-data class LikesChanged(val likes: Int) : Signal
+// In LikeFacts.kt: a signal of the like capability that neighbours may listen to.
+data class LikesChanged(val likes: Int) : LikeSignal
 
-// In the like capability.
-on<LikeSaved> { state, fact -> state.copy(likes = fact.likes).commit(LikesChanged(fact.likes)) }
+// In the like capability. It owns the click, so it tells the neighbours in the same decision.
+onIntent<LikeClicked> { state, _ ->
+    val liked = !state.liked
+    val likes = state.likes + if (liked) 1 else -1
+    Decision(state = state.copy(liked = liked, likes = likes), work = works.save(liked), signal = LikesChanged(likes))
+}
 
-// In the header capability. It imports the fact, never the like capability or its slice.
-on<LikesChanged> { state, fact -> state.copy(likes = fact.likes).commit() }
+// In the header capability. It imports the like’s facts, never the like capability or its slice.
+onSignal<LikesChanged> { state, changed -> Decision(state = state.copy(likes = changed.likes)) }
+onSignal<LikeSaved> { state, saved -> Decision(state = state.copy(likes = saved.likes)) }
 ```
 
-The runtime delivers `LikesChanged` to every capability that handles it, right after `LikeSaved` and before the next fact in the queue. Somebody must handle it, or the runtime reports `UnhandledFact`.
+The header can’t react to `LikeClicked`: the like capability owns that intent. So the like sends `LikesChanged`, and the runtime delivers it to every capability that handles it, right after the click and before the next fact in the queue. Somebody must handle it, or the runtime reports `UnhandledFact`.
+
+The server’s answer needs no new signal. `LikeSaved` is a signal already, and it reaches the header the same way it reaches the like. A rollback after `LikeFailed` sends `LikesChanged` again.
 
 ## Two screens
 
@@ -283,11 +320,13 @@ interface CartEvents {
 // The product screen publishes inside the work it already has.
 class AddToCartPorts(val add: suspend (ProductId) -> Unit) // the wiring calls the repository, then publish()
 
-// The cart screen subscribes once, on start, and turns the data into its own signal.
+// The cart screen subscribes once, in its bootstrap, and turns the data into its own signal.
 class CartPorts(val changes: () -> Flow<CartChange>)
 
-on<Started> { state, _ ->
-    state.commit(stream(CHANGES, onError = { CartFailed }, policy = WorkPolicy.KeepExisting) { ports.changes().map(::CartChanged) })
+data class CartChanged(val change: CartChange) : CartSignal
+
+bootstrap { state ->
+    Decision(state = state, work = stream(key = CHANGES, onError = { CartFailed }, policy = WorkPolicy.KeepExisting) { ports.changes().map(::CartChanged) })
 }
 ```
 

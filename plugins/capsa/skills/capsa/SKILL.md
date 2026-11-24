@@ -1,6 +1,6 @@
 ---
 name: capsa
-description: Capsa, the Kotlin Multiplatform engine for screens built from capabilities, and Capability Slice Architecture (CSA), the rules behind it. Use when code imports com.mairwunnx.capsa, uses CapsaViewModel, rememberCapsa, CapsaComposable, capability, slice, Intent, Signal, Effect, work, stream, WorkKey, mapState, combineState, CollectEffects, or capsaHarness, or when the user asks to build, change, test, migrate, or review a screen on Capsa or CSA (“экран на Capsa”). Skip it for code that doesn’t use Capsa.
+description: Capsa, the Kotlin Multiplatform engine for screens built from capabilities, and Capability Slice Architecture (CSA), the rules behind it. Use when code imports com.mairwunnx.capsa, uses CapsaViewModel, rememberCapsa, CapsaComposable, capability, onIntent, onSignal, bootstrap, Decision, slice, Intent, Signal, Effect, work, stream, WorkKey, mapState, combineState, CollectEffects, or capsaHarness, or when the user asks to build, change, test, migrate, or review a screen on Capsa or CSA (“экран на Capsa”). Skip it for code that doesn’t use Capsa.
 ---
 
 # Capsa
@@ -13,16 +13,16 @@ These rules apply to code on Capsa only. Leave screens on other architectures al
 
 1. The UI sends an `Intent`. A work or the outside world sends a `Signal`. Both are facts.
 2. The runtime puts every fact into one queue and handles them one at a time.
-3. Each capability that handles the fact runs `decide(slice, fact)`, a pure function. It returns a `Decision` through `commit(...)`: the new slice, works to start, work keys to cancel, effects, and signals.
+3. Each capability that handles the fact runs `decide(slice, fact)`, a pure function. It returns a `Decision(state = …, work = …, cancel = …, effect = …, signal = …)`: the new slice, works to start, work keys to cancel, effects, and signals.
 4. The runtime stores the slice, cancels and starts works, queues signals before the next fact, and hands effects to the host.
 5. Projections turn slices into one UI model. The host performs effects: navigation, snackbars, analytics.
 
 | Term | What it is |
 |---|---|
-| Fact | Something that happened: `Intent` from the UI, `Signal` from a work, a neighbour, or the outside |
+| Fact | Something that happened: `Intent` from the UI, `Signal` from a work, a neighbour, or the outside. Each intent has one owner |
 | Slice | The state of one capability: domain data, no formatting |
-| Capability | `(Slice, Fact) -> Decision`, built with `capability(name, initial) { on<Fact> { … } }` |
-| Work | An async job as data: `work` (one answer) or `stream` (a flow), with a `WorkKey` and a `WorkPolicy` |
+| Capability | `(Slice, Fact) -> Decision`, built with `capability<Slice, Intents, Signals>(name, initial) { bootstrap { … } onIntent<…> { … } onSignal<…> { … } }`. It owns its slice, its intents, and its signals |
+| Work | An async job as data: `work` (one answer) or `stream` (a flow), with a `WorkKey` and a `WorkPolicy`. It answers with its capability’s signals |
 | Effect | A command for the host. The capability never performs it |
 | Ports | What a capability needs from the world, as a class of lambdas |
 | Projection | A pure function from slices to a UI model |
@@ -31,11 +31,11 @@ These rules apply to code on Capsa only. Leave screens on other architectures al
 ## What the runtime guarantees
 
 - One coroutine handles facts strictly in order. A capability needs no locks.
-- `Started` arrives once, first. Start the initial load and subscriptions in `on<Started>`.
-- Signals from `commit` reach every capability that handles them, neighbours included, before the next queued fact.
+- Each capability’s `bootstrap` runs once, before any other fact, with the initial or the restored slice. Start the initial load and subscriptions there. Its works run on their own and block nothing.
+- Signals from a decision reach every capability that handles them, neighbours included, before the next queued fact.
 - A cancel or a `Latest` restart revokes the old run: its queued signals get dropped, so a stale answer never overwrites a new one.
 - A broken contract (`UnhandledFact`, `SignalCycle`, `DecideFailed`, `WorkCrashed`) is a bug. It crashes a debug build and goes to the logger in a release build, and the screen keeps working on its last valid state.
-- Build errors stay fatal everywhere: a duplicate capability name, overlapping reactions, `install` after the runtime started.
+- Build errors stay fatal everywhere: a duplicate capability name, overlapping reactions, a reaction to `Started` or a second `bootstrap`, two capabilities that own one intent, `install` after the runtime started.
 
 ## Rules you never break
 
@@ -47,8 +47,13 @@ These rules apply to code on Capsa only. Leave screens on other architectures al
 
 And in practice:
 
+- State the three type arguments: `capability<LikeSlice, LikeIntent, LikeSignal>(…)`. `Nothing` stands for no intents or no signals.
+- An intent has one owner: one `onIntent` on the screen. A neighbour that cares listens to the owner’s signal.
+- A capability sends only its own signals, and its works answer with them. It listens to any signal with `onSignal`.
+- Build a decision with `Decision(state = …, …)` and name every argument.
+- Send a signal only for a neighbour. Change your own slice in the same reaction, let the answer of a work arrive by itself, and send an effect for the host.
 - One reaction per fact class. Reactions in one capability never overlap: sort out subtypes with `when` inside one reaction.
-- Facts are `data class` or `data object`. Every `Intent` and `Signal` has at least one `on<…>`.
+- Facts are `data class` or `data object`. Every `Intent` and `Signal` has at least one reaction.
 - Every work has an `onError` that returns a `Signal`, and a reaction turns it into state, such as `Load.Failed`.
 - Debounce and retries are parameters of a work: `debounce = 300.milliseconds`, `retry = Retry(…)`. No manual `delay` or retry loops.
 - No state in closures or objects. All state lives in slices.
@@ -82,7 +87,7 @@ The first five files hold no platform API beyond short Kotlin examples. The plat
 
 ## Before you finish
 
-- Each new `Intent` and `Signal` has a reaction and a test.
+- Each new `Intent` and `Signal` has a reaction and a test, and each `bootstrap` has a test.
 - Each `Effect` has a handler in the host, and a test checks it leaves the capability.
 - Projections don’t fail on the initial slice.
 - The project’s own tests and linter pass. Find their commands in the build files, `CLAUDE.md`, `AGENTS.md`, or CI, and don’t guess.

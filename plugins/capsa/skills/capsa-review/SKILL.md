@@ -41,9 +41,14 @@ Review only code on Capsa: files that import `com.mairwunnx.capsa`, and the wiri
 
 ### Capabilities and facts
 
+- No old API: `commit(`, `on<…>` inside a `capability` block, or `on<Started>`. Such code doesn’t build on a current Capsa. Point to `capsa-migrate`.
+- `capability<S, I, O>(name = …, initial = …)` states all three type arguments. The intents and the signals of a capability sit under its own sealed interfaces.
 - `decide` is pure: no I/O, no clock, no randomness, no DI, no coroutines, no state in closures or objects.
+- Every `Decision(…)` names its arguments, `state =` included. A single item goes to `effect`, `work`, `cancel`, `signal`, not to a list of one.
+- An intent has one owner: no two capabilities on one screen react to the same intent, its supertype, or its subtype. A neighbour learns through the owner’s signal.
+- A capability sends only its own signals. No `O` widened to `Signal` to send a neighbour’s one.
+- No needless signal: none that a capability sends only to itself, none that forwards the answer of a work, none that asks the host to act instead of an effect.
 - One reaction per fact class, and no reaction to a supertype next to one to its subtype. No fact that implements two interfaces with a reaction each.
-- A sealed slice states its type in `capability<…>(…)`.
 - Facts and effects are `data class` or `data object`.
 - Every `Intent` and `Signal` has a reaction. A new signal for a neighbour comes with the neighbour’s reaction.
 - No chain of signals that loops back.
@@ -55,12 +60,13 @@ Review only code on Capsa: files that import `com.mairwunnx.capsa`, and the wiri
 
 - Every work has its own `onError` that returns a signal, and a reaction turns that signal into state.
 - `WorkKey` is a private constant of the capability file.
+- Works are declared inside the `capability` block, several of them grouped in `val works = object { … }` that holds no state.
 - Jobs that must start, stop, or fail apart have keys of their own. A work that makes several calls, or only waits and sends a signal, breaks no rule.
 - `KeepExisting` isn’t used for a work that depends on input, such as a reload with a new filter.
 - No manual `delay` for debounce, no retry loop, no request token to guard against stale answers.
 - A work with `retry` makes no call that must not run twice (a form, a payment) before another call that can fail: a retry would repeat it. Such a call gets its own work.
 - A timer or a frequent subscription is a `stream` with `whileVisible = true`, and its flow starts from the current value, not from the moment of subscription.
-- The initial load and subscriptions start in the reaction to `Started`. Nothing relies on `Started` to refresh on return.
+- The initial load and subscriptions start in the one `bootstrap`. Nothing relies on the bootstrap to refresh on return. A bootstrap that a restored slice reaches doesn’t throw away data the slice already holds.
 - No `CancellationException` used to stop a work: cancel by the key.
 
 ### Slices, ports, wiring
@@ -100,7 +106,7 @@ These break the visibility of the screen, so `whileVisible` streams run in the b
 
 ### Tests
 
-- Every new intent, signal, and effect has a test.
+- Every new intent, signal, effect, and bootstrap has a test.
 - No `advanceUntilIdle()` to drive the runtime: `runCurrent()` and `advanceTimeBy(…)`.
 - No real `delay` in tests. Ports are fake lambdas, no mock framework for them.
 - A view model test replaces and resets both dispatchers, and collects the state when it tests `whileVisible` streams.

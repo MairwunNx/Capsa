@@ -87,62 +87,89 @@ import com.mairwunnx.capsa.*
 
 data class LikeSlice(val liked: Boolean = false, val likes: Int = 0)
 
-data object LikeClicked : Intent             // from the UI
-data class LikeSaved(val likes: Int) : Signal // from a work or a neighbour
-data object LikeFailed : Signal
-data object ShowLikeError : Effect            // for the host
+sealed interface LikeIntent : Intent               // the intents the capability owns, from the UI
+data object LikeClicked : LikeIntent
 
-class LikePorts(val setLiked: suspend (liked: Boolean) -> Int)
+sealed interface LikeSignal : Signal               // the signals it owns: answers of its works, news for neighbours
+data class LikesLoaded(val liked: Boolean, val likes: Int) : LikeSignal
+data class LikeSaved(val likes: Int) : LikeSignal
+data object LikeFailed : LikeSignal
 
+data object ShowLikeError : Effect                 // for the host
+
+class LikePorts(
+    val load: suspend () -> Pair<Boolean, Int>,
+    val setLiked: suspend (liked: Boolean) -> Int,
+)
+
+private val LOAD = WorkKey("load")
 private val SAVE = WorkKey("save")
 
 context(_: CapabilityScope)
-fun likes(ports: LikePorts): Capability<LikeSlice> = capability("likes", LikeSlice()) {
-    on<LikeClicked> { state, _ ->
-        val liked = !state.liked
-        state.copy(liked = liked, likes = state.likes + if (liked) 1 else -1).commit(
-            work(SAVE, onError = { LikeFailed }) { LikeSaved(ports.setLiked(liked)) },
-        )
+fun likes(ports: LikePorts) = capability<LikeSlice, LikeIntent, LikeSignal>(name = "likes", initial = LikeSlice()) {
+    val works = object {
+        fun load() = work(key = LOAD, onError = { LikeFailed }, policy = WorkPolicy.KeepExisting) {
+            val (liked, likes) = ports.load()
+            LikesLoaded(liked, likes)
+        }
+        fun save(liked: Boolean) = work(key = SAVE, onError = { LikeFailed }) { LikeSaved(ports.setLiked(liked)) }
     }
-    on<LikeSaved> { state, fact -> state.copy(likes = fact.likes).commit() }
-    on<LikeFailed> { state, _ -> state.copy(liked = !state.liked, likes = state.likes + if (state.liked) -1 else 1).commit(ShowLikeError) }
+
+    bootstrap { state -> Decision(state = state, work = works.load()) }
+
+    onIntent<LikeClicked> { state, _ ->
+        val liked = !state.liked
+        Decision(state = state.copy(liked = liked, likes = state.likes + if (liked) 1 else -1), work = works.save(liked))
+    }
+    onSignal<LikesLoaded> { state, loaded -> Decision(state = state.copy(liked = loaded.liked, likes = loaded.likes)) }
+    onSignal<LikeSaved> { state, saved -> Decision(state = state.copy(likes = saved.likes)) }
+    onSignal<LikeFailed> { state, _ ->
+        Decision(state = state.copy(liked = !state.liked, likes = state.likes + if (state.liked) -1 else 1), effect = ShowLikeError)
+    }
 }
 ```
 
 | API | What it does |
 |---|---|
-| `Fact`, `Intent`, `Signal` | Marker interfaces. `Started` is the signal the runtime sends once, first |
-| `Effect` | Marker interface for commands to the host |
-| `capability(name, initial) { on<F> { state, fact -> … } }` | Builds a `Capability<S>`. For a sealed slice: `capability<DownloadSlice>(…)` |
+| `Fact`, `Intent`, `Signal` | Marker interfaces. Give the intents and the signals of each capability a sealed interface of their own |
+| `Started` | The first fact of the runtime. No capability reacts to it: the runtime runs the bootstraps while it handles `Started` |
+| `Effect` | Marker interface for commands to the host. Effects stay untyped |
+| `capability<S, I, O>(name, initial) { … }` | Builds a `Capability<S>`. `S` is the slice, `I : Intent` the intents it owns, `O : Signal` the signals it owns. Always state all three, `Nothing` for none. A capability with `O = Nothing` starts no works |
+| `bootstrap { state -> Decision(…) }` | The first decision, at most one per capability. Runs once, before any other fact, with the initial or the restored slice |
+| `onIntent<F : I> { state, intent -> … }` | A reaction to the capability’s own intents. One owner per intent on the screen: a second capability that handles it, its supertype, or its subtype throws `IllegalArgumentException` at `install` |
+| `onSignal<F : Signal> { state, signal -> … }` | A reaction to any signal: answers of its works, a neighbour’s signals, signals from the host. A reaction to `Started` throws: declare `bootstrap` |
+| `Decision(state, effect, effects, work, works, cancel, cancels, signal, signals)` | The new slice and what follows. Name every argument, `state =` too. The single items go before the lists, a `null` single item is skipped. `work` takes `Work<O>`, `signal` takes `O`. The runtime applies effects, then cancels, then works, then signals |
+| `Decision<S, O>` | The decision type: `state`, `effects`, `works`, `cancels`, `signals` |
 | `CapabilityScope` | The context parameter that limits who creates a capability: `CapsaViewModel`, `CapsaComposable`, the lambda of `rememberCapsa`, and `TestCapabilityScope` provide it |
-| `state.commit()` | The new slice only |
-| `state.commit(work)`, `commit(effect)`, `commit(signal)` | The slice and one item |
-| `state.commit(effects = …, works = …, cancel = …, signals = …)` | The slice and several items. `cancel` takes `WorkKey`s and runs before `works` |
+| `Capability<S>` | The interface, for a custom way of dispatching: `name`, `handles`, `intents`, `initial()`, `bootstrap(state)`, `decide(state, fact)` returning `Decision<S, Signal>` |
 | `Load<T>`: `Loading`, `Loaded(value)`, `Failed`, `valueOrNull()` | Loaded data in a slice |
 
 ## Works
 
 ```kotlin
-work(SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) { ResultsLoaded(ports.search(query)) }
+work(key = SEARCH, onError = { SearchFailed }, debounce = 300.milliseconds) { ResultsLoaded(ports.search(query)) }
 
-work(SEND, onError = { SendFailed }, policy = WorkPolicy.KeepExisting, retry = Retry(times = 3, delay = 1.seconds, factor = 2.0)) {
+work(key = SEND, onError = { SendFailed }, policy = WorkPolicy.KeepExisting, retry = Retry(times = 3, delay = 1.seconds, factor = 2.0)) {
     ports.send(form)
     Sent
 }
 
-stream(TICK, onError = { TimerFailed }, whileVisible = true) { ticks(fact.deadlineMillis, ports.nowMillis) }
+stream(key = TICK, onError = { TimerFailed }, whileVisible = true) { ticks(loaded.deadlineMillis, ports.nowMillis) }
 ```
 
 The whole timer, with `ticks` and an effect on zero, is the recipe “Timer: a stream that pauses in the background” in `recipes.md`.
 
 | API | Parameters |
 |---|---|
-| `work(key, onError, policy, debounce, retry) { suspend -> Signal }` | One run, one signal. The block may make several calls |
-| `stream(key, onError, policy, whileVisible, retry) { Flow<Signal> }` | A subscription. No debounce parameter |
+| `work(key, onError, policy, debounce, retry) { suspend -> O }` | One run, one signal. The block may make several calls. Returns `Work<O>`: the block and `onError` return the capability’s own signals |
+| `stream(key, onError, policy, whileVisible, retry) { Flow<O> }` | A subscription. No debounce parameter |
+| `val works = object { fun load() = work(…) }` | Groups the works of a capability at the top of its block, so reactions call `works.load()` |
+
+Inside the `capability { }` block, a local `object` there included, `work` and `stream` are members of the builder, typed to the capability’s `O`. Call them without type arguments and without importing `com.mairwunnx.capsa.work` or `stream`: the member wins, so `stream(key = TICK, onError = { TimerFailed }) { flow { emit(Ticked) } }` compiles. That’s why works belong inside the block. The top-level `work` and `stream` serve code outside it, where the signal type may need an explicit argument: `work<LikeSignal>(…)`.
 | `WorkKey(name)` | A value class. Keep it in a `private val` of the capability file |
 | `WorkPolicy.Latest`, `KeepExisting`, `Parallel` | `Latest` is the default |
 | `Retry(times, delay, factor = 1.0, maxDelay = INFINITE, retryIf = { true })` | The delay before retry `n` is `delay * factor^n`, capped by `maxDelay` |
-| `Work.signals()` | The flow of a work with `onError` attached. A test can collect it without the runtime |
+| `Work<O>.signals()` | The flow of a work with `onError` attached. A test can collect it without the runtime |
 
 ## Projections
 
@@ -257,7 +284,7 @@ Nobody reports visibility by hand. The runtime counts the screen as visible whil
 
 - `collectAsStateWithLifecycle()` and `CollectEffects` stop collecting below `STARTED`, so the back stack and the background hide the screen.
 - A rotation doesn’t restart the streams: after the last collector leaves, the runtime waits `CapsaVisibility.Watched(grace)`, one second by default.
-- Until the first collector the screen is hidden, so a stream from `Started` waits for the UI.
+- Until the first collector the screen is hidden, so a `whileVisible` stream from the `bootstrap` waits for the UI.
 - The foreground comes from `ProcessLifecycleOwner` on Android, from the app state on iOS, and on macOS from the windows of the app: ⌘H or all windows minimized to the Dock or closed, while the process keeps running, hide the screen. A window that another app covers doesn’t. The JVM has no foreground layer: Compose Desktop drops a minimized or hidden window to `CREATED`, and the lifecycle-aware collectors stop.
 - Inside a host read slices through `.value` or build projections. Your own `stateIn(viewModelScope, SharingStarted.Eagerly)` or `launch { slice.collect {} }` over a slice never stops collecting and keeps the screen visible for good. `SharingStarted.WhileSubscribed` passes the UI collectors through.
 - `CapsaConfig(visibility = CapsaVisibility.Host)` turns the counting off: only `CapsaRuntime.onVisibilityChanged` decides, and the screen starts visible.
@@ -283,7 +310,7 @@ object FormSaver : SliceSaver<FormSlice, FormSaved> {
 - `CapsaLogger` is a `fun interface` with a lazy message. `CapsaLogger.Default` writes to Logcat, `NSLog`, or `System.err` with the tag `Capsa`: errors always, the runtime journal only while `failFast` is on. Pass your own logger to send errors to a crash reporter.
 - `LoggingCapsaObserver` writes the journal: each fact and, indented, what it caused.
 - `CapsaViolationException` carries the `CapsaViolation` and the last 32 events of the runtime.
-- `CapsaConfig(maxSignalDepth = 8, onViolation, workContext, observer, visibility)` and `CapsaObserver` configure the runtime when you build a host of your own.
+- `CapsaConfig(maxSignalDepth = 8, onViolation, workContext, observer, visibility)` and `CapsaObserver` configure the runtime when you build a host of your own. `CapsaObserver.onDecision(capability, fact, decision: Decision<*, *>)` sees every decision, bootstraps included, with `Started` as the fact.
 
 ## Screen: `capsa-compose`
 
@@ -314,7 +341,7 @@ A host without Compose, such as SwiftUI through Kotlin/Native, collects `effects
 ```kotlin
 class LikesTest {
 
-    private fun likesWith(setLiked: suspend (Boolean) -> Int) = inCapabilityScope { likes(LikePorts(setLiked)) }
+    private fun likesWith(setLiked: suspend (Boolean) -> Int) = inCapabilityScope { likes(LikePorts(load = { false to 0 }, setLiked = setLiked)) }
 
     @Test
     fun `a click marks the like at once`() {
@@ -324,9 +351,16 @@ class LikesTest {
     }
 
     @Test
+    fun `the bootstrap loads the likes`() {
+        val replay = likesWith { 1 }.replay(Started)
+        assertEquals(1, replay.works.size)
+    }
+
+    @Test
     fun `a failed save rolls the like back`() = runTest {
         val likes = likesWith { error("offline") }
         val harness = capsaHarness(likes)
+        harness.runCurrent() // the bootstrap loads the likes
 
         harness.append(LikeClicked)
         harness.runCurrent()
@@ -340,12 +374,12 @@ class LikesTest {
 | API | What it does |
 |---|---|
 | `inCapabilityScope { … }` | Gives a test the `CapabilityScope` to create a capability |
-| `capability.replay(vararg facts, from)` | Feeds facts straight into `decide`. `state`, `states`, `effects`, `works`, `signals`, `ignored`. Starts no works |
-| `TestScope.capsaHarness(vararg capabilities, maxSignalDepth, strict = true)` | A real runtime on virtual time in `backgroundScope`. Sends `Started` |
+| `capability.replay(vararg facts, from)` | Feeds facts straight into `decide`, and `Started` into the bootstrap. `state`, `states`, `effects`, `works`, `signals`, `ignored`. Starts no works |
+| `TestScope.capsaHarness(vararg capabilities, maxSignalDepth, strict = true)` | A real runtime on virtual time in `backgroundScope`. Sends `Started`, which runs the bootstraps |
 | `harness.append(fact)` | Queues a fact. Nothing happens until the clock moves |
 | `runCurrent()`, `advanceTimeBy(duration)` | Run what is due now, move the clock and run what became due. The harness has no `advanceUntilIdle()` on purpose |
 | `stateOf(capability)`, `effects`, `takeEffects()` | The slice, the effects so far, the effects since the last take |
-| `facts`, `workEvents` | Handled facts, `WorkEvent.Started`, `Cancelled`, `Failed`, `Dropped` |
+| `facts`, `workEvents` | Handled facts, `Started` first, and `WorkEvent.Started`, `Cancelled`, `Failed`, `Dropped` |
 | `setVisible(visible)` | Hides or shows the screen for `whileVisible` streams. The harness screen starts visible, collectors don’t count in it |
 | `violations`, `assertNoViolations()` | With `strict = false`, the violations collected instead of a failure |
 
