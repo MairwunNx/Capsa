@@ -92,6 +92,7 @@ class RetryDebounceTest {
     fun retryRejectsMeaninglessSettings() {
         assertFailsWith<IllegalArgumentException> { Retry(times = 0, delay = 1.seconds) }
         assertFailsWith<IllegalArgumentException> { Retry(times = 1, delay = 1.seconds, factor = 0.5) }
+        assertFailsWith<IllegalArgumentException> { Retry(times = 1, delay = 1.seconds, maxDelay = (-1).seconds) }
     }
 
     @Test

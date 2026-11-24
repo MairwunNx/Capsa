@@ -22,7 +22,7 @@ import kotlin.time.Duration
  * @param times how many times to retry after the first failure
  * @param delay the delay before the first retry
  * @param factor the backoff multiplier, at least `1.0`
- * @param maxDelay the upper bound of the delay
+ * @param maxDelay the upper bound of the delay, not negative
  * @param retryIf which errors to retry, for example only network ones. All of them by default
  */
 public class Retry(
@@ -36,6 +36,7 @@ public class Retry(
         require(times > 0) { "times must be greater than zero: $times" }
         require(!delay.isNegative()) { "delay must not be negative: $delay" }
         require(factor >= 1.0) { "factor must not be less than 1.0: $factor" }
+        require(!maxDelay.isNegative()) { "maxDelay must not be negative: $maxDelay" }
     }
 
     /** The delay before the retry number `retry`, counting from zero. */
