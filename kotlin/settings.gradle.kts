@@ -33,6 +33,7 @@ include(
     ":capsa-detekt",
     ":capsa-bom",
     ":capsa-benchmarks",
+    ":capsa-benchmarks-android",
     ":samples:shared",
     ":samples:androidApp",
     ":samples:desktopApp",

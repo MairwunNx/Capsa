@@ -14,4 +14,5 @@ dependencies {
     implementation(libs.ktlint.gradle.plugin)
     implementation(libs.detekt.gradle.plugin)
     implementation(libs.kotlinx.benchmark.gradle.plugin)
+    implementation(libs.androidx.benchmark.gradle.plugin)
 }
