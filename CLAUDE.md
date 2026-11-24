@@ -1,6 +1,6 @@
 # Capsa: notes for AI agents
 
-📦 Capsa is a Kotlin Multiplatform engine for screens built from small capabilities. Each capability owns one slice of the screen’s state and declares its async work as data: the runtime starts that work, cancels it, and drops stale results. Side effects leave through a single door. Capsa runs on Android, iOS, and the JVM. README.md is the shop window, README.RU.md its Russian copy. The manual is the GitHub wiki (https://github.com/MairwunNx/Capsa/wiki).
+📦 Capsa is a Kotlin Multiplatform engine for screens built from small capabilities. Each capability owns one slice of the screen’s state and declares its async work as data: the runtime starts that work, cancels it, and drops stale results. Side effects leave through a single door. Capsa runs on Android, iOS, macOS, and the JVM. README.md is the shop window, README.RU.md its Russian copy. The manual is the GitHub wiki (https://github.com/MairwunNx/Capsa/wiki).
 
 ## Capsa and Capability Slice Architecture
 
