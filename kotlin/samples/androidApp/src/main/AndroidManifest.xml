@@ -5,6 +5,8 @@
         android:label="Capsa samples"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
+        <!-- The macrobenchmarks read the frames and the startup of the release build. -->
+        <profileable android:shell="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

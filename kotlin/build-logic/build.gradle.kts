@@ -15,4 +15,5 @@ dependencies {
     implementation(libs.detekt.gradle.plugin)
     implementation(libs.kotlinx.benchmark.gradle.plugin)
     implementation(libs.androidx.benchmark.gradle.plugin)
+    implementation(libs.androidx.baselineprofile.gradle.plugin)
 }

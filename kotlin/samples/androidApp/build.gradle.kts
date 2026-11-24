@@ -3,6 +3,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
+    // Adds the benchmarkRelease build type that samples:macrobenchmark measures, and takes the profile it generates.
+    id("androidx.baselineprofile")
     id("capsa.lint")
 }
 
@@ -35,4 +37,7 @@ kotlin {
 dependencies {
     implementation(projects.samples.shared)
     implementation(libs.androidx.activity.compose)
+    // Installs the baseline profile on phones without Google Play, and lets the macrobenchmarks compile the app with it.
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(projects.samples.macrobenchmark)
 }

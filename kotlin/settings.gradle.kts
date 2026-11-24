@@ -37,4 +37,5 @@ include(
     ":samples:shared",
     ":samples:androidApp",
     ":samples:desktopApp",
+    ":samples:macrobenchmark",
 )
