@@ -28,8 +28,8 @@ The UI sends an intent, a capability decides what it means for its slice, and th
 
 <table>
   <tr>
-    <td align="center" width="50%"><a href="docs/media/search-android.mp4"><img src="docs/media/search-android.webp" width="300" alt="The search sample on Android: “berry” typed letter by letter, and the results come after a short pause"></a><br><sub>Search: the request waits for a pause in typing, and each new letter cancels the old one</sub></td>
-    <td align="center" width="50%"><a href="docs/media/like-ios.mp4"><img src="docs/media/like-ios.webp" width="300" alt="The like sample on iOS: the server goes offline, a tap fills the heart at once, and the like rolls back with a snackbar"></a><br><sub>Like: the heart fills at once and rolls back when the server fails</sub></td>
+    <td align="center" width="50%"><a href="docs/media/search-android.mp4"><img src="docs/media/search-android.webp" width="300" alt="The search sample on Android: “berry” typed letter by letter, and the results come after a short pause"></a><br><sub>Search: the request waits for a pause in typing, and each new letter cancels the old one</sub><br><br><a href="docs/media/search-android.mp4"><img src="docs/media/watch-en.png" height="40" alt="Watch the video"></a></td>
+    <td align="center" width="50%"><a href="docs/media/like-ios.mp4"><img src="docs/media/like-ios.webp" width="300" alt="The like sample on iOS: the server goes offline, a tap fills the heart at once, and the like rolls back with a snackbar"></a><br><sub>Like: the heart fills at once and rolls back when the server fails</sub><br><br><a href="docs/media/like-ios.mp4"><img src="docs/media/watch-en.png" height="40" alt="Watch the video"></a></td>
   </tr>
 </table>
 

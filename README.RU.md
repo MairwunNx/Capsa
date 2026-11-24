@@ -28,8 +28,8 @@ UI отправляет интент, capability решает, что он зн�
 
 <table>
   <tr>
-    <td align="center" width="50%"><a href="docs/media/search-android.mp4"><img src="docs/media/search-android.webp" width="300" alt="Пример поиска на Android: «berry» набирается по букве, и результаты приходят после короткой паузы"></a><br><sub>Поиск: запрос ждёт паузы в наборе, и каждая новая буква отменяет прежний</sub></td>
-    <td align="center" width="50%"><a href="docs/media/like-ios.mp4"><img src="docs/media/like-ios.webp" width="300" alt="Пример лайка на iOS: сервер отключается, сердце закрашивается сразу после нажатия, а потом лайк откатывается со снекбаром"></a><br><sub>Лайк: сердце закрашивается сразу и откатывается, когда сервер не ответил</sub></td>
+    <td align="center" width="50%"><a href="docs/media/search-android.mp4"><img src="docs/media/search-android.webp" width="300" alt="Пример поиска на Android: «berry» набирается по букве, и результаты приходят после короткой паузы"></a><br><sub>Поиск: запрос ждёт паузы в наборе, и каждая новая буква отменяет прежний</sub><br><br><a href="docs/media/search-android.mp4"><img src="docs/media/watch-ru.png" height="40" alt="Смотреть видео"></a></td>
+    <td align="center" width="50%"><a href="docs/media/like-ios.mp4"><img src="docs/media/like-ios.webp" width="300" alt="Пример лайка на iOS: сервер отключается, сердце закрашивается сразу после нажатия, а потом лайк откатывается со снекбаром"></a><br><sub>Лайк: сердце закрашивается сразу и откатывается, когда сервер не ответил</sub><br><br><a href="docs/media/like-ios.mp4"><img src="docs/media/watch-ru.png" height="40" alt="Смотреть видео"></a></td>
   </tr>
 </table>
 
