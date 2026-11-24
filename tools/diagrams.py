@@ -291,39 +291,46 @@ def flow(theme):
     return d
 
 
-MODULES = [  # name, what it holds, x, y, w, family
-    ("capsa-viewmodel", "CapsaViewModel", 40, 150, 250, "effect"),
-    ("capsa-compose", "rememberCapsa, CollectEffects, Slot", 330, 150, 270, "effect"),
-    ("capsa-test", "capsaHarness, replay", 640, 150, 220, None),
-    ("capsa-host", "failFast, CapsaLogger, SliceSaver, CapsaEffects", 40, 290, 560, "effect"),
-    ("capsa-core", "the runtime: capabilities, works, effects, projections. Only kotlinx-coroutines", 40, 420, 820, "runtime"),
+MODULES = [  # name, what it holds, x, y, w, h, family
+    ("capsa-viewmodel-test", "capsaViewModel, collectAsScreen", 40, 140, 250, 72, None),
+    ("capsa-detekt", "rules for detekt 2", 640, 140, 220, 72, None),
+    ("capsa-viewmodel", "CapsaViewModel", 40, 250, 250, 72, "effect"),
+    ("capsa-compose", "rememberCapsa, CollectEffects, Slot", 330, 250, 270, 72, "effect"),
+    ("capsa-test", "capsaHarness, replay", 640, 250, 220, 72, None),
+    ("capsa-host", "failFast, CapsaLogger, SliceSaver, CapsaEffects", 40, 390, 560, 72, "effect"),
+    ("capsa-core", "the runtime: capabilities, works, effects, projections. Only kotlinx-coroutines", 40, 520, 820, 60, "runtime"),
 ]
 
 
 def modules(theme):
-    d = Drawing(theme, 900, 640, "The modules of Capsa and how they depend on each other",
+    d = Drawing(theme, 900, 760, "The modules of Capsa and how they depend on each other",
                 "In kotlin/: capsa-viewmodel and capsa-compose are the two hosts. Both depend on capsa-host, which depends "
-                "on capsa-core. The hosts don’t depend on each other. capsa-test depends on capsa-core. capsa-bom aligns "
-                "the versions of all five. dotnet/ and swift/ are future implementations next to kotlin/.")
+                "on capsa-core. The hosts don’t depend on each other. capsa-test depends on capsa-core, capsa-viewmodel-test "
+                "on capsa-viewmodel. capsa-detekt is a plugin for detekt and depends on no module. capsa-bom aligns the versions "
+                "of all seven. Next to kotlin/ there is room for implementations on other platforms, such as dotnet/ or swift/: "
+                "none exists yet.")
     t = d.t
-    d.rect(20, 20, 860, 476, fill=t["card"], fill_opacity="0.5", stroke=t["border"], rx=14)
+    d.rect(20, 20, 860, 586, fill=t["card"], fill_opacity="0.5", stroke=t["border"], rx=14)
     d.text(40, 48, "kotlin/", 15, bold=True, mono=True)
     d.text(40 + mw("kotlin/", 15) + 10, 48, "an arrow points to what a module depends on", 13, t["muted"])
-    d.box(40, 66, 820, 52, None, "capsa-bom", "one version for the five modules below", title_size=15)
-    for name, holds, x, y, w, family in MODULES:
-        d.box(x, y, w, 72 if y < 400 else 60, family, name, holds)
-    d.path([(165, 222), (165, 288)])
-    d.path([(465, 222), (465, 288)])
-    d.path([(320, 362), (320, 418)])
-    d.path([(750, 222), (750, 418)])
+    d.box(40, 66, 820, 52, None, "capsa-bom", "one version for the seven modules below", title_size=15)
+    for name, holds, x, y, w, h, family in MODULES:
+        d.box(x, y, w, h, family, name, holds)
+    d.path([(165, 212), (165, 248)])          # viewmodel-test -> viewmodel
+    d.path([(165, 322), (165, 388)])          # viewmodel -> host
+    d.path([(465, 322), (465, 388)])          # compose -> host
+    d.path([(320, 462), (320, 518)])          # host -> core
+    d.path([(750, 322), (750, 518)])          # test -> core
+    d.text(750, 236, "a plugin of detekt, depends on no module", 12, t["muted"], anchor="middle")
     # The hosts stay apart.
-    d.path([(292, 186), (328, 186)], color=t["danger"], dashed=True, arrow=False)
-    d.cross(310, 186, 5)
-    d.text(315, 256, "the hosts don’t depend on each other", 12, t["danger"], anchor="middle")
-    # Later implementations
-    d.box(20, 520, 420, 70, None, "dotnet/", "F# and Avalonia.FuncUI, later", dash="6 5")
-    d.box(460, 520, 420, 70, None, "swift/", "Swift and SwiftUI, later", dash="6 5")
-    d.text(450, 618, "Each implementation follows the same rules of Capability Slice Architecture.", 13, t["muted"], anchor="middle")
+    d.path([(292, 286), (328, 286)], color=t["danger"], dashed=True, arrow=False)
+    d.cross(310, 286, 5)
+    d.text(315, 356, "the hosts don’t depend on each other", 12, t["danger"], anchor="middle")
+    # Room for other implementations: a possibility, not a plan.
+    d.text(450, 638, "Room to grow: another platform would get a folder of its own next to kotlin/", 13, t["muted"], anchor="middle")
+    d.box(20, 654, 420, 64, None, "dotnet/", "for example, F# and Avalonia.FuncUI", dash="6 5")
+    d.box(460, 654, 420, 64, None, "swift/", "for example, Swift and SwiftUI", dash="6 5")
+    d.text(450, 744, "None exists yet. Any of them would follow the same rules of Capability Slice Architecture.", 13, t["muted"], anchor="middle")
     return d
 
 
