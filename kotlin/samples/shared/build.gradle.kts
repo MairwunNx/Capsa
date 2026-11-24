@@ -14,6 +14,11 @@ detekt {
     config.from(file("../detekt.yml"))
 }
 
+dependencies {
+    // The demo follows the rules of capsa-detekt, as an app on Capsa would.
+    detektPlugins(projects.capsaDetekt)
+}
+
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
 
