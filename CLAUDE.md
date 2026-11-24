@@ -18,12 +18,12 @@ The root holds what every implementation shares. Each implementation gets its ow
 
 | Path | What lives there |
 |---|---|
-| `kotlin/` | The Kotlin Multiplatform implementation, its own Gradle build: `capsa-core`, `capsa-host`, `capsa-viewmodel`, `capsa-compose`, `capsa-test`, `capsa-viewmodel-test`, `capsa-detekt`, `capsa-bom`, the benchmarks, and the demo app in `samples/` |
+| `kotlin/` | The Kotlin Multiplatform implementation, its own Gradle build: `capsa-core`, `capsa-host`, `capsa-viewmodel`, `capsa-compose`, `capsa-test`, `capsa-viewmodel-test`, `capsa-detekt`, `capsa-bom`, the benchmarks (`capsa-benchmarks`, `capsa-benchmarks-android`), and the demo app with its macrobenchmarks in `samples/` |
 | `plugins/capsa/` | What users install for their agents: the `capsa` skill and the `capsa-setup`, `capsa-migrate`, `capsa-new`, `capsa-review` commands |
 | `.claude-plugin/` | The marketplace that lists the plugin |
 | `.claude/skills/` | Skills for working on this repository, such as `update-deps`. Users never see them |
 | `docs/` | Pictures for the README and the wiki: `images/` (SVG in light and dark), `media/` (WebP in git, mp4 in LFS), `kdoc/`, `social/` |
-| `tools/` | Helper scripts: diagrams, the “Watch the video” buttons, skill install, benchmark comparison |
+| `tools/` | Helper scripts: diagrams, the “Watch the video” buttons, skill install, benchmark comparison, benchmarks on a phone, the baseline profile |
 | `.github/workflows/` | `build.yml` on every push, `release.yml`, `autopilot.yml` |
 
 Later implementations stand next to `kotlin/` and don’t change the root:
@@ -73,9 +73,23 @@ cd kotlin && ./gradlew build
 
 **When you change the runtime for speed:** measure before, change, measure after on the benchmark of that path, and keep the change only when the numbers show a gain.
 
+### On a phone
+
+The JVM numbers don’t carry over to Android: ART compiles the code differently. `tools/device_bench.sh` measures a phone connected over USB, and CI never runs it. It takes about 20 minutes.
+
+- `kotlin/capsa-benchmarks-android` runs the classes of `capsa-benchmarks` with androidx.benchmark: the median time and the allocated objects per operation.
+- `kotlin/samples/macrobenchmark` measures the demo app: the frames of Search under fast typing, of Clock, and of Dashboard, and the cold start. A frame with a positive `frameOverrunMs` came late.
+- The results go to `kotlin/capsa-benchmarks-android/results/<device>.json` with the date, the Android version, and the commit. The script compares the microbenchmarks with the previous file and allows 30 %. Commit the new file when it is the new reference.
+- `tools/device_bench.sh --profile` also regenerates the baseline profile. `tools/baseline_profile.py` takes the rules of Capsa from the profile of the demo and writes them to `src/androidMain/baselineProfiles/baseline-prof.txt` of `capsa-core`, `capsa-host`, `capsa-viewmodel`, and `capsa-compose`. The AAR carries the file, and the apps that use Capsa compile its hot paths ahead of time. Regenerate it after a change to the hot paths, in its own commit.
+- On a phone with Magisk, set Shell to Deny in Magisk’s Superuser list. androidx.benchmark asks `su root id`, and MagiskSU waits forever on it when Shell has root. The script checks this before the run.
+
+The tests that need a real Android run on the phone too: `./gradlew :capsa-viewmodel:connectedAndroidDeviceTest :capsa-compose:connectedAndroidDeviceTest`.
+
 ## Releases
 
 One SemVer covers the whole repository: the Maven modules and the plugin for agents. The tag is `vX.Y.Z`. Until `1.0.0` every version is a preview, and the API may still change.
+
+Before a release you may run `tools/device_bench.sh` on a phone. It’s a check by hand, the release doesn’t wait for it.
 
 1. Add a `## X.Y.Z` section to the top of `CHANGELOG.md`. Each item starts with an emoji and a **bold** first phrase about what the user gets, no internals.
 2. Run Actions → Release → Run workflow on `master` with the version, or `gh workflow run release.yml -f version=X.Y.Z`. The `changelog` field replaces the section of `CHANGELOG.md` when you fill it.
