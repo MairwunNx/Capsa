@@ -44,6 +44,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.capsaTest)
+            implementation(projects.capsaViewmodelTest)
             implementation(libs.kotlin.test)
         }
         jvmTest.dependencies {
